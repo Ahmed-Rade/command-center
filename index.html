@@ -226,7 +226,7 @@
                         <button class="timer-tab" id="tabCountdown" onclick="switchTimerMode('countdown')">COUNTDOWN</button>
                     </div>
                     <div class="timer-countdown-input hidden" id="timerInputRow">
-                        <input type="text" id="timerInput" placeholder="MM:SS or MM" maxlength="5">
+                        <input type="text" id="timerInput" placeholder="HH:MM:SS or MM:SS" maxlength="8">
                         <button class="pomo-btn" onclick="setCountdown()">SET</button>
                     </div>
                     <div class="pomo-controls">
@@ -262,16 +262,6 @@
                 <textarea id="notes" placeholder="// scratchpad..."></textarea>
             </section>
 
-            <!-- LOG PANEL -->
-            <section class="panel log-panel" id="panel-log">
-                <h2 class="panel-title">
-                    <span class="title-bracket">[</span> LOG <span class="title-bracket">]</span>
-                    <button class="log-clear-btn" onclick="clearLog()">CLEAR</button>
-                    <button class="panel-fs-btn" onclick="enterFullscreen('log')" title="Fullscreen">⛶</button>
-                </h2>
-                <div class="log-entries" id="logEntries"></div>
-            </section>
-
             <!-- HABITS TRACKER -->
             <section class="panel habits-panel" id="panel-habits">
                 <h2 class="panel-title">
@@ -283,6 +273,16 @@
                     <button id="habitAdd">+</button>
                 </div>
                 <div class="habits-list" id="habitsList"></div>
+            </section>
+
+            <!-- LOG PANEL -->
+            <section class="panel log-panel" id="panel-log">
+                <h2 class="panel-title">
+                    <span class="title-bracket">[</span> LOG <span class="title-bracket">]</span>
+                    <button class="log-clear-btn" onclick="clearLog()">CLEAR</button>
+                    <button class="panel-fs-btn" onclick="enterFullscreen('log')" title="Fullscreen">⛶</button>
+                </h2>
+                <div class="log-entries" id="logEntries"></div>
             </section>
         </div>
 

@@ -748,12 +748,18 @@ window.setCountdown = function() {
     let totalSeconds = 0;
     if (val.includes(':')) {
         const parts = val.split(':');
-        totalSeconds = parseInt(parts[0] || 0) * 60 + parseInt(parts[1] || 0);
+        if (parts.length === 3) {
+            // HH:MM:SS
+            totalSeconds = parseInt(parts[0] || 0) * 3600 + parseInt(parts[1] || 0) * 60 + parseInt(parts[2] || 0);
+        } else {
+            // MM:SS
+            totalSeconds = parseInt(parts[0] || 0) * 60 + parseInt(parts[1] || 0);
+        }
     } else {
         totalSeconds = parseInt(val) * 60;
     }
     if (!totalSeconds || totalSeconds <= 0) {
-        showOutput('Invalid time. Use MM:SS or MM.', 'error');
+        showOutput('Invalid time. Use HH:MM:SS, MM:SS or MM.', 'error');
         return;
     }
     timerState.countdownTotal = totalSeconds * 1000;
@@ -1243,7 +1249,7 @@ commandInput.addEventListener('input', () => {
         else if (trimmed.startsWith(':engine ')) hint.textContent = 'google / duckduckgo / bing';
         else if (trimmed.startsWith(':bg '))     hint.textContent = 'matrix / stars / clean / grid';
         else if (trimmed.startsWith(':pomo'))    hint.textContent = 'start / stop / reset / status';
-        else if (trimmed.startsWith(':timer '))  hint.textContent = 'MM:SS (countdown) | lap | reset | stopwatch';
+        else if (trimmed.startsWith(':timer '))  hint.textContent = 'HH:MM:SS or MM:SS (countdown) | lap | reset | stopwatch';
         else if (trimmed.startsWith(':price '))  hint.textContent = 'BTC / ETH / AED / EUR...';
         else if (trimmed.startsWith(':links '))  hint.textContent = 'edit | reset';
         else hint.textContent = '';
