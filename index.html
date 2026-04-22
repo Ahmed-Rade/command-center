@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Center — Ahmed</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="scanline"></div>
+    <div class="noise"></div>
+    <canvas id="matrixCanvas"></canvas>
+
+    <!-- KEYBOARD SHORTCUT MODAL -->
+    <div class="modal-overlay hidden" id="shortcutModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">[ KEYBOARD SHORTCUTS ]</span>
+                <button class="modal-close" id="modalClose">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="shortcut-group">
+                    <div class="shortcut-group-title">GLOBAL</div>
+                    <div class="shortcut-row"><kbd>Ctrl+K</kbd><span>Focus command input</span></div>
+                    <div class="shortcut-row"><kbd>Escape</kbd><span>Clear / close</span></div>
+                    <div class="shortcut-row"><kbd>?</kbd><span>Toggle this overlay</span></div>
+                    <div class="shortcut-row"><kbd>Alt+N</kbd><span>Focus notes</span></div>
+                    <div class="shortcut-row"><kbd>Alt+T</kbd><span>Focus todo input</span></div>
+                    <div class="shortcut-row"><kbd>Alt+P</kbd><span>Start/pause Pomodoro</span></div>
+                    <div class="shortcut-row"><kbd>Alt+R</kbd><span>Refresh weather</span></div>
+                </div>
+                <div class="shortcut-group">
+                    <div class="shortcut-group-title">COMMAND INPUT</div>
+                    <div class="shortcut-row"><kbd>↑ / ↓</kbd><span>Navigate history</span></div>
+                    <div class="shortcut-row"><kbd>Tab</kbd><span>Autocomplete</span></div>
+                    <div class="shortcut-row"><kbd>Enter</kbd><span>Execute / search</span></div>
+                </div>
+                <div class="shortcut-group">
+                    <div class="shortcut-group-title">COMMANDS</div>
+                    <div class="shortcut-row"><kbd>:calc &lt;expr&gt;</kbd><span>Calculator</span></div>
+                    <div class="shortcut-row"><kbd>:todo add &lt;task&gt;</kbd><span>Add task</span></div>
+                    <div class="shortcut-row"><kbd>:todo clear</kbd><span>Clear all tasks</span></div>
+                    <div class="shortcut-row"><kbd>:pomo start/stop/status</kbd><span>Pomodoro</span></div>
+                    <div class="shortcut-row"><kbd>:theme &lt;name&gt;</kbd><span>dark/light/solarized/dracula</span></div>
+                    <div class="shortcut-row"><kbd>:engine &lt;name&gt;</kbd><span>google/duckduckgo/bing</span></div>
+                    <div class="shortcut-row"><kbd>:bg &lt;mode&gt;</kbd><span>matrix/stars/clean/grid</span></div>
+                    <div class="shortcut-row"><kbd>:price &lt;ticker&gt;</kbd><span>Crypto/currency price</span></div>
+                    <div class="shortcut-row"><kbd>:myip</kbd><span>Network info</span></div>
+                    <div class="shortcut-row"><kbd>:log clear</kbd><span>Clear command log</span></div>
+                    <div class="shortcut-row"><kbd>:clip &lt;n&gt;</kbd><span>Recall clipboard item</span></div>
+                    <div class="shortcut-row"><kbd>:weather</kbd><span>Refresh weather</span></div>
+                    <div class="shortcut-row"><kbd>:clear</kbd><span>Wipe notes</span></div>
+                    <div class="shortcut-row"><kbd>:help</kbd><span>Show all commands</span></div>
+                </div>
+                <div class="shortcut-group">
+                    <div class="shortcut-group-title">QUICK LINKS (Alt+Key)</div>
+                    <div class="shortcut-row"><kbd>Alt+G</kbd><span>GitHub</span></div>
+                    <div class="shortcut-row"><kbd>Alt+M</kbd><span>Mail</span></div>
+                    <div class="shortcut-row"><kbd>Alt+D</kbd><span>Drive</span></div>
+                    <div class="shortcut-row"><kbd>Alt+Y</kbd><span>YouTube</span></div>
+                    <div class="shortcut-row"><kbd>Alt+A</kbd><span>ChatGPT</span></div>
+                    <div class="shortcut-row"><kbd>Alt+C</kbd><span>Claude</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header class="header">
+            <div class="header-left">
+                <div class="greeting" id="greeting"></div>
+                <div class="sub-greeting">SYSTEM OPERATIONAL · <span id="engineIndicator">GOOGLE</span></div>
+            </div>
+            <div class="header-center">
+                <div class="weather-header" id="weatherHeader">
+                    <span id="weatherIcon">◌</span>
+                    <span id="weatherTemp">--°C</span>
+                    <span id="weatherDesc" class="weather-desc">LOADING...</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="clock" id="clock"></div>
+                <div class="clock-sub" id="timezone">UTC+04:00 · UAE</div>
+            </div>
+        </header>
+
+        <div class="command-section">
+            <div class="prompt-wrapper">
+                <span class="prompt-bracket">[</span>
+                <span class="prompt-user">ahmed</span>
+                <span class="prompt-at">@</span>
+                <span class="prompt-host">cmd-center</span>
+                <span class="prompt-bracket">]</span>
+                <span class="prompt-dollar">$</span>
+            </div>
+            <input type="text" id="commandInput" placeholder="search, :calc 2+2, :pomo start, :theme dark, :weather, :help..." autocomplete="off" spellcheck="false">
+            <div class="cmd-hint" id="cmdHint"></div>
+        </div>
+
+        <div id="outputBar" class="output-bar hidden"></div>
+
+        <div class="main-grid">
+            <!-- STATUS PANEL -->
+            <section class="panel status-panel">
+                <h2 class="panel-title"><span class="title-bracket">[</span> STATUS <span class="title-bracket">]</span></h2>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <div class="status-label">SYSTEM</div>
+                        <div class="status-value online"><span class="pulse-dot"></span>ONLINE</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">NETWORK</div>
+                        <div class="status-value online"><span class="pulse-dot"></span>CONNECTED</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">DATE</div>
+                        <div class="status-value accent" id="date"></div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">SESSION</div>
+                        <div class="status-value" id="uptime">00:00:00</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">WEATHER</div>
+                        <div class="status-value" id="weatherVal">LOADING...</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">BATTERY</div>
+                        <div class="status-value" id="batteryVal">--</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">HUMIDITY</div>
+                        <div class="status-value" id="humidityVal">--</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">WIND</div>
+                        <div class="status-value" id="windVal">--</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- QUICK ACCESS PANEL -->
+            <section class="panel links-panel">
+                <h2 class="panel-title"><span class="title-bracket">[</span> QUICK ACCESS <span class="title-bracket">]</span></h2>
+                <div class="links-grid" id="linksGrid">
+                    <a href="https://github.com/ahmed-rade" class="link-item" target="_blank" data-key="G">
+                        <span class="link-icon">⚡</span><span class="link-text">GitHub</span><span class="link-shortcut">G</span>
+                    </a>
+                    <a href="https://mail.google.com" class="link-item" target="_blank" data-key="M">
+                        <span class="link-icon">✉</span><span class="link-text">Mail</span><span class="link-shortcut">M</span>
+                    </a>
+                    <a href="https://drive.google.com" class="link-item" target="_blank" data-key="D">
+                        <span class="link-icon">📁</span><span class="link-text">Drive</span><span class="link-shortcut">D</span>
+                    </a>
+                    <a href="https://youtube.com" class="link-item" target="_blank" data-key="Y">
+                        <span class="link-icon">▶</span><span class="link-text">YouTube</span><span class="link-shortcut">Y</span>
+                    </a>
+                    <a href="https://chatgpt.com" class="link-item" target="_blank" data-key="A">
+                        <span class="link-icon">◈</span><span class="link-text">ChatGPT</span><span class="link-shortcut">A</span>
+                    </a>
+                    <a href="https://reddit.com" class="link-item" target="_blank" data-key="R">
+                        <span class="link-icon">💬</span><span class="link-text">Reddit</span><span class="link-shortcut">R</span>
+                    </a>
+                    <a href="https://claude.ai" class="link-item" target="_blank" data-key="C">
+                        <span class="link-icon">◉</span><span class="link-text">Claude</span><span class="link-shortcut">C</span>
+                    </a>
+                    <a href="https://linux.die.net" class="link-item" target="_blank" data-key="L">
+                        <span class="link-icon">🐧</span><span class="link-text">Linux Docs</span><span class="link-shortcut">L</span>
+                    </a>
+                </div>
+            </section>
+
+            <!-- POMODORO PANEL -->
+            <section class="panel pomo-panel">
+                <h2 class="panel-title">
+                    <span class="title-bracket">[</span> POMODORO <span class="title-bracket">]</span>
+                    <span class="pomo-tomatoes" id="pomoTomatoes"></span>
+                </h2>
+                <div class="pomo-container">
+                    <div class="pomo-ring-wrapper">
+                        <svg class="pomo-ring" viewBox="0 0 100 100">
+                            <circle class="pomo-ring-bg" cx="50" cy="50" r="42"/>
+                            <circle class="pomo-ring-progress" id="pomoRing" cx="50" cy="50" r="42"
+                                stroke-dasharray="263.9" stroke-dashoffset="0"/>
+                        </svg>
+                        <div class="pomo-time" id="pomoTime">25:00</div>
+                        <div class="pomo-phase" id="pomoPhase">WORK</div>
+                    </div>
+                    <div class="pomo-controls">
+                        <button class="pomo-btn" id="pomoStartBtn" onclick="pomoControl('toggle')">▶ START</button>
+                        <button class="pomo-btn pomo-btn-secondary" onclick="pomoControl('reset')">↺ RESET</button>
+                    </div>
+                    <div class="pomo-info">
+                        <span class="pomo-label">SESSIONS: <span id="pomoSessions">0</span></span>
+                        <span class="pomo-label">NEXT: <span id="pomoNext">BREAK</span></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TODO PANEL -->
+            <section class="panel todo-panel">
+                <h2 class="panel-title">
+                    <span class="title-bracket">[</span> TODO <span class="title-bracket">]</span>
+                    <span class="todo-count" id="todoCount">0</span>
+                </h2>
+                <div class="todo-input-row">
+                    <input type="text" id="todoInput" placeholder="add task..." spellcheck="false">
+                    <button id="todoAdd">+</button>
+                </div>
+                <ul class="todo-list" id="todoList"></ul>
+            </section>
+
+            <!-- NOTES PANEL -->
+            <section class="panel notes-panel">
+                <h2 class="panel-title">
+                    <span class="title-bracket">[</span> NOTES <span class="title-bracket">]</span>
+                    <span class="notes-saved" id="notesSaved"></span>
+                </h2>
+                <textarea id="notes" placeholder="// scratchpad..."></textarea>
+            </section>
+
+            <!-- LOG PANEL -->
+            <section class="panel log-panel">
+                <h2 class="panel-title">
+                    <span class="title-bracket">[</span> LOG <span class="title-bracket">]</span>
+                    <button class="log-clear-btn" onclick="clearLog()">CLEAR</button>
+                </h2>
+                <div class="log-entries" id="logEntries"></div>
+            </section>
+        </div>
+
+        <footer class="footer">
+            <span><kbd>CTRL+K</kbd> focus</span>
+            <span>|</span>
+            <span><kbd>↑↓</kbd> history</span>
+            <span>|</span>
+            <span><kbd>?</kbd> shortcuts</span>
+            <span>|</span>
+            <span><kbd>:pomo</kbd> timer</span>
+            <span>|</span>
+            <span><kbd>:theme</kbd> themes</span>
+            <span>|</span>
+            <span><kbd>:engine</kbd> search</span>
+            <span>|</span>
+            <span><kbd>:help</kbd> all cmds</span>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
