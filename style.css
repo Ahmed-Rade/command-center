@@ -549,9 +549,22 @@ html.theme-minimal .command-section::before { display: none; }
 .main-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
+    grid-template-areas:
+        "status  links   pomo"
+        "timer   todo    habits"
+        "notes   notes   log";
     gap: 16px;
     margin-bottom: 16px;
 }
+
+.status-panel  { grid-area: status; }
+.links-panel   { grid-area: links; }
+.pomo-panel    { grid-area: pomo; }
+.timer-panel   { grid-area: timer; }
+.todo-panel    { grid-area: todo; }
+.habits-panel  { grid-area: habits; }
+.notes-panel   { grid-area: notes; }
+.log-panel     { grid-area: log; }
 
 /* ─── PANEL BASE ─── */
 .panel {
@@ -1636,15 +1649,24 @@ kbd {
 
 /* ─── RESPONSIVE ─── */
 @media (max-width: 1200px) {
-    .main-grid { grid-template-columns: repeat(2, 1fr); }
-    .notes-panel { grid-column: span 2; }
-    .log-panel { grid-column: span 2; }
+    .main-grid {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-areas:
+            "status  links"
+            "pomo    timer"
+            "todo    habits"
+            "notes   notes"
+            "log     log";
+    }
 }
 
 @media (max-width: 768px) {
     body { padding: 12px; }
-    .main-grid { grid-template-columns: 1fr; }
-    .notes-panel, .log-panel { grid-column: span 1; }
+    .main-grid {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "status" "links" "pomo" "timer" "todo" "habits" "notes" "log";
+    }
     .header { flex-direction: column; gap: 10px; }
     .clock { font-size: 1.6rem; }
     .clock-sub { text-align: left; }
