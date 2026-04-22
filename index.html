@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Command Center — Ahmed</title>
+    <title>Command Center</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -43,7 +43,8 @@
                     <div class="shortcut-row"><kbd>:todo add &lt;task&gt;</kbd><span>Add task</span></div>
                     <div class="shortcut-row"><kbd>:todo clear</kbd><span>Clear all tasks</span></div>
                     <div class="shortcut-row"><kbd>:pomo start/stop/status</kbd><span>Pomodoro</span></div>
-                    <div class="shortcut-row"><kbd>:theme &lt;name&gt;</kbd><span>dark/light/solarized/dracula</span></div>
+                    <div class="shortcut-row"><kbd>:timer &lt;mm:ss&gt;</kbd><span>Countdown timer</span></div>
+                    <div class="shortcut-row"><kbd>:theme &lt;name&gt;</kbd><span>dark/light/solarized/dracula/minimal/cyber/nord/mocha</span></div>
                     <div class="shortcut-row"><kbd>:engine &lt;name&gt;</kbd><span>google/duckduckgo/bing</span></div>
                     <div class="shortcut-row"><kbd>:bg &lt;mode&gt;</kbd><span>matrix/stars/clean/grid</span></div>
                     <div class="shortcut-row"><kbd>:price &lt;ticker&gt;</kbd><span>Crypto/currency price</span></div>
@@ -64,6 +65,30 @@
                     <div class="shortcut-row"><kbd>Alt+C</kbd><span>Claude</span></div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- EDIT LINKS MODAL -->
+    <div class="modal-overlay hidden" id="editLinksModal">
+        <div class="modal modal-wide">
+            <div class="modal-header">
+                <span class="modal-title">[ EDIT QUICK ACCESS ]</span>
+                <button class="modal-close" id="editLinksClose">✕</button>
+            </div>
+            <div class="modal-body edit-links-body">
+                <div id="editLinksList"></div>
+                <button class="edit-links-add-btn" id="editLinksAdd">+ ADD LINK</button>
+            </div>
+            <div class="modal-footer">
+                <button class="pomo-btn" id="editLinksSave">SAVE CHANGES</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FULLSCREEN OVERLAY -->
+    <div class="fullscreen-overlay hidden" id="fullscreenOverlay">
+        <div class="fullscreen-inner" id="fullscreenInner">
+            <button class="fullscreen-close" id="fullscreenClose">✕ EXIT FULLSCREEN</button>
         </div>
     </div>
 
@@ -89,13 +114,13 @@
         <div class="command-section">
             <div class="prompt-wrapper">
                 <span class="prompt-bracket">[</span>
-                <span class="prompt-user">ahmed</span>
+                <span class="prompt-user">user</span>
                 <span class="prompt-at">@</span>
                 <span class="prompt-host">cmd-center</span>
                 <span class="prompt-bracket">]</span>
                 <span class="prompt-dollar">$</span>
             </div>
-            <input type="text" id="commandInput" placeholder="search, :calc 2+2, :pomo start, :theme dark, :weather, :help..." autocomplete="off" spellcheck="false">
+            <input type="text" id="commandInput" placeholder="search, :calc 2+2, :pomo start, :timer 5:00, :theme minimal, :help..." autocomplete="off" spellcheck="false">
             <div class="cmd-hint" id="cmdHint"></div>
             <div class="cmd-dropdown hidden" id="cmdDropdown"></div>
         </div>
@@ -104,8 +129,11 @@
 
         <div class="main-grid">
             <!-- STATUS PANEL -->
-            <section class="panel status-panel">
-                <h2 class="panel-title"><span class="title-bracket">[</span> STATUS <span class="title-bracket">]</span></h2>
+            <section class="panel status-panel" id="panel-status">
+                <h2 class="panel-title">
+                    <span class="title-bracket">[</span> STATUS <span class="title-bracket">]</span>
+                    <button class="panel-fs-btn" onclick="enterFullscreen('status')" title="Fullscreen">⛶</button>
+                </h2>
                 <div class="status-grid">
                     <div class="status-item">
                         <div class="status-label">SYSTEM</div>
@@ -143,41 +171,21 @@
             </section>
 
             <!-- QUICK ACCESS PANEL -->
-            <section class="panel links-panel">
-                <h2 class="panel-title"><span class="title-bracket">[</span> QUICK ACCESS <span class="title-bracket">]</span></h2>
-                <div class="links-grid" id="linksGrid">
-                    <a href="https://github.com/ahmed-rade" class="link-item" target="_blank" data-key="G">
-                        <span class="link-icon">⚡</span><span class="link-text">GitHub</span><span class="link-shortcut">G</span>
-                    </a>
-                    <a href="https://mail.google.com" class="link-item" target="_blank" data-key="M">
-                        <span class="link-icon">✉</span><span class="link-text">Mail</span><span class="link-shortcut">M</span>
-                    </a>
-                    <a href="https://drive.google.com" class="link-item" target="_blank" data-key="D">
-                        <span class="link-icon">📁</span><span class="link-text">Drive</span><span class="link-shortcut">D</span>
-                    </a>
-                    <a href="https://youtube.com" class="link-item" target="_blank" data-key="Y">
-                        <span class="link-icon">▶</span><span class="link-text">YouTube</span><span class="link-shortcut">Y</span>
-                    </a>
-                    <a href="https://chatgpt.com" class="link-item" target="_blank" data-key="A">
-                        <span class="link-icon">◈</span><span class="link-text">ChatGPT</span><span class="link-shortcut">A</span>
-                    </a>
-                    <a href="https://reddit.com" class="link-item" target="_blank" data-key="R">
-                        <span class="link-icon">💬</span><span class="link-text">Reddit</span><span class="link-shortcut">R</span>
-                    </a>
-                    <a href="https://claude.ai" class="link-item" target="_blank" data-key="C">
-                        <span class="link-icon">◉</span><span class="link-text">Claude</span><span class="link-shortcut">C</span>
-                    </a>
-                    <a href="https://linux.die.net" class="link-item" target="_blank" data-key="L">
-                        <span class="link-icon">🐧</span><span class="link-text">Linux Docs</span><span class="link-shortcut">L</span>
-                    </a>
-                </div>
+            <section class="panel links-panel" id="panel-links">
+                <h2 class="panel-title">
+                    <span class="title-bracket">[</span> QUICK ACCESS <span class="title-bracket">]</span>
+                    <button class="panel-edit-btn" onclick="openEditLinks()" title="Edit links">✎ EDIT</button>
+                    <button class="panel-fs-btn" onclick="enterFullscreen('links')" title="Fullscreen">⛶</button>
+                </h2>
+                <div class="links-grid" id="linksGrid"></div>
             </section>
 
             <!-- POMODORO PANEL -->
-            <section class="panel pomo-panel">
+            <section class="panel pomo-panel" id="panel-pomo">
                 <h2 class="panel-title">
                     <span class="title-bracket">[</span> POMODORO <span class="title-bracket">]</span>
                     <span class="pomo-tomatoes" id="pomoTomatoes"></span>
+                    <button class="panel-fs-btn" onclick="enterFullscreen('pomo')" title="Fullscreen">⛶</button>
                 </h2>
                 <div class="pomo-container">
                     <div class="pomo-ring-wrapper">
@@ -202,11 +210,40 @@
                 </div>
             </section>
 
+            <!-- TIMER PANEL -->
+            <section class="panel timer-panel" id="panel-timer">
+                <h2 class="panel-title">
+                    <span class="title-bracket">[</span> TIMER <span class="title-bracket">]</span>
+                    <button class="panel-fs-btn" onclick="enterFullscreen('timer')" title="Fullscreen">⛶</button>
+                </h2>
+                <div class="timer-container">
+                    <div class="timer-display-wrap">
+                        <div class="timer-display" id="timerDisplay">00:00:00</div>
+                        <div class="timer-mode-label" id="timerModeLabel">STOPWATCH</div>
+                    </div>
+                    <div class="timer-tabs">
+                        <button class="timer-tab active" id="tabStopwatch" onclick="switchTimerMode('stopwatch')">STOPWATCH</button>
+                        <button class="timer-tab" id="tabCountdown" onclick="switchTimerMode('countdown')">COUNTDOWN</button>
+                    </div>
+                    <div class="timer-countdown-input hidden" id="timerInputRow">
+                        <input type="text" id="timerInput" placeholder="MM:SS or MM" maxlength="5">
+                        <button class="pomo-btn" onclick="setCountdown()">SET</button>
+                    </div>
+                    <div class="pomo-controls">
+                        <button class="pomo-btn" id="timerStartBtn" onclick="timerControl('toggle')">▶ START</button>
+                        <button class="pomo-btn pomo-btn-secondary" onclick="timerControl('reset')">↺ RESET</button>
+                        <button class="pomo-btn pomo-btn-secondary" id="timerLapBtn" onclick="timerControl('lap')" style="display:none">◎ LAP</button>
+                    </div>
+                    <div class="timer-laps" id="timerLaps"></div>
+                </div>
+            </section>
+
             <!-- TODO PANEL -->
-            <section class="panel todo-panel">
+            <section class="panel todo-panel" id="panel-todo">
                 <h2 class="panel-title">
                     <span class="title-bracket">[</span> TODO <span class="title-bracket">]</span>
                     <span class="todo-count" id="todoCount">0</span>
+                    <button class="panel-fs-btn" onclick="enterFullscreen('todo')" title="Fullscreen">⛶</button>
                 </h2>
                 <div class="todo-input-row">
                     <input type="text" id="todoInput" placeholder="add task..." spellcheck="false">
@@ -216,21 +253,36 @@
             </section>
 
             <!-- NOTES PANEL -->
-            <section class="panel notes-panel">
+            <section class="panel notes-panel" id="panel-notes">
                 <h2 class="panel-title">
                     <span class="title-bracket">[</span> NOTES <span class="title-bracket">]</span>
                     <span class="notes-saved" id="notesSaved"></span>
+                    <button class="panel-fs-btn" onclick="enterFullscreen('notes')" title="Fullscreen">⛶</button>
                 </h2>
                 <textarea id="notes" placeholder="// scratchpad..."></textarea>
             </section>
 
             <!-- LOG PANEL -->
-            <section class="panel log-panel">
+            <section class="panel log-panel" id="panel-log">
                 <h2 class="panel-title">
                     <span class="title-bracket">[</span> LOG <span class="title-bracket">]</span>
                     <button class="log-clear-btn" onclick="clearLog()">CLEAR</button>
+                    <button class="panel-fs-btn" onclick="enterFullscreen('log')" title="Fullscreen">⛶</button>
                 </h2>
                 <div class="log-entries" id="logEntries"></div>
+            </section>
+
+            <!-- HABITS TRACKER -->
+            <section class="panel habits-panel" id="panel-habits">
+                <h2 class="panel-title">
+                    <span class="title-bracket">[</span> HABITS <span class="title-bracket">]</span>
+                    <button class="panel-fs-btn" onclick="enterFullscreen('habits')" title="Fullscreen">⛶</button>
+                </h2>
+                <div class="habits-input-row">
+                    <input type="text" id="habitInput" placeholder="add habit..." spellcheck="false">
+                    <button id="habitAdd">+</button>
+                </div>
+                <div class="habits-list" id="habitsList"></div>
             </section>
         </div>
 
@@ -242,6 +294,8 @@
             <span><kbd>?</kbd> shortcuts</span>
             <span>|</span>
             <span><kbd>:pomo</kbd> timer</span>
+            <span>|</span>
+            <span><kbd>:timer</kbd> stopwatch</span>
             <span>|</span>
             <span><kbd>:theme</kbd> themes</span>
             <span>|</span>

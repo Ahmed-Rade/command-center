@@ -6,6 +6,8 @@ const SK = {
     THEME:     'cc_theme',
     BG:        'cc_bg',
     POMO_SESS: 'cc_pomo_sessions',
+    LINKS:     'cc_links',
+    HABITS:    'cc_habits',
 };
 
 // ─── ELEMENTS ───────────────────────────────────────────────
@@ -37,6 +39,7 @@ const pomoTomatoes = document.getElementById('pomoTomatoes');
 const pomoSessions = document.getElementById('pomoSessions');
 const pomoNext     = document.getElementById('pomoNext');
 const pomoStartBtn = document.getElementById('pomoStartBtn');
+const linksGrid    = document.getElementById('linksGrid');
 
 const startTime = Date.now();
 const RING_CIRC = 263.9;
@@ -52,10 +55,10 @@ function updateTime() {
     clockEl.textContent = `${String(h12).padStart(2, '0')}:${m}:${s} ${ampm}`;
 
     let greeting;
-    if (h >= 4 && h < 12)       greeting = '> GOOD MORNING, AHMED';
-    else if (h >= 12 && h < 17) greeting = '> GOOD AFTERNOON, AHMED';
-    else if (h >= 17 && h < 21) greeting = '> GOOD EVENING, AHMED';
-    else                         greeting = '> GOOD NIGHT, AHMED';
+    if (h >= 4 && h < 12)       greeting = '> GOOD MORNING, USER';
+    else if (h >= 12 && h < 17) greeting = '> GOOD AFTERNOON, USER';
+    else if (h >= 17 && h < 21) greeting = '> GOOD EVENING, USER';
+    else                         greeting = '> GOOD NIGHT, USER';
     greetingEl.textContent = greeting;
 
     const opts = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
@@ -124,7 +127,7 @@ async function fetchWeather(lat = 25.4052, lon = 55.5136) {
         humidityVal.textContent = `${hum}%`;
         windVal.textContent     = `${wind} KM/H`;
     } catch {
-        weatherVal.textContent  = 'AJMAN, UAE (--°C)';
+        weatherVal.textContent  = 'UAE (--°C)';
         weatherIcon.textContent = '🌡';
         weatherTemp.textContent = '--°C';
         weatherDesc.textContent = 'UNAVAILABLE';
@@ -145,7 +148,7 @@ function initWeather() {
 }
 
 initWeather();
-setInterval(initWeather, 30 * 60 * 1000); // every 30 min
+setInterval(initWeather, 30 * 60 * 1000);
 
 // ─── MATRIX BACKGROUND ─────────────────────────────────────
 const matrixCanvas = document.getElementById('matrixCanvas');
@@ -248,14 +251,13 @@ function applyBg(mode) {
     } else if (mode === 'grid') {
         document.body.classList.add('bg-grid');
     }
-    // 'clean' → nothing
 }
 
 const savedBg = localStorage.getItem(SK.BG) || 'matrix';
 applyBg(savedBg);
 
 // ─── THEME ─────────────────────────────────────────────────
-const THEMES = ['dark', 'light', 'solarized', 'dracula'];
+const THEMES = ['dark', 'light', 'solarized', 'dracula', 'minimal', 'cyber', 'nord', 'mocha'];
 
 function applyTheme(name) {
     document.documentElement.className = document.documentElement.className
@@ -353,10 +355,167 @@ notesArea.addEventListener('keydown', (e) => {
     }
 });
 
+// ─── QUICK LINKS ───────────────────────────────────────────
+const DEFAULT_LINKS = [
+    { icon: '⚡', text: 'GitHub',     url: 'https://github.com',       key: 'G' },
+    { icon: '✉',  text: 'Mail',       url: 'https://mail.google.com',  key: 'M' },
+    { icon: '📁', text: 'Drive',      url: 'https://drive.google.com', key: 'D' },
+    { icon: '▶',  text: 'YouTube',    url: 'https://youtube.com',      key: 'Y' },
+    { icon: '◈',  text: 'ChatGPT',    url: 'https://chatgpt.com',      key: 'A' },
+    { icon: '💬', text: 'Reddit',     url: 'https://reddit.com',       key: 'R' },
+    { icon: '◉',  text: 'Claude',     url: 'https://claude.ai',        key: 'C' },
+    { icon: '🐧', text: 'Linux Docs', url: 'https://linux.die.net',    key: 'L' },
+];
+
+let userLinks = JSON.parse(localStorage.getItem(SK.LINKS) || 'null') || DEFAULT_LINKS;
+
+function renderLinks() {
+    linksGrid.innerHTML = '';
+    userLinks.forEach(link => {
+        const a = document.createElement('a');
+        a.href = link.url;
+        a.className = 'link-item';
+        a.target = '_blank';
+        a.rel = 'noopener';
+        if (link.key) a.dataset.key = link.key.toUpperCase();
+        a.innerHTML = `
+            <span class="link-icon">${escapeHtml(link.icon || '🔗')}</span>
+            <span class="link-text">${escapeHtml(link.text)}</span>
+            ${link.key ? `<span class="link-shortcut">${escapeHtml(link.key.toUpperCase())}</span>` : ''}
+        `;
+        a.addEventListener('mouseenter', () => {
+            const icon = a.querySelector('.link-icon');
+            if (!icon) return;
+            const orig = icon.textContent;
+            const glyphs = '⚡◈◉▸▹▻✦✧';
+            let i = 0;
+            const interval = setInterval(() => {
+                icon.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+                if (++i >= 4) { clearInterval(interval); icon.textContent = orig; }
+            }, 60);
+        });
+        linksGrid.appendChild(a);
+    });
+}
+
+renderLinks();
+
+// ─── EDIT LINKS MODAL ──────────────────────────────────────
+const editLinksModal = document.getElementById('editLinksModal');
+const editLinksList  = document.getElementById('editLinksList');
+
+function openEditLinks() {
+    editLinksList.innerHTML = '';
+    const header = document.createElement('div');
+    header.className = 'edit-link-header';
+    header.innerHTML = '<span>ICON</span><span>NAME</span><span>URL</span><span>KEY</span><span></span>';
+    editLinksList.appendChild(header);
+
+    userLinks.forEach((link, idx) => {
+        addEditRow(link, idx);
+    });
+    editLinksModal.classList.remove('hidden');
+}
+
+function addEditRow(link = {}, idx = null) {
+    const row = document.createElement('div');
+    row.className = 'edit-link-row';
+    row.dataset.idx = idx !== null ? idx : Date.now();
+    row.innerHTML = `
+        <input class="edit-link-icon-input" type="text" value="${escapeHtml(link.icon || '🔗')}" placeholder="🔗" maxlength="4">
+        <input type="text" value="${escapeHtml(link.text || '')}" placeholder="Name">
+        <input type="url" value="${escapeHtml(link.url || '')}" placeholder="https://...">
+        <input class="edit-link-key-input" type="text" value="${escapeHtml(link.key || '')}" placeholder="Key" maxlength="1">
+        <button class="edit-link-del" onclick="this.closest('.edit-link-row').remove()">✕</button>
+    `;
+    editLinksList.appendChild(row);
+}
+
+document.getElementById('editLinksAdd').addEventListener('click', () => {
+    addEditRow();
+});
+
+document.getElementById('editLinksClose').addEventListener('click', () => {
+    editLinksModal.classList.add('hidden');
+});
+
+document.getElementById('editLinksSave').addEventListener('click', () => {
+    const rows = editLinksList.querySelectorAll('.edit-link-row');
+    const newLinks = [];
+    rows.forEach(row => {
+        const inputs = row.querySelectorAll('input');
+        const icon = inputs[0].value.trim();
+        const text = inputs[1].value.trim();
+        const url  = inputs[2].value.trim();
+        const key  = inputs[3].value.trim().toUpperCase();
+        if (text && url) newLinks.push({ icon: icon || '🔗', text, url, key });
+    });
+    userLinks = newLinks;
+    localStorage.setItem(SK.LINKS, JSON.stringify(userLinks));
+    renderLinks();
+    editLinksModal.classList.add('hidden');
+    showOutput(`Quick access updated — ${newLinks.length} links saved.`, 'success');
+    addLog('cmd', ':links edit saved');
+});
+
+editLinksModal.addEventListener('click', (e) => {
+    if (e.target === editLinksModal) editLinksModal.classList.add('hidden');
+});
+
+window.openEditLinks = openEditLinks;
+
+// ─── FULLSCREEN ────────────────────────────────────────────
+const fullscreenOverlay = document.getElementById('fullscreenOverlay');
+const fullscreenInner   = document.getElementById('fullscreenInner');
+const fullscreenClose   = document.getElementById('fullscreenClose');
+let fullscreenOrigPanel = null;
+
+const PANEL_MAP = {
+    status: 'panel-status',
+    links:  'panel-links',
+    pomo:   'panel-pomo',
+    timer:  'panel-timer',
+    todo:   'panel-todo',
+    notes:  'panel-notes',
+    log:    'panel-log',
+    habits: 'panel-habits',
+};
+
+window.enterFullscreen = function(panelKey) {
+    const panelId = PANEL_MAP[panelKey];
+    if (!panelId) return;
+    const panel = document.getElementById(panelId);
+    if (!panel) return;
+
+    fullscreenOrigPanel = { panel, parent: panel.parentNode, next: panel.nextSibling };
+    fullscreenInner.appendChild(panel);
+    fullscreenOverlay.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    addLog('cmd', `fullscreen: ${panelKey}`);
+};
+
+function exitFullscreen() {
+    if (!fullscreenOrigPanel) return;
+    const { panel, parent, next } = fullscreenOrigPanel;
+    if (next) {
+        parent.insertBefore(panel, next);
+    } else {
+        parent.appendChild(panel);
+    }
+    fullscreenOverlay.classList.add('hidden');
+    document.body.style.overflow = '';
+    fullscreenOrigPanel = null;
+}
+
+fullscreenClose.addEventListener('click', exitFullscreen);
+fullscreenOverlay.addEventListener('click', (e) => {
+    if (e.target === fullscreenOverlay) exitFullscreen();
+});
+
 // ─── POMODORO ──────────────────────────────────────────────
 let pomoState = {
     running: false,
-    phase: 'work',   // 'work' | 'break'
+    phase: 'work',
     total: 25 * 60,
     remaining: 25 * 60,
     sessions: parseInt(localStorage.getItem(SK.POMO_SESS) || '0'),
@@ -424,7 +583,6 @@ window.pomoControl = function(action) {
             pomoStartBtn.textContent = '▶ RESUME';
             addLog('cmd', ':pomo pause');
         } else {
-            // request notification permission
             if (Notification.permission === 'default') Notification.requestPermission();
             pomoState.running = true;
             pomoState.interval = setInterval(pomoTick, 1000);
@@ -445,6 +603,172 @@ window.pomoControl = function(action) {
 
 updatePomoDisplay();
 
+// ─── TIMER (STOPWATCH + COUNTDOWN) ─────────────────────────
+let timerState = {
+    mode: 'stopwatch',      // 'stopwatch' | 'countdown'
+    running: false,
+    elapsed: 0,             // ms for stopwatch
+    countdownTotal: 0,      // ms
+    countdownRemaining: 0,  // ms
+    interval: null,
+    laps: [],
+    lastLap: 0,
+};
+
+const timerDisplayEl  = document.getElementById('timerDisplay');
+const timerModeLabel  = document.getElementById('timerModeLabel');
+const timerStartBtn   = document.getElementById('timerStartBtn');
+const timerLapBtn     = document.getElementById('timerLapBtn');
+const timerLapsEl     = document.getElementById('timerLaps');
+const tabStopwatch    = document.getElementById('tabStopwatch');
+const tabCountdown    = document.getElementById('tabCountdown');
+const timerInputRow   = document.getElementById('timerInputRow');
+const timerInput      = document.getElementById('timerInput');
+
+function formatMs(ms) {
+    const totalSec = Math.floor(ms / 1000);
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function updateTimerDisplay() {
+    if (timerState.mode === 'stopwatch') {
+        timerDisplayEl.textContent = formatMs(timerState.elapsed);
+        timerDisplayEl.className = `timer-display${timerState.running ? ' running' : ''}`;
+    } else {
+        timerDisplayEl.textContent = formatMs(timerState.countdownRemaining);
+        if (timerState.countdownRemaining <= 0) {
+            timerDisplayEl.className = 'timer-display finished';
+        } else {
+            timerDisplayEl.className = `timer-display${timerState.running ? ' running' : ''}`;
+        }
+    }
+}
+
+function timerTick() {
+    if (timerState.mode === 'stopwatch') {
+        timerState.elapsed += 100;
+        updateTimerDisplay();
+    } else {
+        timerState.countdownRemaining -= 100;
+        if (timerState.countdownRemaining <= 0) {
+            timerState.countdownRemaining = 0;
+            timerState.running = false;
+            clearInterval(timerState.interval);
+            timerStartBtn.textContent = '▶ START';
+            updateTimerDisplay();
+            showOutput('⏰ Timer finished!', 'success', 6000);
+            addLog('result', 'Timer: countdown done');
+            if (Notification.permission === 'granted') {
+                new Notification('Timer', { body: 'Countdown complete!' });
+            }
+            return;
+        }
+        updateTimerDisplay();
+    }
+}
+
+window.timerControl = function(action) {
+    if (action === 'toggle') {
+        if (timerState.running) {
+            clearInterval(timerState.interval);
+            timerState.running = false;
+            timerStartBtn.textContent = '▶ RESUME';
+            addLog('cmd', 'timer pause');
+        } else {
+            if (timerState.mode === 'countdown' && timerState.countdownRemaining <= 0) {
+                showOutput('Set a countdown time first.', 'info');
+                return;
+            }
+            if (Notification.permission === 'default') Notification.requestPermission();
+            timerState.running = true;
+            timerState.interval = setInterval(timerTick, 100);
+            timerStartBtn.textContent = '⏸ PAUSE';
+            addLog('cmd', 'timer start');
+        }
+    } else if (action === 'reset') {
+        clearInterval(timerState.interval);
+        timerState.running = false;
+        timerState.elapsed = 0;
+        timerState.countdownRemaining = timerState.countdownTotal;
+        timerState.laps = [];
+        timerState.lastLap = 0;
+        timerLapsEl.innerHTML = '';
+        timerStartBtn.textContent = '▶ START';
+        updateTimerDisplay();
+        addLog('cmd', 'timer reset');
+    } else if (action === 'lap') {
+        if (timerState.mode !== 'stopwatch' || !timerState.running) return;
+        const lapTime = timerState.elapsed - timerState.lastLap;
+        timerState.laps.push({ total: timerState.elapsed, lap: lapTime });
+        timerState.lastLap = timerState.elapsed;
+        renderLaps();
+    }
+};
+
+function renderLaps() {
+    timerLapsEl.innerHTML = '';
+    [...timerState.laps].reverse().forEach((l, i) => {
+        const idx = timerState.laps.length - i;
+        const div = document.createElement('div');
+        div.className = 'timer-lap-item';
+        div.innerHTML = `<span>LAP ${idx}</span><span>${formatMs(l.lap)}</span>`;
+        timerLapsEl.appendChild(div);
+    });
+}
+
+window.switchTimerMode = function(mode) {
+    if (timerState.running) {
+        clearInterval(timerState.interval);
+        timerState.running = false;
+    }
+    timerState.mode = mode;
+    timerState.elapsed = 0;
+    timerState.laps = [];
+    timerState.lastLap = 0;
+    timerLapsEl.innerHTML = '';
+    timerStartBtn.textContent = '▶ START';
+
+    tabStopwatch.classList.toggle('active', mode === 'stopwatch');
+    tabCountdown.classList.toggle('active', mode === 'countdown');
+    timerInputRow.classList.toggle('hidden', mode !== 'countdown');
+    timerLapBtn.style.display = mode === 'stopwatch' ? 'block' : 'none';
+    timerModeLabel.textContent = mode.toUpperCase();
+
+    if (mode === 'countdown') {
+        timerState.countdownRemaining = 0;
+    }
+    updateTimerDisplay();
+};
+
+window.setCountdown = function() {
+    const val = timerInput.value.trim();
+    let totalSeconds = 0;
+    if (val.includes(':')) {
+        const parts = val.split(':');
+        totalSeconds = parseInt(parts[0] || 0) * 60 + parseInt(parts[1] || 0);
+    } else {
+        totalSeconds = parseInt(val) * 60;
+    }
+    if (!totalSeconds || totalSeconds <= 0) {
+        showOutput('Invalid time. Use MM:SS or MM.', 'error');
+        return;
+    }
+    timerState.countdownTotal = totalSeconds * 1000;
+    timerState.countdownRemaining = totalSeconds * 1000;
+    updateTimerDisplay();
+    timerInput.value = '';
+    showOutput(`Countdown set: ${formatMs(totalSeconds * 1000)}`, 'success', 2000);
+};
+
+timerInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') window.setCountdown();
+});
+
+updateTimerDisplay();
+
 // ─── IP INFO ───────────────────────────────────────────────
 async function fetchMyIP() {
     try {
@@ -461,7 +785,6 @@ async function fetchMyIP() {
 async function fetchPrice(ticker) {
     const t = ticker.toUpperCase();
     try {
-        // Use exchangerate-api for fiat, coingecko-style for crypto
         if (['BTC', 'ETH', 'SOL', 'BNB'].includes(t)) {
             const ids = { BTC: 'bitcoin', ETH: 'ethereum', SOL: 'solana', BNB: 'binancecoin' };
             const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids[t]}&vs_currencies=usd`);
@@ -483,11 +806,110 @@ async function fetchPrice(ticker) {
     }
 }
 
+// ─── HABITS ────────────────────────────────────────────────
+let habits = JSON.parse(localStorage.getItem(SK.HABITS) || '[]');
+
+function saveHabits() { localStorage.setItem(SK.HABITS, JSON.stringify(habits)); }
+
+function todayKey() {
+    const d = new Date();
+    return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+function addHabit(name) {
+    habits.unshift({ id: Date.now(), name, days: {} });
+    saveHabits();
+    renderHabits();
+}
+
+function toggleHabitDay(id, dayKey) {
+    const h = habits.find(h => h.id === id);
+    if (!h) return;
+    h.days[dayKey] = !h.days[dayKey];
+    saveHabits();
+    renderHabits();
+}
+
+function deleteHabit(id) {
+    habits = habits.filter(h => h.id !== id);
+    saveHabits();
+    renderHabits();
+}
+
+function getStreak(habit) {
+    let streak = 0;
+    const d = new Date();
+    for (let i = 0; i < 365; i++) {
+        const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+        if (habit.days[key]) streak++;
+        else if (i > 0) break;
+        d.setDate(d.getDate() - 1);
+    }
+    return streak;
+}
+
+function renderHabits() {
+    const habitsList = document.getElementById('habitsList');
+    if (!habitsList) return;
+    habitsList.innerHTML = '';
+    const today = todayKey();
+
+    // Build last 7 days keys
+    const dayKeys = [];
+    const dayLabels = [];
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        dayKeys.push(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
+        dayLabels.push(['S','M','T','W','T','F','S'][d.getDay()]);
+    }
+
+    habits.forEach(h => {
+        const streak = getStreak(h);
+        const todayDone = !!h.days[today];
+        const div = document.createElement('div');
+        div.className = 'habit-item';
+        div.innerHTML = `
+            <button class="habit-today-btn${todayDone ? ' done' : ''}" onclick="toggleHabitDay(${h.id}, '${today}')">
+                ${todayDone ? '✓ DONE' : '+ TODAY'}
+            </button>
+            <span class="habit-name">${escapeHtml(h.name)}</span>
+            ${streak > 0 ? `<span class="habit-streak">🔥${streak}</span>` : ''}
+            <div class="habit-days">
+                ${dayKeys.map((k,i) => `
+                    <div class="habit-day${h.days[k] ? ' done' : ''}" 
+                         onclick="toggleHabitDay(${h.id}, '${k}')" 
+                         title="${k}">${dayLabels[i]}</div>
+                `).join('')}
+            </div>
+            <button class="habit-del" onclick="deleteHabit(${h.id})">✕</button>
+        `;
+        habitsList.appendChild(div);
+    });
+}
+
+window.toggleHabitDay = toggleHabitDay;
+window.deleteHabit = deleteHabit;
+
+document.getElementById('habitAdd').addEventListener('click', () => {
+    const text = document.getElementById('habitInput').value.trim();
+    if (text) { addHabit(text); document.getElementById('habitInput').value = ''; }
+});
+
+document.getElementById('habitInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        const text = document.getElementById('habitInput').value.trim();
+        if (text) { addHabit(text); document.getElementById('habitInput').value = ''; }
+    }
+});
+
+renderHabits();
+
 // ─── COMMAND PROCESSOR ─────────────────────────────────────
 const AUTOCOMPLETE_LIST = [
     ':calc', ':clear', ':todo', ':time', ':help', ':ping',
     ':theme', ':engine', ':bg', ':pomo', ':myip', ':price',
-    ':weather', ':log',
+    ':weather', ':log', ':timer', ':links',
 ];
 
 const COMMANDS = {
@@ -534,7 +956,7 @@ const COMMANDS = {
     },
 
     ':help': () => {
-        showOutput(':calc  :todo  :clear  :time  :ping  :pomo  :theme  :engine  :bg  :price  :myip  :weather  :log  — or type to search', 'info', 10000);
+        showOutput(':calc  :todo  :clear  :time  :ping  :pomo  :timer  :theme  :engine  :bg  :price  :myip  :weather  :log  :links — or type to search', 'info', 10000);
         addLog('cmd', ':help');
     },
 
@@ -587,6 +1009,40 @@ const COMMANDS = {
         } else {
             showOutput('Usage: :pomo start/stop/reset/status', 'info');
         }
+    },
+
+    ':timer': (args) => {
+        const sub = args.trim().toLowerCase();
+        if (!sub || sub === 'start') {
+            timerControl('toggle');
+        } else if (sub === 'reset') {
+            timerControl('reset');
+        } else if (sub === 'lap') {
+            timerControl('lap');
+        } else if (sub === 'stopwatch') {
+            switchTimerMode('stopwatch');
+        } else {
+            // treat as countdown time
+            switchTimerMode('countdown');
+            timerInput.value = sub;
+            setCountdown();
+        }
+        addLog('cmd', `:timer ${args}`);
+    },
+
+    ':links': (args) => {
+        const sub = args.trim().toLowerCase();
+        if (sub === 'edit') {
+            openEditLinks();
+        } else if (sub === 'reset') {
+            userLinks = [...DEFAULT_LINKS];
+            localStorage.removeItem(SK.LINKS);
+            renderLinks();
+            showOutput('Quick access reset to defaults.', 'success');
+        } else {
+            showOutput('Usage: :links edit | :links reset', 'info');
+        }
+        addLog('cmd', `:links ${args}`);
     },
 
     ':myip': () => {
@@ -714,7 +1170,8 @@ const CMD_CATALOG = [
     { cmd: ':calc',    desc: 'Calculator',            usage: ':calc 2+2' },
     { cmd: ':todo',    desc: 'Task manager',          usage: ':todo add <task>' },
     { cmd: ':pomo',    desc: 'Pomodoro timer',        usage: ':pomo start/stop/reset' },
-    { cmd: ':theme',   desc: 'Switch theme',          usage: 'dark/light/solarized/dracula' },
+    { cmd: ':timer',   desc: 'Stopwatch/Countdown',   usage: ':timer 5:00 | :timer lap' },
+    { cmd: ':theme',   desc: 'Switch theme',          usage: 'dark/light/solarized/dracula/minimal/cyber/nord/mocha' },
     { cmd: ':engine',  desc: 'Search engine',         usage: 'google/duckduckgo/bing' },
     { cmd: ':bg',      desc: 'Background mode',       usage: 'matrix/stars/clean/grid' },
     { cmd: ':price',   desc: 'Crypto/currency price', usage: ':price BTC' },
@@ -722,6 +1179,7 @@ const CMD_CATALOG = [
     { cmd: ':myip',    desc: 'Network info',          usage: ':myip' },
     { cmd: ':log',     desc: 'Command log',           usage: ':log clear' },
     { cmd: ':clip',    desc: 'Clipboard history',     usage: ':clip <n>' },
+    { cmd: ':links',   desc: 'Edit quick access',     usage: ':links edit | :links reset' },
     { cmd: ':clear',   desc: 'Wipe notes',            usage: ':clear' },
     { cmd: ':time',    desc: 'Show current time',     usage: ':time' },
     { cmd: ':help',    desc: 'Show all commands',     usage: ':help' },
@@ -766,7 +1224,6 @@ function updateDropdownActive() {
 
 commandInput.addEventListener('blur', () => setTimeout(hideDropdown, 150));
 
-// Live hint + dropdown
 commandInput.addEventListener('input', () => {
     const val = commandInput.value;
     const hint = document.getElementById('cmdHint');
@@ -782,11 +1239,13 @@ commandInput.addEventListener('input', () => {
         const trimmed = val.trim();
         if (trimmed.startsWith(':calc '))        hint.textContent = 'e.g. 2+2*3';
         else if (trimmed.startsWith(':todo '))   hint.textContent = 'add <task> | clear';
-        else if (trimmed.startsWith(':theme '))  hint.textContent = 'dark / light / solarized / dracula';
+        else if (trimmed.startsWith(':theme '))  hint.textContent = 'dark / light / solarized / dracula / minimal / cyber / nord / mocha';
         else if (trimmed.startsWith(':engine ')) hint.textContent = 'google / duckduckgo / bing';
         else if (trimmed.startsWith(':bg '))     hint.textContent = 'matrix / stars / clean / grid';
         else if (trimmed.startsWith(':pomo'))    hint.textContent = 'start / stop / reset / status';
+        else if (trimmed.startsWith(':timer '))  hint.textContent = 'MM:SS (countdown) | lap | reset | stopwatch';
         else if (trimmed.startsWith(':price '))  hint.textContent = 'BTC / ETH / AED / EUR...';
+        else if (trimmed.startsWith(':links '))  hint.textContent = 'edit | reset';
         else hint.textContent = '';
     } else {
         hideDropdown();
@@ -796,7 +1255,6 @@ commandInput.addEventListener('input', () => {
 
 // ─── GLOBAL KEYBOARD ───────────────────────────────────────
 document.addEventListener('keydown', (e) => {
-    // Skip if typing in an input
     const tag = e.target.tagName;
     const isInput = tag === 'INPUT' || tag === 'TEXTAREA';
 
@@ -806,14 +1264,28 @@ document.addEventListener('keydown', (e) => {
         return;
     }
 
-    // ? → shortcut modal
     if (e.key === '?' && !isInput) {
         e.preventDefault();
         toggleModal();
         return;
     }
 
-    // Alt+letter shortcuts
+    // Escape closes fullscreen too
+    if (e.key === 'Escape') {
+        if (!fullscreenOverlay.classList.contains('hidden')) {
+            exitFullscreen();
+            return;
+        }
+        if (!shortcutModal.classList.contains('hidden')) {
+            shortcutModal.classList.add('hidden');
+            return;
+        }
+        if (!editLinksModal.classList.contains('hidden')) {
+            editLinksModal.classList.add('hidden');
+            return;
+        }
+    }
+
     if (e.altKey && !e.ctrlKey) {
         const key = e.key.toUpperCase();
         if (key === 'N') { e.preventDefault(); notesArea.focus(); return; }
@@ -838,12 +1310,6 @@ document.getElementById('modalClose').addEventListener('click', () => {
 
 shortcutModal.addEventListener('click', (e) => {
     if (e.target === shortcutModal) shortcutModal.classList.add('hidden');
-});
-
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !shortcutModal.classList.contains('hidden')) {
-        shortcutModal.classList.add('hidden');
-    }
 });
 
 // ─── NOTES ─────────────────────────────────────────────────
@@ -899,8 +1365,12 @@ function renderTodos() {
 }
 
 function escapeHtml(str) {
+    if (typeof str !== 'string') return String(str);
     return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+window.toggleTodo = toggleTodo;
+window.deleteTodo = deleteTodo;
 
 todoInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
@@ -915,21 +1385,6 @@ document.getElementById('todoAdd').addEventListener('click', () => {
 });
 
 renderTodos();
-
-// ─── LINK HOVER GLITCH ─────────────────────────────────────
-document.querySelectorAll('.link-item').forEach(link => {
-    link.addEventListener('mouseenter', () => {
-        const icon = link.querySelector('.link-icon');
-        if (!icon) return;
-        const orig = icon.textContent;
-        const glyphs = '⚡◈◉▸▹▻✦✧';
-        let i = 0;
-        const interval = setInterval(() => {
-            icon.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
-            if (++i >= 4) { clearInterval(interval); icon.textContent = orig; }
-        }, 60);
-    });
-});
 
 // ─── INIT LOG ──────────────────────────────────────────────
 addLog('result', 'Command Center initialized');
