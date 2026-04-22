@@ -97,6 +97,7 @@
             </div>
             <input type="text" id="commandInput" placeholder="search, :calc 2+2, :pomo start, :theme dark, :weather, :help..." autocomplete="off" spellcheck="false">
             <div class="cmd-hint" id="cmdHint"></div>
+            <div class="cmd-dropdown hidden" id="cmdDropdown"></div>
         </div>
 
         <div id="outputBar" class="output-bar hidden"></div>
@@ -185,8 +186,10 @@
                             <circle class="pomo-ring-progress" id="pomoRing" cx="50" cy="50" r="42"
                                 stroke-dasharray="263.9" stroke-dashoffset="0"/>
                         </svg>
-                        <div class="pomo-time" id="pomoTime">25:00</div>
-                        <div class="pomo-phase" id="pomoPhase">WORK</div>
+                        <div class="pomo-center-text">
+                            <div class="pomo-time" id="pomoTime">25:00</div>
+                            <div class="pomo-phase" id="pomoPhase">WORK</div>
+                        </div>
                     </div>
                     <div class="pomo-controls">
                         <button class="pomo-btn" id="pomoStartBtn" onclick="pomoControl('toggle')">▶ START</button>

@@ -47,7 +47,9 @@ function updateTime() {
     const h = now.getHours();
     const m = String(now.getMinutes()).padStart(2, '0');
     const s = String(now.getSeconds()).padStart(2, '0');
-    clockEl.textContent = `${String(h).padStart(2, '0')}:${m}:${s}`;
+    const h12 = h % 12 || 12;
+    const ampm = h < 12 ? 'AM' : 'PM';
+    clockEl.textContent = `${String(h12).padStart(2, '0')}:${m}:${s} ${ampm}`;
 
     let greeting;
     if (h >= 4 && h < 12)       greeting = '> GOOD MORNING, AHMED';
@@ -636,9 +638,14 @@ const COMMANDS = {
 
 // ─── COMMAND INPUT EVENTS ──────────────────────────────────
 commandInput.addEventListener('keydown', (e) => {
+    const ddVisible = !cmdDropdown.classList.contains('hidden');
+
     if (e.key === 'ArrowUp') {
         e.preventDefault();
-        if (histIdx < cmdHistory.length - 1) {
+        if (ddVisible && dropdownItems.length) {
+            dropdownIdx = dropdownIdx <= 0 ? dropdownItems.length - 1 : dropdownIdx - 1;
+            updateDropdownActive();
+        } else if (histIdx < cmdHistory.length - 1) {
             histIdx++;
             commandInput.value = cmdHistory[histIdx];
         }
@@ -646,7 +653,10 @@ commandInput.addEventListener('keydown', (e) => {
     }
     if (e.key === 'ArrowDown') {
         e.preventDefault();
-        if (histIdx > 0) {
+        if (ddVisible && dropdownItems.length) {
+            dropdownIdx = dropdownIdx >= dropdownItems.length - 1 ? 0 : dropdownIdx + 1;
+            updateDropdownActive();
+        } else if (histIdx > 0) {
             histIdx--;
             commandInput.value = cmdHistory[histIdx];
         } else {
@@ -655,11 +665,16 @@ commandInput.addEventListener('keydown', (e) => {
         }
         return;
     }
-    if (e.key === 'Tab') {
+    if (e.key === 'Tab' || (e.key === 'Enter' && ddVisible && dropdownIdx >= 0)) {
         e.preventDefault();
-        const val = commandInput.value;
-        const match = AUTOCOMPLETE_LIST.find(c => c.startsWith(val) && c !== val);
-        if (match) commandInput.value = match + ' ';
+        if (ddVisible && dropdownIdx >= 0) {
+            commandInput.value = dropdownItems[dropdownIdx].cmd + ' ';
+            hideDropdown();
+        } else if (e.key === 'Tab') {
+            const val = commandInput.value;
+            const match = AUTOCOMPLETE_LIST.find(c => c.startsWith(val) && c !== val);
+            if (match) commandInput.value = match + ' ';
+        }
         return;
     }
 
@@ -684,30 +699,99 @@ commandInput.addEventListener('keydown', (e) => {
     }
 
     if (e.key === 'Escape') {
-        commandInput.value = '';
-        commandInput.blur();
-        hideOutput();
+        if (!cmdDropdown.classList.contains('hidden')) {
+            hideDropdown();
+        } else {
+            commandInput.value = '';
+            commandInput.blur();
+            hideOutput();
+        }
     }
 });
 
-// Live hint
+// ─── COMMAND DROPDOWN ──────────────────────────────────────
+const CMD_CATALOG = [
+    { cmd: ':calc',    desc: 'Calculator',            usage: ':calc 2+2' },
+    { cmd: ':todo',    desc: 'Task manager',          usage: ':todo add <task>' },
+    { cmd: ':pomo',    desc: 'Pomodoro timer',        usage: ':pomo start/stop/reset' },
+    { cmd: ':theme',   desc: 'Switch theme',          usage: 'dark/light/solarized/dracula' },
+    { cmd: ':engine',  desc: 'Search engine',         usage: 'google/duckduckgo/bing' },
+    { cmd: ':bg',      desc: 'Background mode',       usage: 'matrix/stars/clean/grid' },
+    { cmd: ':price',   desc: 'Crypto/currency price', usage: ':price BTC' },
+    { cmd: ':weather', desc: 'Refresh weather',       usage: ':weather' },
+    { cmd: ':myip',    desc: 'Network info',          usage: ':myip' },
+    { cmd: ':log',     desc: 'Command log',           usage: ':log clear' },
+    { cmd: ':clip',    desc: 'Clipboard history',     usage: ':clip <n>' },
+    { cmd: ':clear',   desc: 'Wipe notes',            usage: ':clear' },
+    { cmd: ':time',    desc: 'Show current time',     usage: ':time' },
+    { cmd: ':help',    desc: 'Show all commands',     usage: ':help' },
+    { cmd: ':ping',    desc: 'Connection check',      usage: ':ping' },
+];
+
+const cmdDropdown = document.getElementById('cmdDropdown');
+let dropdownIdx = -1;
+let dropdownItems = [];
+
+function showDropdown(matches) {
+    dropdownItems = matches;
+    dropdownIdx = -1;
+    cmdDropdown.innerHTML = '';
+    if (!matches.length) { cmdDropdown.classList.add('hidden'); return; }
+    matches.forEach((item) => {
+        const div = document.createElement('div');
+        div.className = 'cmd-dropdown-item';
+        div.innerHTML = `<span class="cmd-dropdown-cmd">${item.cmd}</span><span class="cmd-dropdown-desc">${item.desc}</span><span class="cmd-dropdown-shortcut">${item.usage}</span>`;
+        div.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            commandInput.value = item.cmd + ' ';
+            hideDropdown();
+            commandInput.focus();
+        });
+        cmdDropdown.appendChild(div);
+    });
+    cmdDropdown.classList.remove('hidden');
+}
+
+function hideDropdown() {
+    cmdDropdown.classList.add('hidden');
+    dropdownIdx = -1;
+    dropdownItems = [];
+}
+
+function updateDropdownActive() {
+    [...cmdDropdown.querySelectorAll('.cmd-dropdown-item')].forEach((el, i) => {
+        el.classList.toggle('active', i === dropdownIdx);
+    });
+}
+
+commandInput.addEventListener('blur', () => setTimeout(hideDropdown, 150));
+
+// Live hint + dropdown
 commandInput.addEventListener('input', () => {
-    const val = commandInput.value.trim();
+    const val = commandInput.value;
     const hint = document.getElementById('cmdHint');
-    if (val.startsWith(':calc '))       hint.textContent = 'calculator';
-    else if (val.startsWith(':todo '))  hint.textContent = 'task manager';
-    else if (val === ':clear')          hint.textContent = 'clear notes';
-    else if (val === ':help')           hint.textContent = 'show help';
-    else if (val === ':time')           hint.textContent = 'current time';
-    else if (val.startsWith(':theme ')) hint.textContent = 'dark / light / solarized / dracula';
-    else if (val.startsWith(':engine '))hint.textContent = 'google / duckduckgo / bing';
-    else if (val.startsWith(':bg '))    hint.textContent = 'matrix / stars / clean / grid';
-    else if (val.startsWith(':pomo'))   hint.textContent = 'start / stop / reset / status';
-    else if (val.startsWith(':price ')) hint.textContent = 'BTC / ETH / AED / EUR...';
-    else if (val === ':myip')           hint.textContent = 'network info';
-    else if (val === ':weather')        hint.textContent = 'refresh weather';
-    else if (val.length > 0 && !val.startsWith(':')) hint.textContent = `↵ search ${currentEngine}`;
-    else hint.textContent = '';
+
+    if (val.startsWith(':')) {
+        const hasArgs = val.includes(' ');
+        const matches = CMD_CATALOG.filter(c => c.cmd.startsWith(val.split(' ')[0]));
+        if (!hasArgs && matches.length) {
+            showDropdown(matches);
+        } else {
+            hideDropdown();
+        }
+        const trimmed = val.trim();
+        if (trimmed.startsWith(':calc '))        hint.textContent = 'e.g. 2+2*3';
+        else if (trimmed.startsWith(':todo '))   hint.textContent = 'add <task> | clear';
+        else if (trimmed.startsWith(':theme '))  hint.textContent = 'dark / light / solarized / dracula';
+        else if (trimmed.startsWith(':engine ')) hint.textContent = 'google / duckduckgo / bing';
+        else if (trimmed.startsWith(':bg '))     hint.textContent = 'matrix / stars / clean / grid';
+        else if (trimmed.startsWith(':pomo'))    hint.textContent = 'start / stop / reset / status';
+        else if (trimmed.startsWith(':price '))  hint.textContent = 'BTC / ETH / AED / EUR...';
+        else hint.textContent = '';
+    } else {
+        hideDropdown();
+        hint.textContent = val.length > 0 ? `↵ search ${currentEngine}` : '';
+    }
 });
 
 // ─── GLOBAL KEYBOARD ───────────────────────────────────────

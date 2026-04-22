@@ -355,6 +355,64 @@ body.bg-grid::before {
     flex-shrink: 0;
 }
 
+/* ─── COMMAND DROPDOWN ─── */
+.cmd-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-top: 2px solid var(--text-accent);
+    border-radius: 0 0 4px 4px;
+    z-index: 1000;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    animation: slideDown 0.12s ease;
+}
+
+.cmd-dropdown.hidden { display: none; }
+
+.cmd-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 14px;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    cursor: pointer;
+    border-bottom: 1px solid var(--bg-tertiary);
+    transition: background 0.1s;
+}
+
+.cmd-dropdown-item:last-child { border-bottom: none; }
+
+.cmd-dropdown-item:hover,
+.cmd-dropdown-item.active {
+    background: var(--bg-tertiary);
+    border-left: 2px solid var(--text-accent);
+    padding-left: 12px;
+}
+
+.cmd-dropdown-cmd {
+    color: var(--text-accent);
+    font-weight: 700;
+    min-width: 140px;
+    letter-spacing: 0.5px;
+}
+
+.cmd-dropdown-desc {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+}
+
+.cmd-dropdown-shortcut {
+    margin-left: auto;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    opacity: 0.6;
+}
+
 /* ─── OUTPUT BAR ─── */
 .output-bar {
     background: var(--bg-tertiary);
@@ -546,10 +604,9 @@ body.bg-grid::before {
 
 .pomo-ring-wrapper {
     position: relative;
-    width: 120px; height: 120px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 160px; height: 160px;
+    display: grid;
+    place-items: center;
 }
 
 .pomo-ring {
@@ -557,6 +614,17 @@ body.bg-grid::before {
     top: 0; left: 0;
     width: 100%; height: 100%;
     transform: rotate(-90deg);
+    overflow: visible;
+}
+
+.pomo-center-text {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
 }
 
 .pomo-ring-bg {
@@ -581,20 +649,24 @@ body.bg-grid::before {
 
 .pomo-time {
     font-family: var(--font-display);
-    font-size: 1.4rem;
+    font-size: 1.6rem;
     font-weight: 900;
     color: var(--text-primary);
-    z-index: 1;
+    z-index: 2;
     letter-spacing: 2px;
     line-height: 1;
+    text-align: center;
+    position: relative;
 }
 
 .pomo-phase {
     font-size: 0.55rem;
     color: var(--text-secondary);
     letter-spacing: 3px;
-    z-index: 1;
-    margin-top: 2px;
+    z-index: 2;
+    position: relative;
+    margin-top: 4px;
+    text-align: center;
 }
 
 .pomo-controls {
