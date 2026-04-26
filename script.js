@@ -734,6 +734,7 @@ window.switchTimerMode = function(mode) {
     tabStopwatch.classList.toggle('active', mode === 'stopwatch');
     tabCountdown.classList.toggle('active', mode === 'countdown');
     timerInputRow.classList.toggle('hidden', mode !== 'countdown');
+    document.getElementById('timerPresets').classList.toggle('hidden', mode !== 'countdown');
     timerLapBtn.style.display = mode === 'stopwatch' ? 'block' : 'none';
     timerModeLabel.textContent = mode.toUpperCase();
 
@@ -766,7 +767,34 @@ window.setCountdown = function() {
     timerState.countdownRemaining = totalSeconds * 1000;
     updateTimerDisplay();
     timerInput.value = '';
-    showOutput(`Countdown set: ${formatMs(totalSeconds * 1000)}`, 'success', 2000);
+    // Auto-start
+    if (timerState.running) {
+        clearInterval(timerState.interval);
+        timerState.running = false;
+    }
+    if (Notification.permission === 'default') Notification.requestPermission();
+    timerState.running = true;
+    timerState.interval = setInterval(timerTick, 100);
+    timerStartBtn.textContent = '⏸ PAUSE';
+    showOutput(`▶ Countdown started: ${formatMs(totalSeconds * 1000)}`, 'success', 2000);
+    addLog('cmd', `timer set+start: ${formatMs(totalSeconds * 1000)}`);
+};
+
+window.setCountdownPreset = function(minutes) {
+    const totalSeconds = minutes * 60;
+    timerState.countdownTotal = totalSeconds * 1000;
+    timerState.countdownRemaining = totalSeconds * 1000;
+    updateTimerDisplay();
+    if (timerState.running) {
+        clearInterval(timerState.interval);
+        timerState.running = false;
+    }
+    if (Notification.permission === 'default') Notification.requestPermission();
+    timerState.running = true;
+    timerState.interval = setInterval(timerTick, 100);
+    timerStartBtn.textContent = '⏸ PAUSE';
+    showOutput(`▶ ${minutes}m countdown started`, 'success', 2000);
+    addLog('cmd', `timer preset: ${minutes}m`);
 };
 
 timerInput.addEventListener('keydown', (e) => {

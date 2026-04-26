@@ -1692,3 +1692,29 @@ kbd {
     .noise { animation: none; }
     .header::after { animation: none; }
 }
+
+/* ─── TIMER PRESETS ─────────────────────────────────────── */
+.timer-presets {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 6px;
+}
+.timer-preset-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-accent);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    letter-spacing: 0.05em;
+}
+.timer-preset-btn:hover {
+    background: var(--text-accent);
+    color: var(--bg-primary);
+    border-color: var(--text-accent);
+}

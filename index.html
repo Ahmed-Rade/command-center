@@ -229,6 +229,14 @@
                         <input type="text" id="timerInput" placeholder="HH:MM:SS or MM:SS" maxlength="8">
                         <button class="pomo-btn" onclick="setCountdown()">SET</button>
                     </div>
+                    <div class="timer-presets hidden" id="timerPresets">
+                        <button class="timer-preset-btn" onclick="setCountdownPreset(5)">5m</button>
+                        <button class="timer-preset-btn" onclick="setCountdownPreset(10)">10m</button>
+                        <button class="timer-preset-btn" onclick="setCountdownPreset(15)">15m</button>
+                        <button class="timer-preset-btn" onclick="setCountdownPreset(25)">25m</button>
+                        <button class="timer-preset-btn" onclick="setCountdownPreset(30)">30m</button>
+                        <button class="timer-preset-btn" onclick="setCountdownPreset(60)">60m</button>
+                    </div>
                     <div class="pomo-controls">
                         <button class="pomo-btn" id="timerStartBtn" onclick="timerControl('toggle')">▶ START</button>
                         <button class="pomo-btn pomo-btn-secondary" onclick="timerControl('reset')">↺ RESET</button>
