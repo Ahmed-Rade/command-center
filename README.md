@@ -1,4 +1,4 @@
-# ⚡ Command Center — Ahmed
+# ⚡ Command Center
 
 A personal hacker-style browser dashboard. Minimal. Fast. No dependencies.
 
