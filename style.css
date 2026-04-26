@@ -1747,3 +1747,21 @@ kbd {
 #timerTargetInput:focus {
     border-color: var(--text-accent);
 }
+
+/* ─── FOOTER CLEAR ALL BTN ──────────────────────────────── */
+.footer-clear-btn {
+    background: transparent;
+    border: 1px solid var(--text-red, #ff5555);
+    color: var(--text-red, #ff5555);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: background 0.15s, color 0.15s;
+}
+.footer-clear-btn:hover {
+    background: var(--text-red, #ff5555);
+    color: var(--bg-primary);
+}

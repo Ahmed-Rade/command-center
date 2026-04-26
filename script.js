@@ -1,13 +1,16 @@
 // ─── STORAGE KEYS ───────────────────────────────────────────
 const SK = {
-    NOTES:     'cc_notes',
-    TODOS:     'cc_todos',
-    ENGINE:    'cc_engine',
-    THEME:     'cc_theme',
-    BG:        'cc_bg',
-    POMO_SESS: 'cc_pomo_sessions',
-    LINKS:     'cc_links',
-    HABITS:    'cc_habits',
+    NOTES:       'cc_notes',
+    TODOS:       'cc_todos',
+    ENGINE:      'cc_engine',
+    THEME:       'cc_theme',
+    BG:          'cc_bg',
+    POMO_SESS:   'cc_pomo_sessions',
+    POMO_STATE:  'cc_pomo_state',
+    TIMER_STATE: 'cc_timer_state',
+    LINKS:       'cc_links',
+    HABITS:      'cc_habits',
+    LOG:         'cc_log',
 };
 
 // ─── ELEMENTS ───────────────────────────────────────────────
@@ -299,13 +302,14 @@ function pushHistory(cmd) {
 }
 
 // ─── LOG ───────────────────────────────────────────────────
-let logStore = [];
+let logStore = JSON.parse(localStorage.getItem(SK.LOG) || '[]');
 
 function addLog(type, msg) {
     const now = new Date();
     const ts = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
     logStore.unshift({ type, msg, ts });
     if (logStore.length > 100) logStore.pop();
+    localStorage.setItem(SK.LOG, JSON.stringify(logStore));
     renderLog();
 }
 
@@ -321,6 +325,7 @@ function renderLog() {
 
 function clearLog() {
     logStore = [];
+    localStorage.setItem(SK.LOG, '[]');
     renderLog();
     showOutput('Log cleared.', 'info');
 }
@@ -513,14 +518,23 @@ fullscreenOverlay.addEventListener('click', (e) => {
 });
 
 // ─── POMODORO ──────────────────────────────────────────────
+const _savedPomo = JSON.parse(localStorage.getItem(SK.POMO_STATE) || 'null');
 let pomoState = {
     running: false,
-    phase: 'work',
-    total: 25 * 60,
-    remaining: 25 * 60,
-    sessions: parseInt(localStorage.getItem(SK.POMO_SESS) || '0'),
+    phase:     _savedPomo?.phase     || 'work',
+    total:     _savedPomo?.total     || 25 * 60,
+    remaining: _savedPomo?.remaining || 25 * 60,
+    sessions:  parseInt(localStorage.getItem(SK.POMO_SESS) || '0'),
     interval: null,
 };
+
+function savePomoState() {
+    localStorage.setItem(SK.POMO_STATE, JSON.stringify({
+        phase:     pomoState.phase,
+        total:     pomoState.total,
+        remaining: pomoState.remaining,
+    }));
+}
 
 function updatePomoRing() {
     const pct = pomoState.remaining / pomoState.total;
@@ -572,6 +586,7 @@ function pomoTick() {
         return;
     }
     pomoState.remaining--;
+    savePomoState();
     updatePomoDisplay();
 }
 
@@ -596,6 +611,7 @@ window.pomoControl = function(action) {
         pomoState.total = 25 * 60;
         pomoState.remaining = 25 * 60;
         pomoStartBtn.textContent = '▶ START';
+        savePomoState();
         updatePomoDisplay();
         addLog('cmd', ':pomo reset');
     }
@@ -604,16 +620,28 @@ window.pomoControl = function(action) {
 updatePomoDisplay();
 
 // ─── TIMER (STOPWATCH + COUNTDOWN) ─────────────────────────
+const _savedTimer = JSON.parse(localStorage.getItem(SK.TIMER_STATE) || 'null');
 let timerState = {
-    mode: 'stopwatch',      // 'stopwatch' | 'countdown'
+    mode:               _savedTimer?.mode               || 'stopwatch',
     running: false,
-    elapsed: 0,             // ms for stopwatch
-    countdownTotal: 0,      // ms
-    countdownRemaining: 0,  // ms
+    elapsed:            _savedTimer?.elapsed            || 0,
+    countdownTotal:     _savedTimer?.countdownTotal     || 0,
+    countdownRemaining: _savedTimer?.countdownRemaining || 0,
     interval: null,
-    laps: [],
-    lastLap: 0,
+    laps:               _savedTimer?.laps               || [],
+    lastLap:            _savedTimer?.lastLap            || 0,
 };
+
+function saveTimerState() {
+    localStorage.setItem(SK.TIMER_STATE, JSON.stringify({
+        mode:               timerState.mode,
+        elapsed:            timerState.elapsed,
+        countdownTotal:     timerState.countdownTotal,
+        countdownRemaining: timerState.countdownRemaining,
+        laps:               timerState.laps,
+        lastLap:            timerState.lastLap,
+    }));
+}
 
 const timerDisplayEl  = document.getElementById('timerDisplay');
 const timerModeLabel  = document.getElementById('timerModeLabel');
@@ -650,6 +678,7 @@ function updateTimerDisplay() {
 function timerTick() {
     if (timerState.mode === 'stopwatch') {
         timerState.elapsed += 100;
+        saveTimerState();
         updateTimerDisplay();
     } else {
         timerState.countdownRemaining -= 100;
@@ -658,6 +687,7 @@ function timerTick() {
             timerState.running = false;
             clearInterval(timerState.interval);
             timerStartBtn.textContent = '▶ START';
+            saveTimerState();
             updateTimerDisplay();
             showOutput('⏰ Timer finished!', 'success', 6000);
             addLog('result', 'Timer: countdown done');
@@ -667,6 +697,7 @@ function timerTick() {
             return;
         }
         updateTimerDisplay();
+        saveTimerState();
     }
 }
 
@@ -697,6 +728,7 @@ window.timerControl = function(action) {
         timerState.lastLap = 0;
         timerLapsEl.innerHTML = '';
         timerStartBtn.textContent = '▶ START';
+        saveTimerState();
         updateTimerDisplay();
         addLog('cmd', 'timer reset');
     } else if (action === 'lap') {
@@ -704,6 +736,7 @@ window.timerControl = function(action) {
         const lapTime = timerState.elapsed - timerState.lastLap;
         timerState.laps.push({ total: timerState.elapsed, lap: lapTime });
         timerState.lastLap = timerState.elapsed;
+        saveTimerState();
         renderLaps();
     }
 };
@@ -836,6 +869,17 @@ timerInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') window.setCountdown();
 });
 
+// Restore timer UI to saved mode on load
+if (_savedTimer?.mode === 'countdown') {
+    tabStopwatch.classList.remove('active');
+    tabCountdown.classList.add('active');
+    timerInputRow.classList.remove('hidden');
+    document.getElementById('timerPresets').classList.remove('hidden');
+    document.getElementById('timerTargetRow').classList.remove('hidden');
+    timerLapBtn.style.display = 'none';
+    timerModeLabel.textContent = 'COUNTDOWN';
+}
+if (_savedTimer?.laps?.length) renderLaps();
 updateTimerDisplay();
 
 // ─── IP INFO ───────────────────────────────────────────────
@@ -1454,6 +1498,14 @@ document.getElementById('todoAdd').addEventListener('click', () => {
 });
 
 renderTodos();
+
+// ─── CLEAR ALL DATA ────────────────────────────────────────
+window.clearAllData = function() {
+    if (!confirm('Clear ALL data? This cannot be undone.')) return;
+    Object.values(SK).forEach(k => localStorage.removeItem(k));
+    sessionStorage.clear();
+    location.reload();
+};
 
 // ─── INIT LOG ──────────────────────────────────────────────
 addLog('result', 'Command Center initialized');
