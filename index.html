@@ -237,6 +237,11 @@
                         <button class="timer-preset-btn" onclick="setCountdownPreset(30)">30m</button>
                         <button class="timer-preset-btn" onclick="setCountdownPreset(60)">60m</button>
                     </div>
+                    <div class="timer-target-row hidden" id="timerTargetRow">
+                        <span class="timer-target-label">UNTIL</span>
+                        <input type="time" id="timerTargetInput">
+                        <button class="pomo-btn" onclick="setCountdownToTime()">GO</button>
+                    </div>
                     <div class="pomo-controls">
                         <button class="pomo-btn" id="timerStartBtn" onclick="timerControl('toggle')">▶ START</button>
                         <button class="pomo-btn pomo-btn-secondary" onclick="timerControl('reset')">↺ RESET</button>

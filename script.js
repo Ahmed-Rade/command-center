@@ -735,6 +735,7 @@ window.switchTimerMode = function(mode) {
     tabCountdown.classList.toggle('active', mode === 'countdown');
     timerInputRow.classList.toggle('hidden', mode !== 'countdown');
     document.getElementById('timerPresets').classList.toggle('hidden', mode !== 'countdown');
+    document.getElementById('timerTargetRow').classList.toggle('hidden', mode !== 'countdown');
     timerLapBtn.style.display = mode === 'stopwatch' ? 'block' : 'none';
     timerModeLabel.textContent = mode.toUpperCase();
 
@@ -778,6 +779,40 @@ window.setCountdown = function() {
     timerStartBtn.textContent = '⏸ PAUSE';
     showOutput(`▶ Countdown started: ${formatMs(totalSeconds * 1000)}`, 'success', 2000);
     addLog('cmd', `timer set+start: ${formatMs(totalSeconds * 1000)}`);
+};
+
+window.setCountdownToTime = function() {
+    const val = document.getElementById('timerTargetInput').value;
+    if (!val) { showOutput('Pick a target time first.', 'error'); return; }
+
+    const now = new Date();
+    const [hStr, mStr] = val.split(':');
+    const target = new Date(now);
+    target.setHours(parseInt(hStr), parseInt(mStr), 0, 0);
+
+    // If target already passed today, aim for tomorrow
+    if (target <= now) target.setDate(target.getDate() + 1);
+
+    const diffMs = target - now;
+    const totalSeconds = Math.floor(diffMs / 1000);
+
+    timerState.countdownTotal = totalSeconds * 1000;
+    timerState.countdownRemaining = totalSeconds * 1000;
+    updateTimerDisplay();
+
+    if (timerState.running) {
+        clearInterval(timerState.interval);
+        timerState.running = false;
+    }
+    if (Notification.permission === 'default') Notification.requestPermission();
+    timerState.running = true;
+    timerState.interval = setInterval(timerTick, 100);
+    timerStartBtn.textContent = '⏸ PAUSE';
+
+    const h = String(parseInt(hStr) % 12 || 12).padStart(2, '0');
+    const ampm = parseInt(hStr) < 12 ? 'AM' : 'PM';
+    showOutput(`▶ Countdown to ${h}:${mStr} ${ampm} (${formatMs(totalSeconds * 1000)})`, 'success', 3000);
+    addLog('cmd', `timer until: ${h}:${mStr} ${ampm}`);
 };
 
 window.setCountdownPreset = function(minutes) {

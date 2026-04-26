@@ -1718,3 +1718,32 @@ kbd {
     color: var(--bg-primary);
     border-color: var(--text-accent);
 }
+
+/* ─── TARGET TIME ROW ───────────────────────────────────── */
+.timer-target-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 8px;
+}
+.timer-target-label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+}
+#timerTargetInput {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    padding: 5px 8px;
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+}
+#timerTargetInput:focus {
+    border-color: var(--text-accent);
+}
