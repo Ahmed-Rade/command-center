@@ -50,7 +50,7 @@
                     <div class="shortcut-row"><kbd>:todo clear</kbd><span>Clear all tasks</span></div>
                     <div class="shortcut-row"><kbd>:pomo start/stop/status</kbd><span>Pomodoro</span></div>
                     <div class="shortcut-row"><kbd>:timer &lt;mm:ss&gt;</kbd><span>Countdown timer</span></div>
-                    <div class="shortcut-row"><kbd>:theme &lt;name&gt;</kbd><span>dark/light/solarized/dracula/minimal/cyber/nord/mocha</span></div>
+                    <div class="shortcut-row"><kbd>:theme &lt;name&gt;</kbd><span>14 themes · or click 🎨 THEME</span></div>
                     <div class="shortcut-row"><kbd>:engine &lt;name&gt;</kbd><span>google/duckduckgo/bing</span></div>
                     <div class="shortcut-row"><kbd>:bg &lt;mode&gt;</kbd><span>matrix/stars/clean/grid</span></div>
                     <div class="shortcut-row"><kbd>:price &lt;ticker&gt;</kbd><span>Crypto/currency price</span></div>
@@ -91,6 +91,17 @@
         </div>
     </div>
 
+    <!-- THEME PICKER MODAL -->
+    <div class="modal-overlay hidden" id="themeModal">
+        <div class="modal modal-wide">
+            <div class="modal-header">
+                <span class="modal-title">[ SELECT THEME ]</span>
+                <button class="modal-close" id="themeModalClose">✕</button>
+            </div>
+            <div class="modal-body theme-grid" id="themeGrid"></div>
+        </div>
+    </div>
+
     <!-- FULLSCREEN OVERLAY -->
     <div class="fullscreen-overlay hidden" id="fullscreenOverlay">
         <div class="fullscreen-inner" id="fullscreenInner">
@@ -102,7 +113,7 @@
         <header class="header">
             <div class="header-left">
                 <div class="greeting" id="greeting"></div>
-                <div class="sub-greeting">SYSTEM OPERATIONAL · <span id="engineIndicator">GOOGLE</span></div>
+                <div class="sub-greeting">SYSTEM OPERATIONAL · <span id="engineIndicator">GOOGLE</span> <button class="theme-trigger-btn" id="themeTriggerBtn">🎨 THEME</button></div>
             </div>
             <div class="header-center">
                 <div class="weather-header" id="weatherHeader">

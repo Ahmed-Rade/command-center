@@ -260,7 +260,24 @@ const savedBg = localStorage.getItem(SK.BG) || 'matrix';
 applyBg(savedBg);
 
 // ─── THEME ─────────────────────────────────────────────────
-const THEMES = ['dark', 'light', 'solarized', 'dracula', 'minimal', 'cyber', 'nord', 'mocha'];
+const THEMES = ['dark', 'light', 'solarized', 'dracula', 'minimal', 'cyber', 'nord', 'mocha', 'amber', 'synthwave', 'ocean', 'forest', 'sakura', 'monokai'];
+
+const THEME_META = {
+    dark:      { swatch: ['#060a0f', '#39d353', '#58a6ff', '#e3b341'] },
+    light:     { swatch: ['#f6f8fa', '#1a7f37', '#0969da', '#9a6700'] },
+    solarized: { swatch: ['#002b36', '#859900', '#268bd2', '#b58900'] },
+    dracula:   { swatch: ['#0d1117', '#50fa7b', '#8be9fd', '#f1fa8c'] },
+    minimal:   { swatch: ['#fafafa', '#1a1a1a', '#3366ff', '#ff9900'] },
+    cyber:     { swatch: ['#05001a', '#ff2d78', '#00f5ff', '#ffe600'] },
+    nord:      { swatch: ['#2e3440', '#88c0d0', '#81a1c1', '#ebcb8b'] },
+    mocha:     { swatch: ['#1e1e2e', '#cba6f7', '#89b4fa', '#f9e2af'] },
+    amber:     { swatch: ['#1a1006', '#ffb000', '#ffd76a', '#ffe066'] },
+    synthwave: { swatch: ['#1a0b2e', '#ff2e88', '#00e8fc', '#ffd23f'] },
+    ocean:     { swatch: ['#031a26', '#22d3ee', '#38bdf8', '#facc15'] },
+    forest:    { swatch: ['#0d1a10', '#7fd858', '#6fc6d1', '#e0c069'] },
+    sakura:    { swatch: ['#fff5f7', '#e85d8a', '#7aa6c2', '#e0a458'] },
+    monokai:   { swatch: ['#1e1f1c', '#a6e22e', '#66d9ef', '#e6db74'] },
+};
 
 function applyTheme(name) {
     document.documentElement.className = document.documentElement.className
@@ -270,6 +287,38 @@ function applyTheme(name) {
 }
 
 applyTheme(localStorage.getItem(SK.THEME) || 'dark');
+
+// ─── THEME PICKER MODAL ────────────────────────────────────
+const themeModal = document.getElementById('themeModal');
+const themeGrid  = document.getElementById('themeGrid');
+
+function renderThemeGrid() {
+    const current = localStorage.getItem(SK.THEME) || 'dark';
+    themeGrid.innerHTML = '';
+    THEMES.forEach(name => {
+        const meta = THEME_META[name] || { swatch: [] };
+        const card = document.createElement('div');
+        card.className = `theme-card${name === current ? ' active' : ''}`;
+        card.innerHTML = `
+            <div class="theme-swatch">${meta.swatch.map(c => `<span style="background:${c}"></span>`).join('')}</div>
+            <div class="theme-name">${name}<span class="theme-check">✓</span></div>
+        `;
+        card.addEventListener('click', () => {
+            applyTheme(name);
+            renderThemeGrid();
+            addLog('cmd', `:theme ${name}`);
+            showOutput(`Theme → ${name}`, 'success');
+        });
+        themeGrid.appendChild(card);
+    });
+}
+
+document.getElementById('themeTriggerBtn').addEventListener('click', () => {
+    renderThemeGrid();
+    themeModal.classList.remove('hidden');
+});
+document.getElementById('themeModalClose').addEventListener('click', () => themeModal.classList.add('hidden'));
+themeModal.addEventListener('click', (e) => { if (e.target === themeModal) themeModal.classList.add('hidden'); });
 
 // ─── SEARCH ENGINE ─────────────────────────────────────────
 const ENGINES = {
@@ -1284,7 +1333,7 @@ const CMD_CATALOG = [
     { cmd: ':todo',    desc: 'Task manager',          usage: ':todo add <task>' },
     { cmd: ':pomo',    desc: 'Pomodoro timer',        usage: ':pomo start/stop/reset' },
     { cmd: ':timer',   desc: 'Stopwatch/Countdown',   usage: ':timer 5:00 | :timer lap' },
-    { cmd: ':theme',   desc: 'Switch theme',          usage: 'dark/light/solarized/dracula/minimal/cyber/nord/mocha' },
+    { cmd: ':theme',   desc: 'Switch theme',          usage: '14 themes · or click 🎨 THEME' },
     { cmd: ':engine',  desc: 'Search engine',         usage: 'google/duckduckgo/bing' },
     { cmd: ':bg',      desc: 'Background mode',       usage: 'matrix/stars/clean/grid' },
     { cmd: ':price',   desc: 'Crypto/currency price', usage: ':price BTC' },
@@ -1352,7 +1401,7 @@ commandInput.addEventListener('input', () => {
         const trimmed = val.trim();
         if (trimmed.startsWith(':calc '))        hint.textContent = 'e.g. 2+2*3';
         else if (trimmed.startsWith(':todo '))   hint.textContent = 'add <task> | clear';
-        else if (trimmed.startsWith(':theme '))  hint.textContent = 'dark / light / solarized / dracula / minimal / cyber / nord / mocha';
+        else if (trimmed.startsWith(':theme '))  hint.textContent = 'dark/light/solarized/dracula/minimal/cyber/nord/mocha/amber/synthwave/ocean/forest/sakura/monokai';
         else if (trimmed.startsWith(':engine ')) hint.textContent = 'google / duckduckgo / bing';
         else if (trimmed.startsWith(':bg '))     hint.textContent = 'matrix / stars / clean / grid';
         else if (trimmed.startsWith(':pomo'))    hint.textContent = 'start / stop / reset / status';
@@ -1395,6 +1444,10 @@ document.addEventListener('keydown', (e) => {
         }
         if (!editLinksModal.classList.contains('hidden')) {
             editLinksModal.classList.add('hidden');
+            return;
+        }
+        if (!themeModal.classList.contains('hidden')) {
+            themeModal.classList.add('hidden');
             return;
         }
     }

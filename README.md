@@ -32,7 +32,7 @@ command-center/
 | 🖥 Log | Command history log |
 | ⚡ Quick Links | 8 shortcuts with Alt+Key bindings |
 | 🔋 Battery | Live battery % + charging indicator |
-| 🎨 Themes | dark / light / solarized / dracula |
+| 🎨 Themes | 14 themes · pick via 🎨 THEME button or `:theme <name>` |
 | 🌌 Backgrounds | matrix / stars / grid / clean |
 | 🔍 Search | Google / DuckDuckGo / Bing (switchable) |
 
@@ -45,7 +45,7 @@ command-center/
 :todo add <task>       # Add task
 :todo clear            # Clear all tasks
 :pomo start/stop       # Pomodoro control
-:theme dark            # Switch theme (dark/light/solarized/dracula)
+:theme dark            # Switch theme (dark/light/solarized/dracula/minimal/cyber/nord/mocha/amber/synthwave/ocean/forest/sakura/monokai)
 :engine google         # Switch search engine (google/duckduckgo/bing)
 :bg matrix             # Switch background (matrix/stars/grid/clean)
 :price <ticker>        # Crypto/currency price
