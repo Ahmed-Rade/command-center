@@ -393,16 +393,17 @@ function playSound(kind) {
     const gain = ctx.createGain();
     osc.type = profile.wave;
 
-    const baseFreq = kind === 'click' ? profile.click : profile.hover;
+    let baseFreq = kind === 'click' ? profile.click : profile.hover;
+    if (kind === 'type') baseFreq *= 0.85 + Math.random() * 0.3; // natural per-key pitch jitter
     osc.frequency.setValueAtTime(baseFreq, now);
 
-    const dur  = kind === 'click' ? 0.13 : 0.06;
-    const peak = kind === 'click' ? 0.07 : 0.03;
+    const dur  = kind === 'click' ? 0.13 : kind === 'type' ? 0.035 : 0.06;
+    const peak = kind === 'click' ? 0.07 : kind === 'type' ? 0.02  : 0.03;
     if (kind === 'click') {
         osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.82, now + dur);
     }
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(peak, now + 0.008);
+    gain.gain.exponentialRampToValueAtTime(peak, now + 0.006);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
 
     osc.connect(gain).connect(ctx.destination);
@@ -440,6 +441,21 @@ document.addEventListener('click', (e) => {
     const el = e.target.closest(SOUND_SELECTOR);
     if (!el || el === soundToggleBtn) return;
     playSound('click');
+});
+
+// Typing ticks — fires on real text input, skips nav/modifier keys.
+const TYPE_KEY_BLOCKLIST = new Set([
+    'Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab', 'Escape',
+    'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+    'Home', 'End', 'PageUp', 'PageDown', 'Insert',
+    'F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12',
+]);
+document.addEventListener('keydown', (e) => {
+    const tag = e.target.tagName;
+    if (tag !== 'INPUT' && tag !== 'TEXTAREA') return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (TYPE_KEY_BLOCKLIST.has(e.key)) return;
+    playSound('type');
 });
 
 
