@@ -12,10 +12,27 @@ const SK = {
     HABITS:      'cc_habits',
     LOG:         'cc_log',
     SOUND:       'cc_sound',
+    ACCENT:      'cc_accent',
+    NAME:        'cc_display_name',
+    FONT:        'cc_font',
+    DENSITY:     'cc_density',
 };
 
 // ─── ELEMENTS ───────────────────────────────────────────────
 const greetingEl   = document.getElementById('greeting');
+const greetingPrefixEl = document.getElementById('greetingPrefix');
+const greetingNameEl   = document.getElementById('greetingName');
+
+// ─── DISPLAY NAME (editable greeting) ───────────────────────
+greetingNameEl.textContent = localStorage.getItem(SK.NAME) || 'USER';
+greetingNameEl.addEventListener('blur', () => {
+    const val = greetingNameEl.textContent.trim().toUpperCase().slice(0, 24) || 'USER';
+    greetingNameEl.textContent = val;
+    localStorage.setItem(SK.NAME, val);
+});
+greetingNameEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); greetingNameEl.blur(); }
+});
 const clockEl      = document.getElementById('clock');
 const dateEl       = document.getElementById('date');
 const uptimeEl     = document.getElementById('uptime');
@@ -67,12 +84,12 @@ function updateTime() {
     const ampm = h < 12 ? 'AM' : 'PM';
     clockEl.textContent = `${String(h12).padStart(2, '0')}:${m}:${s} ${ampm}`;
 
-    let greeting;
-    if (h >= 4 && h < 12)       greeting = '> GOOD MORNING, USER';
-    else if (h >= 12 && h < 17) greeting = '> GOOD AFTERNOON, USER';
-    else if (h >= 17 && h < 21) greeting = '> GOOD EVENING, USER';
-    else                         greeting = '> GOOD NIGHT, USER';
-    greetingEl.textContent = greeting;
+    let prefix;
+    if (h >= 4 && h < 12)       prefix = '> GOOD MORNING,';
+    else if (h >= 12 && h < 17) prefix = '> GOOD AFTERNOON,';
+    else if (h >= 17 && h < 21) prefix = '> GOOD EVENING,';
+    else                         prefix = '> GOOD NIGHT,';
+    greetingPrefixEl.textContent = prefix;
 
     const opts = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
     dateEl.textContent = now.toLocaleDateString('en-US', opts);
@@ -104,6 +121,18 @@ async function updateBattery() {
     } catch { batteryVal.textContent = 'N/A'; }
 }
 updateBattery();
+
+// ─── NETWORK STATUS (live) ──────────────────────────────────
+const networkStatusEl = document.getElementById('networkStatus');
+function updateNetworkStatus() {
+    const online = navigator.onLine;
+    networkStatusEl.innerHTML = `<span class="pulse-dot"></span>${online ? 'CONNECTED' : 'OFFLINE'}`;
+    networkStatusEl.classList.toggle('online', online);
+    networkStatusEl.classList.toggle('offline', !online);
+}
+window.addEventListener('online', () => { updateNetworkStatus(); showOutput('Network reconnected.', 'success', 3000); });
+window.addEventListener('offline', () => { updateNetworkStatus(); showOutput('Network connection lost.', 'error', 4000); });
+updateNetworkStatus();
 
 // ─── WEATHER ───────────────────────────────────────────────
 const WMO_CODES = {
@@ -258,7 +287,7 @@ function applyBg(mode) {
     matrixEnabled = false;
     matrixCanvas.style.opacity = '0';
     window.setStarsBg(false);
-    document.body.classList.remove('bg-grid');
+    document.body.classList.remove('bg-grid', 'bg-aurora');
 
     if (mode === 'matrix') {
         matrixEnabled = true;
@@ -267,6 +296,8 @@ function applyBg(mode) {
         window.setStarsBg(true);
     } else if (mode === 'grid') {
         document.body.classList.add('bg-grid');
+    } else if (mode === 'aurora') {
+        document.body.classList.add('bg-aurora');
     }
 }
 
@@ -274,7 +305,7 @@ const savedBg = localStorage.getItem(SK.BG) || 'matrix';
 applyBg(savedBg);
 
 // ─── THEME ─────────────────────────────────────────────────
-const THEMES = ['dark', 'light', 'solarized', 'dracula', 'minimal', 'cyber', 'nord', 'mocha', 'amber', 'synthwave', 'ocean', 'forest', 'sakura', 'monokai', 'paper', 'terminal', 'blood', 'gold', 'ice', 'autumn'];
+const THEMES = ['dark', 'light', 'solarized', 'dracula', 'minimal', 'cyber', 'nord', 'mocha', 'amber', 'synthwave', 'ocean', 'forest', 'sakura', 'monokai', 'paper', 'terminal', 'blood', 'gold', 'ice', 'autumn', 'midnight', 'void', 'coral', 'lavender', 'lime', 'copper'];
 
 const THEME_META = {
     dark:      { swatch: ['#060a0f', '#39d353', '#58a6ff', '#e3b341'] },
@@ -297,6 +328,12 @@ const THEME_META = {
     gold:      { swatch: ['#0c0c0a', '#d4af37', '#c9a86a', '#ffd700'] },
     ice:       { swatch: ['#eef6fb', '#0891b2', '#2563eb', '#d97706'] },
     autumn:    { swatch: ['#1c120a', '#ff8c3a', '#d4a24a', '#ffb84d'] },
+    midnight:  { swatch: ['#050814', '#5b7fff', '#7fa8ff', '#ffd166'] },
+    void:      { swatch: ['#000000', '#ffffff', '#aaaaaa', '#d4d4d4'] },
+    coral:     { swatch: ['#1a0e0c', '#ff6f59', '#ff9b85', '#ffb84d'] },
+    lavender:  { swatch: ['#f6f2fb', '#8b5cf6', '#6366f1', '#d97706'] },
+    lime:      { swatch: ['#0a1006', '#aef02d', '#7fd858', '#e8e85a'] },
+    copper:    { swatch: ['#160d08', '#d97b3f', '#c98b5e', '#e0a458'] },
 };
 
 function applyTheme(name) {
@@ -340,6 +377,76 @@ document.getElementById('themeTriggerBtn').addEventListener('click', () => {
 document.getElementById('themeModalClose').addEventListener('click', () => themeModal.classList.add('hidden'));
 themeModal.addEventListener('click', (e) => { if (e.target === themeModal) themeModal.classList.add('hidden'); });
 
+// ─── CUSTOM ACCENT COLOR ────────────────────────────────────
+const accentColorInput = document.getElementById('accentColorInput');
+const accentResetBtn   = document.getElementById('accentResetBtn');
+
+function hexToRgba(hex, alpha) {
+    const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function applyCustomAccent(hex) {
+    const root = document.documentElement.style;
+    root.setProperty('--text-accent', hex);
+    root.setProperty('--border-active', hex);
+    root.setProperty('--online-color', hex);
+    root.setProperty('--glow-green', hexToRgba(hex, 0.18));
+}
+
+function clearCustomAccent() {
+    const root = document.documentElement.style;
+    ['--text-accent', '--border-active', '--online-color', '--glow-green'].forEach(p => root.removeProperty(p));
+}
+
+const storedAccent = localStorage.getItem(SK.ACCENT);
+if (storedAccent) {
+    applyCustomAccent(storedAccent);
+    accentColorInput.value = storedAccent;
+} else {
+    accentColorInput.value = (THEME_META[localStorage.getItem(SK.THEME) || 'dark'] || THEME_META.dark).swatch[1];
+}
+
+accentColorInput.addEventListener('input', () => {
+    applyCustomAccent(accentColorInput.value);
+    localStorage.setItem(SK.ACCENT, accentColorInput.value);
+});
+
+accentResetBtn.addEventListener('click', () => {
+    clearCustomAccent();
+    localStorage.removeItem(SK.ACCENT);
+    accentColorInput.value = (THEME_META[localStorage.getItem(SK.THEME) || 'dark'] || THEME_META.dark).swatch[1];
+    showOutput('Accent reset to theme default.', 'info', 2000);
+});
+
+// ─── UI FONT ─────────────────────────────────────────────────
+const FONT_CLASSES = ['font-space', 'font-inter', 'font-orbitron'];
+const fontSelect = document.getElementById('fontSelect');
+
+function applyFont(name) {
+    document.documentElement.classList.remove(...FONT_CLASSES);
+    if (name && name !== 'jetbrains') document.documentElement.classList.add(`font-${name}`);
+    localStorage.setItem(SK.FONT, name || 'jetbrains');
+}
+
+const storedFont = localStorage.getItem(SK.FONT) || 'jetbrains';
+applyFont(storedFont);
+fontSelect.value = storedFont;
+fontSelect.addEventListener('change', () => applyFont(fontSelect.value));
+
+// ─── LAYOUT DENSITY ──────────────────────────────────────────
+const densitySelect = document.getElementById('densitySelect');
+
+function applyDensity(name) {
+    document.body.classList.toggle('density-compact', name === 'compact');
+    localStorage.setItem(SK.DENSITY, name);
+}
+
+const storedDensity = localStorage.getItem(SK.DENSITY) || 'comfortable';
+applyDensity(storedDensity);
+densitySelect.value = storedDensity;
+densitySelect.addEventListener('change', () => applyDensity(densitySelect.value));
+
 // ─── AUDIO ENGINE (synthesized, theme-tinted hover/click/type) ───
 // Each theme defines distinct waveform+pitch per interaction kind —
 // type ticks deliberately contrast with hover/click for a real "key" feel.
@@ -364,6 +471,12 @@ const AUDIO_PROFILES = {
     gold:      { hover: { wave: 'triangle', freq: 600 }, click: { wave: 'triangle', freq: 900  }, type: { wave: 'sine',     freq: 1400 } },
     ice:       { hover: { wave: 'sine',     freq: 800 }, click: { wave: 'sine',     freq: 1150 }, type: { wave: 'triangle', freq: 1700 } },
     autumn:    { hover: { wave: 'triangle', freq: 420 }, click: { wave: 'triangle', freq: 640  }, type: { wave: 'square',   freq: 950  } },
+    midnight:  { hover: { wave: 'sine',     freq: 480 }, click: { wave: 'sine',     freq: 720  }, type: { wave: 'triangle', freq: 1100 } },
+    void:      { hover: { wave: 'sine',     freq: 260 }, click: { wave: 'triangle', freq: 440  }, type: { wave: 'sine',     freq: 880  } },
+    coral:     { hover: { wave: 'triangle', freq: 560 }, click: { wave: 'triangle', freq: 840  }, type: { wave: 'square',   freq: 1250 } },
+    lavender:  { hover: { wave: 'sine',     freq: 660 }, click: { wave: 'sine',     freq: 980  }, type: { wave: 'triangle', freq: 1450 } },
+    lime:      { hover: { wave: 'square',   freq: 520 }, click: { wave: 'square',   freq: 880  }, type: { wave: 'sawtooth', freq: 1500 } },
+    copper:    { hover: { wave: 'triangle', freq: 440 }, click: { wave: 'triangle', freq: 660  }, type: { wave: 'square',   freq: 1000 } },
 };
 
 let soundSettings = Object.assign({ hover: true, click: true, type: true },
@@ -1449,7 +1562,7 @@ const COMMANDS = {
 
     ':bg': (args) => {
         const mode = args.trim().toLowerCase();
-        const valid = ['matrix', 'stars', 'clean', 'grid'];
+        const valid = ['matrix', 'stars', 'clean', 'grid', 'aurora'];
         if (!valid.includes(mode)) {
             showOutput(`Modes: ${valid.join(' / ')}`, 'info');
         } else {
@@ -1696,9 +1809,9 @@ const CMD_CATALOG = [
     { cmd: ':todo',    desc: 'Task manager',          usage: ':todo add <task>' },
     { cmd: ':pomo',    desc: 'Pomodoro timer',        usage: ':pomo start/stop/reset' },
     { cmd: ':timer',   desc: 'Stopwatch/Countdown',   usage: ':timer 5:00 | :timer lap' },
-    { cmd: ':theme',   desc: 'Switch theme',          usage: '14 themes · or click 🎨 THEME' },
+    { cmd: ':theme',   desc: 'Switch theme',          usage: '26 themes · or click 🎨 THEME' },
     { cmd: ':engine',  desc: 'Search engine',         usage: 'google/duckduckgo/bing' },
-    { cmd: ':bg',      desc: 'Background mode',       usage: 'matrix/stars/clean/grid' },
+    { cmd: ':bg',      desc: 'Background mode',       usage: 'matrix/stars/clean/grid/aurora' },
     { cmd: ':price',   desc: 'Crypto/currency price', usage: ':price BTC' },
     { cmd: ':weather', desc: 'Refresh weather',       usage: ':weather' },
     { cmd: ':myip',    desc: 'Network info',          usage: ':myip' },
@@ -1771,9 +1884,9 @@ commandInput.addEventListener('input', () => {
         const trimmed = val.trim();
         if (trimmed.startsWith(':calc '))        hint.textContent = 'e.g. 2+2*3';
         else if (trimmed.startsWith(':todo '))   hint.textContent = 'add <task> | clear';
-        else if (trimmed.startsWith(':theme '))  hint.textContent = '20 themes — try dark/light/cyber/sakura/terminal/gold/ice/blood...';
+        else if (trimmed.startsWith(':theme '))  hint.textContent = '26 themes — try dark/light/cyber/sakura/void/midnight/lavender/copper...';
         else if (trimmed.startsWith(':engine ')) hint.textContent = 'google / duckduckgo / bing';
-        else if (trimmed.startsWith(':bg '))     hint.textContent = 'matrix / stars / clean / grid';
+        else if (trimmed.startsWith(':bg '))     hint.textContent = 'matrix / stars / clean / grid / aurora';
         else if (trimmed.startsWith(':pomo'))    hint.textContent = 'start / stop / reset / status';
         else if (trimmed.startsWith(':timer '))  hint.textContent = 'HH:MM:SS or MM:SS (countdown) | lap | reset | stopwatch';
         else if (trimmed.startsWith(':price '))  hint.textContent = 'BTC / ETH / AED / EUR...';

@@ -32,8 +32,12 @@ command-center/
 | 🖥 Log | Command history log |
 | ⚡ Quick Links | 8 shortcuts with Alt+Key bindings |
 | 🔋 Battery | Live battery % + charging indicator |
-| 🎨 Themes | 20 themes · pick via 🎨 THEME button or `:theme <name>` |
-| 🌌 Backgrounds | matrix / stars / grid / clean |
+| 🌐 Network | Live online/offline detection (auto-updates) |
+| 🎨 Themes | 26 themes + custom accent color · pick via 🎨 THEME button or `:theme <name>` |
+| 🔤 UI Font | JetBrains Mono / Space Mono / Inter / Orbitron — pick in theme picker |
+| 📐 Density | Comfortable / Compact layout toggle |
+| 👤 Display Name | Click your name in the greeting to edit it |
+| 🌌 Backgrounds | matrix / stars / grid / clean / aurora |
 | 🔍 Search | Google / DuckDuckGo / Bing (switchable) |
 | 💬 Quote | Daily rotating quote · refresh for a random one |
 | 🧘 Zen Mode | Hides all panels but Notes · `Alt+Z` or `:zen` |
@@ -51,7 +55,7 @@ command-center/
 :todo add <task>       # Add task
 :todo clear            # Clear all tasks
 :pomo start/stop       # Pomodoro control
-:theme dark            # Switch theme (20 themes — see 🎨 THEME button)
+:theme dark            # Switch theme (26 themes — see 🎨 THEME button)
 :engine google         # Switch search engine (google/duckduckgo/bing)
 :bg matrix             # Switch background (matrix/stars/grid/clean)
 :price <ticker>        # Crypto/currency price

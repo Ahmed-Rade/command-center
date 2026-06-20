@@ -30,7 +30,7 @@
         <div class="modal">
             <div class="modal-header">
                 <span class="modal-title">[ KEYBOARD SHORTCUTS ]</span>
-                <button class="modal-close" id="modalClose">✕</button>
+                <button class="modal-close" id="modalClose" aria-label="Close shortcuts">✕</button>
             </div>
             <div class="modal-body">
                 <div class="shortcut-group">
@@ -57,7 +57,7 @@
                     <div class="shortcut-row"><kbd>:todo clear</kbd><span>Clear all tasks</span></div>
                     <div class="shortcut-row"><kbd>:pomo start/stop/status</kbd><span>Pomodoro</span></div>
                     <div class="shortcut-row"><kbd>:timer &lt;mm:ss&gt;</kbd><span>Countdown timer</span></div>
-                    <div class="shortcut-row"><kbd>:theme &lt;name&gt;</kbd><span>14 themes · or click 🎨 THEME</span></div>
+                    <div class="shortcut-row"><kbd>:theme &lt;name&gt;</kbd><span>26 themes · or click 🎨 THEME</span></div>
                     <div class="shortcut-row"><kbd>:engine &lt;name&gt;</kbd><span>google/duckduckgo/bing</span></div>
                     <div class="shortcut-row"><kbd>:bg &lt;mode&gt;</kbd><span>matrix/stars/clean/grid</span></div>
                     <div class="shortcut-row"><kbd>:price &lt;ticker&gt;</kbd><span>Crypto/currency price</span></div>
@@ -91,7 +91,7 @@
         <div class="modal modal-wide">
             <div class="modal-header">
                 <span class="modal-title">[ EDIT QUICK ACCESS ]</span>
-                <button class="modal-close" id="editLinksClose">✕</button>
+                <button class="modal-close" id="editLinksClose" aria-label="Close edit links">✕</button>
             </div>
             <div class="modal-body edit-links-body">
                 <div id="editLinksList"></div>
@@ -108,7 +108,26 @@
         <div class="modal modal-wide">
             <div class="modal-header">
                 <span class="modal-title">[ SELECT THEME ]</span>
-                <button class="modal-close" id="themeModalClose">✕</button>
+                <button class="modal-close" id="themeModalClose" aria-label="Close theme picker">✕</button>
+            </div>
+            <div class="accent-picker-row">
+                <span>Custom Accent</span>
+                <input type="color" id="accentColorInput" value="#39d353" aria-label="Custom accent color">
+                <button class="backup-btn" id="accentResetBtn">RESET</button>
+            </div>
+            <div class="accent-picker-row">
+                <span>UI Font</span>
+                <select id="fontSelect" class="font-select">
+                    <option value="jetbrains">JetBrains Mono</option>
+                    <option value="space">Space Mono</option>
+                    <option value="inter">Inter</option>
+                    <option value="orbitron">Orbitron</option>
+                </select>
+                <span class="row-spacer-left">Density</span>
+                <select id="densitySelect" class="font-select">
+                    <option value="comfortable">Comfortable</option>
+                    <option value="compact">Compact</option>
+                </select>
             </div>
             <div class="modal-body theme-grid" id="themeGrid"></div>
         </div>
@@ -124,9 +143,9 @@
     <div class="container">
         <header class="header">
             <div class="header-left">
-                <div class="greeting" id="greeting"></div>
-                <div class="sub-greeting">SYSTEM OPERATIONAL · <span id="engineIndicator">GOOGLE</span> <button class="theme-trigger-btn" id="themeTriggerBtn">🎨 THEME</button> <span class="sound-control">
-                    <button class="theme-trigger-btn" id="soundToggleBtn">🔊 SOUND</button>
+                <div class="greeting" id="greeting"><span id="greetingPrefix">> GOOD EVENING,</span> <span id="greetingName" contenteditable="true" spellcheck="false" autocorrect="off" autocapitalize="characters" title="Click to set your name" role="textbox" aria-label="Your display name">USER</span></div>
+                <div class="sub-greeting">SYSTEM OPERATIONAL · <span id="engineIndicator">GOOGLE</span> <button class="theme-trigger-btn" id="themeTriggerBtn" aria-label="Open theme picker">🎨 THEME</button> <span class="sound-control">
+                    <button class="theme-trigger-btn" id="soundToggleBtn" aria-label="Sound effect settings" aria-haspopup="true">🔊 SOUND</button>
                     <div class="sound-popover hidden" id="soundPopover">
                         <div class="sound-popover-row"><span>Hover</span><button class="sound-toggle-pill" data-kind="hover">ON</button></div>
                         <div class="sound-popover-row"><span>Click</span><button class="sound-toggle-pill" data-kind="click">ON</button></div>
@@ -161,14 +180,14 @@
             <div class="cmd-dropdown hidden" id="cmdDropdown"></div>
         </div>
 
-        <div id="outputBar" class="output-bar hidden"></div>
+        <div id="outputBar" class="output-bar hidden" role="status" aria-live="polite"></div>
 
         <div class="main-grid">
             <!-- STATUS PANEL -->
             <section class="panel status-panel" id="panel-status">
                 <h2 class="panel-title">
                     <span class="title-bracket">[</span> STATUS <span class="title-bracket">]</span>
-                    <button class="panel-fs-btn" onclick="enterFullscreen('status')" title="Fullscreen">⛶</button>
+                    <button class="panel-fs-btn" onclick="enterFullscreen('status')" title="Fullscreen" aria-label="Fullscreen status panel">⛶</button>
                 </h2>
                 <div class="status-grid">
                     <div class="status-item">
@@ -177,7 +196,7 @@
                     </div>
                     <div class="status-item">
                         <div class="status-label">NETWORK</div>
-                        <div class="status-value online"><span class="pulse-dot"></span>CONNECTED</div>
+                        <div class="status-value online" id="networkStatus"><span class="pulse-dot"></span>CONNECTED</div>
                     </div>
                     <div class="status-item">
                         <div class="status-label">DATE</div>
@@ -210,8 +229,8 @@
             <section class="panel links-panel" id="panel-links">
                 <h2 class="panel-title">
                     <span class="title-bracket">[</span> QUICK ACCESS <span class="title-bracket">]</span>
-                    <button class="panel-edit-btn" onclick="openEditLinks()" title="Edit links">✎ EDIT</button>
-                    <button class="panel-fs-btn" onclick="enterFullscreen('links')" title="Fullscreen">⛶</button>
+                    <button class="panel-edit-btn" onclick="openEditLinks()" title="Edit links" aria-label="Edit quick links">✎ EDIT</button>
+                    <button class="panel-fs-btn" onclick="enterFullscreen('links')" title="Fullscreen" aria-label="Fullscreen links panel">⛶</button>
                 </h2>
                 <div class="links-grid" id="linksGrid"></div>
             </section>
@@ -221,7 +240,7 @@
                 <h2 class="panel-title">
                     <span class="title-bracket">[</span> POMODORO <span class="title-bracket">]</span>
                     <span class="pomo-tomatoes" id="pomoTomatoes"></span>
-                    <button class="panel-fs-btn" onclick="enterFullscreen('pomo')" title="Fullscreen">⛶</button>
+                    <button class="panel-fs-btn" onclick="enterFullscreen('pomo')" title="Fullscreen" aria-label="Fullscreen pomo panel">⛶</button>
                 </h2>
                 <div class="pomo-container">
                     <div class="pomo-ring-wrapper">
@@ -250,7 +269,7 @@
             <section class="panel timer-panel" id="panel-timer">
                 <h2 class="panel-title">
                     <span class="title-bracket">[</span> TIMER <span class="title-bracket">]</span>
-                    <button class="panel-fs-btn" onclick="enterFullscreen('timer')" title="Fullscreen">⛶</button>
+                    <button class="panel-fs-btn" onclick="enterFullscreen('timer')" title="Fullscreen" aria-label="Fullscreen timer panel">⛶</button>
                 </h2>
                 <div class="timer-container">
                     <div class="timer-display-wrap">
@@ -292,7 +311,7 @@
                 <h2 class="panel-title">
                     <span class="title-bracket">[</span> TODO <span class="title-bracket">]</span>
                     <span class="todo-count" id="todoCount">0</span>
-                    <button class="panel-fs-btn" onclick="enterFullscreen('todo')" title="Fullscreen">⛶</button>
+                    <button class="panel-fs-btn" onclick="enterFullscreen('todo')" title="Fullscreen" aria-label="Fullscreen todo panel">⛶</button>
                 </h2>
                 <div class="todo-input-row">
                     <input type="text" id="todoInput" placeholder="add task..." spellcheck="false">
@@ -306,7 +325,7 @@
                 <h2 class="panel-title">
                     <span class="title-bracket">[</span> NOTES <span class="title-bracket">]</span>
                     <span class="notes-saved" id="notesSaved"></span>
-                    <button class="panel-fs-btn" onclick="enterFullscreen('notes')" title="Fullscreen">⛶</button>
+                    <button class="panel-fs-btn" onclick="enterFullscreen('notes')" title="Fullscreen" aria-label="Fullscreen notes panel">⛶</button>
                 </h2>
                 <textarea id="notes" placeholder="// scratchpad..."></textarea>
             </section>
@@ -315,7 +334,7 @@
             <section class="panel habits-panel" id="panel-habits">
                 <h2 class="panel-title">
                     <span class="title-bracket">[</span> HABITS <span class="title-bracket">]</span>
-                    <button class="panel-fs-btn" onclick="enterFullscreen('habits')" title="Fullscreen">⛶</button>
+                    <button class="panel-fs-btn" onclick="enterFullscreen('habits')" title="Fullscreen" aria-label="Fullscreen habits panel">⛶</button>
                 </h2>
                 <div class="habits-input-row">
                     <input type="text" id="habitInput" placeholder="add habit..." spellcheck="false">
@@ -328,12 +347,12 @@
             <section class="panel quote-panel" id="panel-quote">
                 <h2 class="panel-title">
                     <span class="title-bracket">[</span> QUOTE <span class="title-bracket">]</span>
-                    <button class="panel-fs-btn" onclick="enterFullscreen('quote')" title="Fullscreen">⛶</button>
+                    <button class="panel-fs-btn" onclick="enterFullscreen('quote')" title="Fullscreen" aria-label="Fullscreen quote panel">⛶</button>
                 </h2>
                 <div class="quote-body">
                     <div class="quote-text" id="quoteText"></div>
                     <div class="quote-footer">
-                        <button class="quote-refresh-btn" id="quoteRefresh">↻ NEW</button>
+                        <button class="quote-refresh-btn" id="quoteRefresh" aria-label="Get a new quote">↻ NEW</button>
                     </div>
                 </div>
             </section>
@@ -343,7 +362,7 @@
                 <h2 class="panel-title">
                     <span class="title-bracket">[</span> LOG <span class="title-bracket">]</span>
                     <button class="log-clear-btn" onclick="clearLog()">CLEAR</button>
-                    <button class="panel-fs-btn" onclick="enterFullscreen('log')" title="Fullscreen">⛶</button>
+                    <button class="panel-fs-btn" onclick="enterFullscreen('log')" title="Fullscreen" aria-label="Fullscreen log panel">⛶</button>
                 </h2>
                 <div class="log-entries" id="logEntries"></div>
             </section>
