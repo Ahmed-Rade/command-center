@@ -119,7 +119,14 @@
         <header class="header">
             <div class="header-left">
                 <div class="greeting" id="greeting"></div>
-                <div class="sub-greeting">SYSTEM OPERATIONAL · <span id="engineIndicator">GOOGLE</span> <button class="theme-trigger-btn" id="themeTriggerBtn">🎨 THEME</button> <button class="theme-trigger-btn" id="soundToggleBtn">🔊 SOUND</button></div>
+                <div class="sub-greeting">SYSTEM OPERATIONAL · <span id="engineIndicator">GOOGLE</span> <button class="theme-trigger-btn" id="themeTriggerBtn">🎨 THEME</button> <span class="sound-control">
+                    <button class="theme-trigger-btn" id="soundToggleBtn">🔊 SOUND</button>
+                    <div class="sound-popover hidden" id="soundPopover">
+                        <div class="sound-popover-row"><span>Hover</span><button class="sound-toggle-pill" data-kind="hover">ON</button></div>
+                        <div class="sound-popover-row"><span>Click</span><button class="sound-toggle-pill" data-kind="click">ON</button></div>
+                        <div class="sound-popover-row"><span>Type</span><button class="sound-toggle-pill" data-kind="type">ON</button></div>
+                    </div>
+                </span></div>
             </div>
             <div class="header-center">
                 <div class="weather-header" id="weatherHeader">

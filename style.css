@@ -1759,6 +1759,55 @@ html.theme-minimal #notes { border-radius: 8px; font-family: 'Inter', sans-serif
     box-shadow: 0 0 8px var(--glow-green);
 }
 
+.sound-control { position: relative; display: inline-block; }
+
+.sound-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 50;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 10px 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    min-width: 150px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sound-popover-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.sound-toggle-pill {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    padding: 2px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    min-width: 38px;
+    transition: all 0.15s;
+}
+.sound-toggle-pill.active {
+    color: var(--bg-primary);
+    background: var(--text-accent);
+    border-color: var(--text-accent);
+}
+
 .theme-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));

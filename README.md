@@ -40,7 +40,7 @@ command-center/
 | ⇅ Backup | Export/import all data as JSON · `:export` / `:import` |
 | 🔁 Convert | Unit converter · km/mi, kg/lb, °C/°F, m/ft, L/gal, cm/in |
 | 🎲 Random | Coin flip & dice roll · `:flip` / `:roll <n>` |
-| 🔊 Sound FX | Synthesized hover/click/typing tones, unique per theme · `:sound on/off` |
+| 🔊 Sound FX | Synthesized hover/click/type tones, unique per theme · independent toggles via 🔊 SOUND popover or `:sound on/off/hover/click/type` |
 
 ---
 

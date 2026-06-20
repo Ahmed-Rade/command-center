@@ -340,37 +340,39 @@ document.getElementById('themeTriggerBtn').addEventListener('click', () => {
 document.getElementById('themeModalClose').addEventListener('click', () => themeModal.classList.add('hidden'));
 themeModal.addEventListener('click', (e) => { if (e.target === themeModal) themeModal.classList.add('hidden'); });
 
-// ─── AUDIO ENGINE (synthesized, theme-tinted hover/click) ───
-// Profiles tuned to each theme's mood: waveform + base pitch.
+// ─── AUDIO ENGINE (synthesized, theme-tinted hover/click/type) ───
+// Each theme defines distinct waveform+pitch per interaction kind —
+// type ticks deliberately contrast with hover/click for a real "key" feel.
 const AUDIO_PROFILES = {
-    dark:      { wave: 'sine',     hover: 600, click: 900  },
-    light:     { wave: 'sine',     hover: 700, click: 1000 },
-    solarized: { wave: 'triangle', hover: 550, click: 850  },
-    dracula:   { wave: 'sawtooth', hover: 500, click: 760  },
-    minimal:   { wave: 'sine',     hover: 650, click: 950  },
-    cyber:     { wave: 'square',   hover: 700, click: 1200 },
-    nord:      { wave: 'sine',     hover: 500, click: 750  },
-    mocha:     { wave: 'triangle', hover: 480, click: 700  },
-    amber:     { wave: 'square',   hover: 400, click: 650  },
-    synthwave: { wave: 'sawtooth', hover: 620, click: 1100 },
-    ocean:     { wave: 'sine',     hover: 550, click: 800  },
-    forest:    { wave: 'triangle', hover: 450, click: 680  },
-    sakura:    { wave: 'sine',     hover: 750, click: 1050 },
-    monokai:   { wave: 'square',   hover: 500, click: 800  },
-    paper:     { wave: 'sine',     hover: 500, click: 700  },
-    terminal:  { wave: 'square',   hover: 350, click: 550  },
-    blood:     { wave: 'sawtooth', hover: 300, click: 500  },
-    gold:      { wave: 'triangle', hover: 600, click: 900  },
-    ice:       { wave: 'sine',     hover: 800, click: 1150 },
-    autumn:    { wave: 'triangle', hover: 420, click: 640  },
+    dark:      { hover: { wave: 'sine',     freq: 600 }, click: { wave: 'sine',     freq: 900  }, type: { wave: 'square',   freq: 1200 } },
+    light:     { hover: { wave: 'sine',     freq: 700 }, click: { wave: 'sine',     freq: 1000 }, type: { wave: 'triangle', freq: 1500 } },
+    solarized: { hover: { wave: 'triangle', freq: 550 }, click: { wave: 'triangle', freq: 850  }, type: { wave: 'square',   freq: 1100 } },
+    dracula:   { hover: { wave: 'sawtooth', freq: 500 }, click: { wave: 'sawtooth', freq: 760  }, type: { wave: 'square',   freq: 1300 } },
+    minimal:   { hover: { wave: 'sine',     freq: 650 }, click: { wave: 'sine',     freq: 950  }, type: { wave: 'triangle', freq: 1400 } },
+    cyber:     { hover: { wave: 'square',   freq: 700 }, click: { wave: 'square',   freq: 1200 }, type: { wave: 'sawtooth', freq: 1800 } },
+    nord:      { hover: { wave: 'sine',     freq: 500 }, click: { wave: 'sine',     freq: 750  }, type: { wave: 'triangle', freq: 1000 } },
+    mocha:     { hover: { wave: 'triangle', freq: 480 }, click: { wave: 'triangle', freq: 700  }, type: { wave: 'square',   freq: 950  } },
+    amber:     { hover: { wave: 'square',   freq: 400 }, click: { wave: 'square',   freq: 650  }, type: { wave: 'triangle', freq: 900  } },
+    synthwave: { hover: { wave: 'sawtooth', freq: 620 }, click: { wave: 'sawtooth', freq: 1100 }, type: { wave: 'square',   freq: 1600 } },
+    ocean:     { hover: { wave: 'sine',     freq: 550 }, click: { wave: 'sine',     freq: 800  }, type: { wave: 'triangle', freq: 1200 } },
+    forest:    { hover: { wave: 'triangle', freq: 450 }, click: { wave: 'triangle', freq: 680  }, type: { wave: 'square',   freq: 850  } },
+    sakura:    { hover: { wave: 'sine',     freq: 750 }, click: { wave: 'sine',     freq: 1050 }, type: { wave: 'triangle', freq: 1500 } },
+    monokai:   { hover: { wave: 'square',   freq: 500 }, click: { wave: 'square',   freq: 800  }, type: { wave: 'sawtooth', freq: 1300 } },
+    paper:     { hover: { wave: 'sine',     freq: 500 }, click: { wave: 'sine',     freq: 700  }, type: { wave: 'triangle', freq: 950  } },
+    terminal:  { hover: { wave: 'square',   freq: 350 }, click: { wave: 'square',   freq: 550  }, type: { wave: 'square',   freq: 1600 } },
+    blood:     { hover: { wave: 'sawtooth', freq: 300 }, click: { wave: 'sawtooth', freq: 500  }, type: { wave: 'square',   freq: 700  } },
+    gold:      { hover: { wave: 'triangle', freq: 600 }, click: { wave: 'triangle', freq: 900  }, type: { wave: 'sine',     freq: 1400 } },
+    ice:       { hover: { wave: 'sine',     freq: 800 }, click: { wave: 'sine',     freq: 1150 }, type: { wave: 'triangle', freq: 1700 } },
+    autumn:    { hover: { wave: 'triangle', freq: 420 }, click: { wave: 'triangle', freq: 640  }, type: { wave: 'square',   freq: 950  } },
 };
 
-let soundEnabled = (localStorage.getItem(SK.SOUND) ?? 'on') === 'on';
+let soundSettings = Object.assign({ hover: true, click: true, type: true },
+    JSON.parse(localStorage.getItem(SK.SOUND) || 'null') || {});
 let audioCtx = null;
 const soundToggleBtn = document.getElementById('soundToggleBtn');
+const soundPopover    = document.getElementById('soundPopover');
 
 function ensureAudioCtx() {
-    if (!soundEnabled) return null;
     if (!audioCtx) {
         try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
         catch { return null; }
@@ -385,20 +387,22 @@ function currentAudioProfile() {
 }
 
 function playSound(kind) {
+    if (!soundSettings[kind]) return;
     const ctx = ensureAudioCtx();
     if (!ctx) return;
-    const profile = currentAudioProfile();
+    const cfg = currentAudioProfile()[kind];
     const now = ctx.currentTime;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = profile.wave;
+    osc.type = cfg.wave;
 
-    let baseFreq = kind === 'click' ? profile.click : profile.hover;
-    if (kind === 'type') baseFreq *= 0.85 + Math.random() * 0.3; // natural per-key pitch jitter
+    let baseFreq = cfg.freq;
+    if (kind === 'type') baseFreq *= 0.92 + Math.random() * 0.16; // per-key pitch jitter
+
     osc.frequency.setValueAtTime(baseFreq, now);
 
-    const dur  = kind === 'click' ? 0.13 : kind === 'type' ? 0.035 : 0.06;
-    const peak = kind === 'click' ? 0.07 : kind === 'type' ? 0.02  : 0.03;
+    const dur  = kind === 'click' ? 0.13 : kind === 'type' ? 0.04 : 0.06;
+    const peak = kind === 'click' ? 0.07 : kind === 'type' ? 0.025 : 0.03;
     if (kind === 'click') {
         osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.82, now + dur);
     }
@@ -411,17 +415,46 @@ function playSound(kind) {
     osc.stop(now + dur + 0.02);
 }
 
-function setSoundEnabled(on) {
-    soundEnabled = on;
-    localStorage.setItem(SK.SOUND, on ? 'on' : 'off');
-    soundToggleBtn.textContent = on ? '🔊 SOUND' : '🔇 MUTED';
+function saveSoundSettings() {
+    localStorage.setItem(SK.SOUND, JSON.stringify(soundSettings));
 }
-setSoundEnabled(soundEnabled);
+
+function updateSoundUI() {
+    const anyOn = soundSettings.hover || soundSettings.click || soundSettings.type;
+    soundToggleBtn.textContent = anyOn ? '🔊 SOUND' : '🔇 MUTED';
+    soundPopover.querySelectorAll('.sound-toggle-pill').forEach(btn => {
+        const on = soundSettings[btn.dataset.kind];
+        btn.textContent = on ? 'ON' : 'OFF';
+        btn.classList.toggle('active', on);
+    });
+}
+updateSoundUI();
+
+function setAllSound(on) {
+    soundSettings.hover = on; soundSettings.click = on; soundSettings.type = on;
+    saveSoundSettings();
+    updateSoundUI();
+}
 
 soundToggleBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    setSoundEnabled(!soundEnabled);
-    showOutput(`Sound effects ${soundEnabled ? 'on' : 'off'}.`, 'info', 2000);
+    soundPopover.classList.toggle('hidden');
+});
+
+soundPopover.querySelectorAll('.sound-toggle-pill').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const kind = btn.dataset.kind;
+        soundSettings[kind] = !soundSettings[kind];
+        saveSoundSettings();
+        updateSoundUI();
+    });
+});
+
+document.addEventListener('click', (e) => {
+    if (!soundPopover.classList.contains('hidden') && !e.target.closest('.sound-control')) {
+        soundPopover.classList.add('hidden');
+    }
 });
 
 // Elements that get hover/click ticks — buttons + key interactive non-buttons.
@@ -429,6 +462,7 @@ const SOUND_SELECTOR = 'button, a.link-item, .theme-card, .habit-day, .todo-chec
 
 let lastHoverSound = 0;
 document.addEventListener('mouseover', (e) => {
+    if (e.target.closest('.sound-control')) return;
     const el = e.target.closest(SOUND_SELECTOR);
     if (!el) return;
     const now = performance.now();
@@ -438,8 +472,9 @@ document.addEventListener('mouseover', (e) => {
 });
 
 document.addEventListener('click', (e) => {
+    if (e.target.closest('.sound-control')) return;
     const el = e.target.closest(SOUND_SELECTOR);
-    if (!el || el === soundToggleBtn) return;
+    if (!el) return;
     playSound('click');
 });
 
@@ -457,6 +492,8 @@ document.addEventListener('keydown', (e) => {
     if (TYPE_KEY_BLOCKLIST.has(e.key)) return;
     playSound('type');
 });
+
+
 
 
 
@@ -1207,30 +1244,61 @@ renderHabits();
 
 // ─── QUOTE PANEL ───────────────────────────────────────────
 const QUOTES = [
+    // Craft & systems
     "Uptime is a habit, not an accident.",
     "Every outage teaches something a dashboard can't.",
     "Ship the small fix today — don't wait for the perfect one.",
     "A clean log is a calm mind.",
     "Automate the boring parts so you can focus on the hard ones.",
-    "Discipline compounds faster than motivation.",
     "The fastest fix is the one you never had to make.",
     "Document it now — future you is already busy.",
-    "Small daily reps beat occasional heroics.",
     "Good monitoring is just good listening, automated.",
     "Backups are cheap. Regret is not.",
-    "Progress hides inside boring, repeated work.",
     "Read the error message. It is usually telling the truth.",
-    "Consistency turns a skill into a reputation.",
     "Every system you understand deeply becomes a tool you trust.",
-    "Rest is part of the build process, not a break from it.",
-    "Plan for the bad day; build for the good one.",
     "The best alert is the one that never had to fire.",
-    "Patience scales better than panic.",
     "Keep the dashboard simple — clarity beats cleverness.",
     "What gets measured gets improved.",
     "A second pair of eyes catches the bug your tired ones missed.",
-    "Slow is smooth, smooth is fast.",
     "Your future self will thank you for the comment you wrote today.",
+    "Complexity is a debt — someone always pays the interest.",
+    "The system that fails loudly is kinder than the one that fails silently.",
+    "A good incident report is a gift to your next self.",
+    "Resilience isn't avoiding failure — it's recovering faster than it spreads.",
+
+    // Discipline & growth
+    "Discipline compounds faster than motivation.",
+    "Small daily reps beat occasional heroics.",
+    "Progress hides inside boring, repeated work.",
+    "Consistency turns a skill into a reputation.",
+    "Plan for the bad day; build for the good one.",
+    "Patience scales better than panic.",
+    "Slow is smooth, smooth is fast.",
+    "The work you do when no one's watching sets the ceiling for everything else.",
+    "Mastery is just beginner's habits, kept long enough.",
+    "You don't rise to your goals, you fall to your systems.",
+    "Comfort and growth rarely share the same room.",
+    "Energy follows attention — guard what you look at.",
+    "The standard you walk past is the standard you accept.",
+    "Done today beats perfect someday.",
+    "A habit missed once is an accident; missed twice is a pattern.",
+
+    // Reflection & mindset
+    "Rest is part of the build process, not a break from it.",
+    "Most stress is just unrouted attention.",
+    "You can't pour from a system that's never backed up.",
+    "Quiet days build the strength loud days require.",
+    "Not every problem needs solving tonight.",
+    "Clarity comes from doing, far more often than from thinking.",
+    "The mind, like a server, needs scheduled maintenance.",
+    "Worry is a process running with no output.",
+    "Some weights are meant to be set down, not carried.",
+    "Strength is a quiet, repeated decision — not a single dramatic one.",
+    "You are allowed to move slowly and still be moving forward.",
+    "A body in motion changes the mood that's driving it.",
+    "What you tolerate, you teach others to repeat.",
+    "Asking for help is a system design choice, not a weakness.",
+    "Every version of you that kept going is still in here somewhere.",
 ];
 
 const quoteTextEl = document.getElementById('quoteText');
@@ -1527,11 +1595,21 @@ const COMMANDS = {
 
     ':sound': (args) => {
         const sub = args.trim().toLowerCase();
-        if (sub === 'on') setSoundEnabled(true);
-        else if (sub === 'off') setSoundEnabled(false);
-        else setSoundEnabled(!soundEnabled);
-        showOutput(`Sound effects ${soundEnabled ? 'on' : 'off'}.`, 'info', 2000);
-        addLog('cmd', `:sound ${soundEnabled ? 'on' : 'off'}`);
+        if (sub === 'on') setAllSound(true);
+        else if (sub === 'off') setAllSound(false);
+        else if (['hover', 'click', 'type'].includes(sub)) {
+            soundSettings[sub] = !soundSettings[sub];
+            saveSoundSettings();
+            updateSoundUI();
+            showOutput(`${sub} sound ${soundSettings[sub] ? 'on' : 'off'}.`, 'info', 2000);
+            addLog('cmd', `:sound ${sub}`);
+            return;
+        } else {
+            setAllSound(!(soundSettings.hover || soundSettings.click || soundSettings.type));
+        }
+        const anyOn = soundSettings.hover || soundSettings.click || soundSettings.type;
+        showOutput(`Sound effects ${anyOn ? 'on' : 'off'}.`, 'info', 2000);
+        addLog('cmd', `:sound ${anyOn ? 'on' : 'off'}`);
     },
 
     ':export': () => exportData(),
@@ -1631,7 +1709,7 @@ const CMD_CATALOG = [
     { cmd: ':flip',    desc: 'Coin flip',             usage: ':flip' },
     { cmd: ':roll',    desc: 'Dice roll',             usage: ':roll 20' },
     { cmd: ':zen',     desc: 'Zen / focus mode',      usage: 'Alt+Z' },
-    { cmd: ':sound',   desc: 'Toggle hover/click sfx', usage: ':sound on/off' },
+    { cmd: ':sound',   desc: 'Toggle hover/click/type sfx', usage: ':sound on/off/hover/click/type' },
     { cmd: ':export',  desc: 'Backup all data',       usage: ':export' },
     { cmd: ':import',  desc: 'Restore from backup',   usage: ':import' },
     { cmd: ':clear',   desc: 'Wipe notes',            usage: ':clear' },
