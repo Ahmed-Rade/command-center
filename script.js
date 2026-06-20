@@ -11,6 +11,7 @@ const SK = {
     LINKS:       'cc_links',
     HABITS:      'cc_habits',
     LOG:         'cc_log',
+    SOUND:       'cc_sound',
 };
 
 // ─── ELEMENTS ───────────────────────────────────────────────
@@ -338,6 +339,110 @@ document.getElementById('themeTriggerBtn').addEventListener('click', () => {
 });
 document.getElementById('themeModalClose').addEventListener('click', () => themeModal.classList.add('hidden'));
 themeModal.addEventListener('click', (e) => { if (e.target === themeModal) themeModal.classList.add('hidden'); });
+
+// ─── AUDIO ENGINE (synthesized, theme-tinted hover/click) ───
+// Profiles tuned to each theme's mood: waveform + base pitch.
+const AUDIO_PROFILES = {
+    dark:      { wave: 'sine',     hover: 600, click: 900  },
+    light:     { wave: 'sine',     hover: 700, click: 1000 },
+    solarized: { wave: 'triangle', hover: 550, click: 850  },
+    dracula:   { wave: 'sawtooth', hover: 500, click: 760  },
+    minimal:   { wave: 'sine',     hover: 650, click: 950  },
+    cyber:     { wave: 'square',   hover: 700, click: 1200 },
+    nord:      { wave: 'sine',     hover: 500, click: 750  },
+    mocha:     { wave: 'triangle', hover: 480, click: 700  },
+    amber:     { wave: 'square',   hover: 400, click: 650  },
+    synthwave: { wave: 'sawtooth', hover: 620, click: 1100 },
+    ocean:     { wave: 'sine',     hover: 550, click: 800  },
+    forest:    { wave: 'triangle', hover: 450, click: 680  },
+    sakura:    { wave: 'sine',     hover: 750, click: 1050 },
+    monokai:   { wave: 'square',   hover: 500, click: 800  },
+    paper:     { wave: 'sine',     hover: 500, click: 700  },
+    terminal:  { wave: 'square',   hover: 350, click: 550  },
+    blood:     { wave: 'sawtooth', hover: 300, click: 500  },
+    gold:      { wave: 'triangle', hover: 600, click: 900  },
+    ice:       { wave: 'sine',     hover: 800, click: 1150 },
+    autumn:    { wave: 'triangle', hover: 420, click: 640  },
+};
+
+let soundEnabled = (localStorage.getItem(SK.SOUND) ?? 'on') === 'on';
+let audioCtx = null;
+const soundToggleBtn = document.getElementById('soundToggleBtn');
+
+function ensureAudioCtx() {
+    if (!soundEnabled) return null;
+    if (!audioCtx) {
+        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        catch { return null; }
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+}
+
+function currentAudioProfile() {
+    const theme = localStorage.getItem(SK.THEME) || 'dark';
+    return AUDIO_PROFILES[theme] || AUDIO_PROFILES.dark;
+}
+
+function playSound(kind) {
+    const ctx = ensureAudioCtx();
+    if (!ctx) return;
+    const profile = currentAudioProfile();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = profile.wave;
+
+    const baseFreq = kind === 'click' ? profile.click : profile.hover;
+    osc.frequency.setValueAtTime(baseFreq, now);
+
+    const dur  = kind === 'click' ? 0.13 : 0.06;
+    const peak = kind === 'click' ? 0.07 : 0.03;
+    if (kind === 'click') {
+        osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.82, now + dur);
+    }
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(peak, now + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + dur + 0.02);
+}
+
+function setSoundEnabled(on) {
+    soundEnabled = on;
+    localStorage.setItem(SK.SOUND, on ? 'on' : 'off');
+    soundToggleBtn.textContent = on ? '🔊 SOUND' : '🔇 MUTED';
+}
+setSoundEnabled(soundEnabled);
+
+soundToggleBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setSoundEnabled(!soundEnabled);
+    showOutput(`Sound effects ${soundEnabled ? 'on' : 'off'}.`, 'info', 2000);
+});
+
+// Elements that get hover/click ticks — buttons + key interactive non-buttons.
+const SOUND_SELECTOR = 'button, a.link-item, .theme-card, .habit-day, .todo-check, .cmd-dropdown-item, .timer-tab';
+
+let lastHoverSound = 0;
+document.addEventListener('mouseover', (e) => {
+    const el = e.target.closest(SOUND_SELECTOR);
+    if (!el) return;
+    const now = performance.now();
+    if (now - lastHoverSound < 45) return;
+    lastHoverSound = now;
+    playSound('hover');
+});
+
+document.addEventListener('click', (e) => {
+    const el = e.target.closest(SOUND_SELECTOR);
+    if (!el || el === soundToggleBtn) return;
+    playSound('click');
+});
+
+
 
 // ─── SEARCH ENGINE ─────────────────────────────────────────
 const ENGINES = {
@@ -1185,7 +1290,7 @@ const AUTOCOMPLETE_LIST = [
     ':calc', ':clear', ':todo', ':time', ':help', ':ping',
     ':theme', ':engine', ':bg', ':pomo', ':myip', ':price',
     ':weather', ':log', ':timer', ':links', ':clip',
-    ':convert', ':flip', ':roll', ':zen', ':export', ':import',
+    ':convert', ':flip', ':roll', ':zen', ':sound', ':export', ':import',
 ];
 
 const COMMANDS = {
@@ -1404,6 +1509,15 @@ const COMMANDS = {
 
     ':zen': () => toggleZenMode(),
 
+    ':sound': (args) => {
+        const sub = args.trim().toLowerCase();
+        if (sub === 'on') setSoundEnabled(true);
+        else if (sub === 'off') setSoundEnabled(false);
+        else setSoundEnabled(!soundEnabled);
+        showOutput(`Sound effects ${soundEnabled ? 'on' : 'off'}.`, 'info', 2000);
+        addLog('cmd', `:sound ${soundEnabled ? 'on' : 'off'}`);
+    },
+
     ':export': () => exportData(),
 
     ':import': () => document.getElementById('importFile').click(),
@@ -1501,6 +1615,7 @@ const CMD_CATALOG = [
     { cmd: ':flip',    desc: 'Coin flip',             usage: ':flip' },
     { cmd: ':roll',    desc: 'Dice roll',             usage: ':roll 20' },
     { cmd: ':zen',     desc: 'Zen / focus mode',      usage: 'Alt+Z' },
+    { cmd: ':sound',   desc: 'Toggle hover/click sfx', usage: ':sound on/off' },
     { cmd: ':export',  desc: 'Backup all data',       usage: ':export' },
     { cmd: ':import',  desc: 'Restore from backup',   usage: ':import' },
     { cmd: ':clear',   desc: 'Wipe notes',            usage: ':clear' },
