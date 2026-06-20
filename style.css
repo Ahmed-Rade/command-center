@@ -2163,3 +2163,65 @@ body.zen-mode .notes-panel textarea { min-height: 60vh; }
     background: var(--text-red, #ff5555);
     color: var(--bg-primary);
 }
+
+/* ─── PHONE FRIENDLY ──────────────────────────────────────
+   Touch-target sizing, hover-reveal fixes, zoom prevention,
+   and layout fixes for phones/tablets. ─────────────────── */
+
+/* Hover-only controls are unreachable on touch — show them always
+   on devices that can't hover (phones/tablets). */
+@media (hover: none), (pointer: coarse) {
+    .todo-del, .habit-del { opacity: 0.55; }
+    .todo-item:active .todo-del,
+    .habit-item:active .habit-del { opacity: 1; }
+
+    /* Bigger tap targets across the board */
+    .todo-del, .habit-del, .modal-close, .panel-fs-btn, .panel-edit-btn,
+    .quote-refresh-btn, .backup-btn, .theme-trigger-btn, .sound-toggle-pill,
+    .log-clear-btn, .footer-clear-btn, .habit-today-btn {
+        min-height: 32px;
+        min-width: 32px;
+    }
+    .habit-day { width: 24px; height: 24px; font-size: 9px; }
+    .todo-check { width: 22px; height: 22px; }
+    .link-item { min-height: 64px; }
+
+    /* Faster, no 300ms-delay taps; no accidental double-tap zoom */
+    button, a.link-item, .theme-card, .cmd-dropdown-item, .habit-day, .todo-check {
+        touch-action: manipulation;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Prevent iOS Safari auto-zoom on focus (needs >=16px) */
+    #commandInput, #notes, .todo-input-row input, .habits-input-row input,
+    #timerInput, #timerTargetInput, .edit-link-row input {
+        font-size: 16px;
+    }
+
+    .quote-panel { grid-column: span 1; }
+    .notes-panel { grid-column: span 1; }
+
+    .sub-greeting { flex-wrap: wrap; row-gap: 6px; }
+    .sound-popover {
+        left: 50%;
+        transform: translateX(-50%);
+        max-width: calc(100vw - 32px);
+    }
+
+    .theme-grid { grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); }
+
+    .habit-item { flex-wrap: wrap; row-gap: 6px; }
+    .habit-days { order: 3; flex-basis: 100%; justify-content: flex-start; }
+
+    .modal { max-height: 85vh; }
+    .modal-body { max-height: 60vh; overflow-y: auto; }
+
+    .panel { padding: 14px; }
+}
+
+@media (max-width: 380px) {
+    .clock { font-size: 1.4rem; }
+    .theme-trigger-btn { font-size: 0.6rem; padding: 2px 6px; }
+    .links-grid { grid-template-columns: 1fr; }
+}

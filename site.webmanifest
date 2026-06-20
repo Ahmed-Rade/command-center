@@ -1,0 +1,14 @@
+{
+  "name": "Command Center",
+  "short_name": "CmdCenter",
+  "description": "A personal hacker-style productivity dashboard.",
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#060a0f",
+  "theme_color": "#060a0f",
+  "icons": [
+    { "src": "android-chrome-192x192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "android-chrome-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
