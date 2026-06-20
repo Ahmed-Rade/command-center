@@ -47,6 +47,15 @@ const linksGrid    = document.getElementById('linksGrid');
 const startTime = Date.now();
 const RING_CIRC = 263.9;
 
+// ─── SAFE NOTIFICATIONS (guards browsers w/o Notification API) ──
+const hasNotifications = typeof Notification !== 'undefined';
+function requestNotifyPermission() {
+    if (hasNotifications && Notification.permission === 'default') Notification.requestPermission();
+}
+function notify(title, opts) {
+    if (hasNotifications && Notification.permission === 'granted') new Notification(title, opts);
+}
+
 // ─── CLOCK & GREETING ──────────────────────────────────────
 function updateTime() {
     const now = new Date();
@@ -86,8 +95,11 @@ async function updateBattery() {
         const charging = bat.charging ? ' ⚡' : '';
         batteryVal.textContent = `${pct}%${charging}`;
         batteryVal.style.color = pct > 50 ? 'var(--text-accent)' : pct > 20 ? 'var(--text-yellow)' : 'var(--text-red)';
-        bat.addEventListener('levelchange', updateBattery);
-        bat.addEventListener('chargingchange', updateBattery);
+        if (!updateBattery._bound) {
+            bat.addEventListener('levelchange', updateBattery);
+            bat.addEventListener('chargingchange', updateBattery);
+            updateBattery._bound = true;
+        }
     } catch { batteryVal.textContent = 'N/A'; }
 }
 updateBattery();
@@ -143,7 +155,8 @@ function initWeather() {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             pos => fetchWeather(pos.coords.latitude, pos.coords.longitude),
-            () => fetchWeather()
+            () => fetchWeather(),
+            { timeout: 6000 }
         );
     } else {
         fetchWeather();
@@ -260,7 +273,7 @@ const savedBg = localStorage.getItem(SK.BG) || 'matrix';
 applyBg(savedBg);
 
 // ─── THEME ─────────────────────────────────────────────────
-const THEMES = ['dark', 'light', 'solarized', 'dracula', 'minimal', 'cyber', 'nord', 'mocha', 'amber', 'synthwave', 'ocean', 'forest', 'sakura', 'monokai'];
+const THEMES = ['dark', 'light', 'solarized', 'dracula', 'minimal', 'cyber', 'nord', 'mocha', 'amber', 'synthwave', 'ocean', 'forest', 'sakura', 'monokai', 'paper', 'terminal', 'blood', 'gold', 'ice', 'autumn'];
 
 const THEME_META = {
     dark:      { swatch: ['#060a0f', '#39d353', '#58a6ff', '#e3b341'] },
@@ -277,6 +290,12 @@ const THEME_META = {
     forest:    { swatch: ['#0d1a10', '#7fd858', '#6fc6d1', '#e0c069'] },
     sakura:    { swatch: ['#fff5f7', '#e85d8a', '#7aa6c2', '#e0a458'] },
     monokai:   { swatch: ['#1e1f1c', '#a6e22e', '#66d9ef', '#e6db74'] },
+    paper:     { swatch: ['#f4ecd8', '#a8762a', '#3d6e8c', '#b4862a'] },
+    terminal:  { swatch: ['#000000', '#33ff33', '#1f9c1f', '#9fff9f'] },
+    blood:     { swatch: ['#0a0000', '#ff2b2b', '#c93b3b', '#ff8c42'] },
+    gold:      { swatch: ['#0c0c0a', '#d4af37', '#c9a86a', '#ffd700'] },
+    ice:       { swatch: ['#eef6fb', '#0891b2', '#2563eb', '#d97706'] },
+    autumn:    { swatch: ['#1c120a', '#ff8c3a', '#d4a24a', '#ffb84d'] },
 };
 
 function applyTheme(name) {
@@ -533,6 +552,7 @@ const PANEL_MAP = {
     notes:  'panel-notes',
     log:    'panel-log',
     habits: 'panel-habits',
+    quote:  'panel-quote',
 };
 
 window.enterFullscreen = function(panelKey) {
@@ -622,12 +642,10 @@ function pomoTick() {
             showOutput('Break over — back to work!', 'info', 6000);
         }
 
-        if (Notification.permission === 'granted') {
-            new Notification('Pomodoro', {
-                body: pomoState.phase === 'work' ? 'Break over! Back to work.' : 'Session done! Take a 5 min break.',
-                icon: '🍅',
-            });
-        }
+        notify('Pomodoro', {
+            body: pomoState.phase === 'work' ? 'Break over! Back to work.' : 'Session done! Take a 5 min break.',
+            icon: '🍅',
+        });
 
         pomoStartBtn.textContent = '▶ START';
         updatePomoDisplay();
@@ -647,7 +665,7 @@ window.pomoControl = function(action) {
             pomoStartBtn.textContent = '▶ RESUME';
             addLog('cmd', ':pomo pause');
         } else {
-            if (Notification.permission === 'default') Notification.requestPermission();
+            requestNotifyPermission();
             pomoState.running = true;
             pomoState.interval = setInterval(pomoTick, 1000);
             pomoStartBtn.textContent = '⏸ PAUSE';
@@ -667,6 +685,7 @@ window.pomoControl = function(action) {
 };
 
 updatePomoDisplay();
+if (pomoState.remaining < pomoState.total) pomoStartBtn.textContent = '▶ RESUME';
 
 // ─── TIMER (STOPWATCH + COUNTDOWN) ─────────────────────────
 const _savedTimer = JSON.parse(localStorage.getItem(SK.TIMER_STATE) || 'null');
@@ -740,9 +759,7 @@ function timerTick() {
             updateTimerDisplay();
             showOutput('⏰ Timer finished!', 'success', 6000);
             addLog('result', 'Timer: countdown done');
-            if (Notification.permission === 'granted') {
-                new Notification('Timer', { body: 'Countdown complete!' });
-            }
+            notify('Timer', { body: 'Countdown complete!' });
             return;
         }
         updateTimerDisplay();
@@ -762,7 +779,7 @@ window.timerControl = function(action) {
                 showOutput('Set a countdown time first.', 'info');
                 return;
             }
-            if (Notification.permission === 'default') Notification.requestPermission();
+            requestNotifyPermission();
             timerState.running = true;
             timerState.interval = setInterval(timerTick, 100);
             timerStartBtn.textContent = '⏸ PAUSE';
@@ -855,7 +872,7 @@ window.setCountdown = function() {
         clearInterval(timerState.interval);
         timerState.running = false;
     }
-    if (Notification.permission === 'default') Notification.requestPermission();
+    requestNotifyPermission();
     timerState.running = true;
     timerState.interval = setInterval(timerTick, 100);
     timerStartBtn.textContent = '⏸ PAUSE';
@@ -886,7 +903,7 @@ window.setCountdownToTime = function() {
         clearInterval(timerState.interval);
         timerState.running = false;
     }
-    if (Notification.permission === 'default') Notification.requestPermission();
+    requestNotifyPermission();
     timerState.running = true;
     timerState.interval = setInterval(timerTick, 100);
     timerStartBtn.textContent = '⏸ PAUSE';
@@ -906,7 +923,7 @@ window.setCountdownPreset = function(minutes) {
         clearInterval(timerState.interval);
         timerState.running = false;
     }
-    if (Notification.permission === 'default') Notification.requestPermission();
+    requestNotifyPermission();
     timerState.running = true;
     timerState.interval = setInterval(timerTick, 100);
     timerStartBtn.textContent = '⏸ PAUSE';
@@ -1067,11 +1084,108 @@ document.getElementById('habitInput').addEventListener('keydown', (e) => {
 
 renderHabits();
 
+// ─── QUOTE PANEL ───────────────────────────────────────────
+const QUOTES = [
+    "Uptime is a habit, not an accident.",
+    "Every outage teaches something a dashboard can't.",
+    "Ship the small fix today — don't wait for the perfect one.",
+    "A clean log is a calm mind.",
+    "Automate the boring parts so you can focus on the hard ones.",
+    "Discipline compounds faster than motivation.",
+    "The fastest fix is the one you never had to make.",
+    "Document it now — future you is already busy.",
+    "Small daily reps beat occasional heroics.",
+    "Good monitoring is just good listening, automated.",
+    "Backups are cheap. Regret is not.",
+    "Progress hides inside boring, repeated work.",
+    "Read the error message. It is usually telling the truth.",
+    "Consistency turns a skill into a reputation.",
+    "Every system you understand deeply becomes a tool you trust.",
+    "Rest is part of the build process, not a break from it.",
+    "Plan for the bad day; build for the good one.",
+    "The best alert is the one that never had to fire.",
+    "Patience scales better than panic.",
+    "Keep the dashboard simple — clarity beats cleverness.",
+    "What gets measured gets improved.",
+    "A second pair of eyes catches the bug your tired ones missed.",
+    "Slow is smooth, smooth is fast.",
+    "Your future self will thank you for the comment you wrote today.",
+];
+
+const quoteTextEl = document.getElementById('quoteText');
+
+function dayOfYear() {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 0);
+    return Math.floor((now - start) / 86400000);
+}
+
+function renderQuote(random = false) {
+    const idx = random
+        ? Math.floor(Math.random() * QUOTES.length)
+        : dayOfYear() % QUOTES.length;
+    quoteTextEl.textContent = QUOTES[idx];
+}
+
+renderQuote();
+document.getElementById('quoteRefresh').addEventListener('click', () => renderQuote(true));
+
+// ─── ZEN MODE ──────────────────────────────────────────────
+function toggleZenMode() {
+    const on = document.body.classList.toggle('zen-mode');
+    showOutput(on ? 'Zen mode on — Alt+Z to exit' : 'Zen mode off', 'info', 2500);
+    addLog('cmd', `zen mode ${on ? 'on' : 'off'}`);
+}
+window.toggleZenMode = toggleZenMode;
+
+// ─── EXPORT / IMPORT (BACKUP & RESTORE) ─────────────────────
+function exportData() {
+    const data = {};
+    Object.entries(SK).forEach(([key, storageKey]) => {
+        const val = localStorage.getItem(storageKey);
+        if (val !== null) data[storageKey] = val;
+    });
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `command-center-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showOutput('Backup downloaded.', 'success');
+    addLog('cmd', ':export');
+}
+
+function importData(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+        try {
+            const data = JSON.parse(reader.result);
+            Object.entries(data).forEach(([k, v]) => localStorage.setItem(k, v));
+            showOutput('Backup restored. Reloading...', 'success', 2000);
+            addLog('cmd', ':import');
+            setTimeout(() => location.reload(), 1200);
+        } catch {
+            showOutput('Invalid backup file.', 'error');
+        }
+    };
+    reader.readAsText(file);
+}
+
+document.getElementById('exportBtn').addEventListener('click', exportData);
+document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change', (e) => {
+    if (e.target.files[0]) importData(e.target.files[0]);
+});
+
 // ─── COMMAND PROCESSOR ─────────────────────────────────────
 const AUTOCOMPLETE_LIST = [
     ':calc', ':clear', ':todo', ':time', ':help', ':ping',
     ':theme', ':engine', ':bg', ':pomo', ':myip', ':price',
-    ':weather', ':log', ':timer', ':links',
+    ':weather', ':log', ':timer', ':links', ':clip',
+    ':convert', ':flip', ':roll', ':zen', ':export', ':import',
 ];
 
 const COMMANDS = {
@@ -1118,7 +1232,7 @@ const COMMANDS = {
     },
 
     ':help': () => {
-        showOutput(':calc  :todo  :clear  :time  :ping  :pomo  :timer  :theme  :engine  :bg  :price  :myip  :weather  :log  :links — or type to search', 'info', 10000);
+        showOutput(':calc :todo :clear :time :ping :pomo :timer :theme :engine :bg :price :myip :weather :log :clip :convert :flip :roll :zen :export :import — or type to search', 'info', 10000);
         addLog('cmd', ':help');
     },
 
@@ -1252,6 +1366,47 @@ const COMMANDS = {
             showOutput('Usage: :clip (list) | :clip <n>', 'info');
         }
     },
+
+    ':convert': (args) => {
+        const parts = args.trim().split(/\s+/);
+        if (parts.length !== 3) { showOutput('Usage: :convert 10 km mi', 'info'); return; }
+        const [valStr, from, to] = parts;
+        const val = parseFloat(valStr);
+        if (isNaN(val)) { showOutput('Invalid number.', 'error'); return; }
+        const f = from.toLowerCase(), t = to.toLowerCase();
+        const CONVERSIONS = {
+            'km->mi': v => v * 0.621371, 'mi->km': v => v / 0.621371,
+            'kg->lb': v => v * 2.20462,  'lb->kg': v => v / 2.20462,
+            'c->f':   v => v * 9/5 + 32, 'f->c':   v => (v - 32) * 5/9,
+            'm->ft':  v => v * 3.28084,  'ft->m':  v => v / 3.28084,
+            'l->gal': v => v * 0.264172, 'gal->l': v => v / 0.264172,
+            'cm->in': v => v / 2.54,     'in->cm': v => v * 2.54,
+        };
+        const key = `${f}->${t}`;
+        if (!CONVERSIONS[key]) { showOutput(`Unsupported: ${f} → ${t}. Try km/mi, kg/lb, c/f, m/ft, l/gal, cm/in.`, 'info'); return; }
+        const result = CONVERSIONS[key](val);
+        showOutput(`${val} ${f} = ${result.toFixed(2)} ${t}`, 'success', 6000);
+        addLog('result', `:convert ${args} = ${result.toFixed(2)}`);
+    },
+
+    ':flip': () => {
+        const result = Math.random() < 0.5 ? 'HEADS' : 'TAILS';
+        showOutput(`🪙 ${result}`, 'success', 4000);
+        addLog('result', `:flip = ${result}`);
+    },
+
+    ':roll': (args) => {
+        const sides = parseInt(args.trim()) || 6;
+        const result = Math.floor(Math.random() * sides) + 1;
+        showOutput(`🎲 Rolled ${result} (d${sides})`, 'success', 4000);
+        addLog('result', `:roll d${sides} = ${result}`);
+    },
+
+    ':zen': () => toggleZenMode(),
+
+    ':export': () => exportData(),
+
+    ':import': () => document.getElementById('importFile').click(),
 };
 
 // ─── COMMAND INPUT EVENTS ──────────────────────────────────
@@ -1342,6 +1497,12 @@ const CMD_CATALOG = [
     { cmd: ':log',     desc: 'Command log',           usage: ':log clear' },
     { cmd: ':clip',    desc: 'Clipboard history',     usage: ':clip <n>' },
     { cmd: ':links',   desc: 'Edit quick access',     usage: ':links edit | :links reset' },
+    { cmd: ':convert', desc: 'Unit converter',        usage: ':convert 10 km mi' },
+    { cmd: ':flip',    desc: 'Coin flip',             usage: ':flip' },
+    { cmd: ':roll',    desc: 'Dice roll',             usage: ':roll 20' },
+    { cmd: ':zen',     desc: 'Zen / focus mode',      usage: 'Alt+Z' },
+    { cmd: ':export',  desc: 'Backup all data',       usage: ':export' },
+    { cmd: ':import',  desc: 'Restore from backup',   usage: ':import' },
     { cmd: ':clear',   desc: 'Wipe notes',            usage: ':clear' },
     { cmd: ':time',    desc: 'Show current time',     usage: ':time' },
     { cmd: ':help',    desc: 'Show all commands',     usage: ':help' },
@@ -1401,7 +1562,7 @@ commandInput.addEventListener('input', () => {
         const trimmed = val.trim();
         if (trimmed.startsWith(':calc '))        hint.textContent = 'e.g. 2+2*3';
         else if (trimmed.startsWith(':todo '))   hint.textContent = 'add <task> | clear';
-        else if (trimmed.startsWith(':theme '))  hint.textContent = 'dark/light/solarized/dracula/minimal/cyber/nord/mocha/amber/synthwave/ocean/forest/sakura/monokai';
+        else if (trimmed.startsWith(':theme '))  hint.textContent = '20 themes — try dark/light/cyber/sakura/terminal/gold/ice/blood...';
         else if (trimmed.startsWith(':engine ')) hint.textContent = 'google / duckduckgo / bing';
         else if (trimmed.startsWith(':bg '))     hint.textContent = 'matrix / stars / clean / grid';
         else if (trimmed.startsWith(':pomo'))    hint.textContent = 'start / stop / reset / status';
@@ -1450,6 +1611,10 @@ document.addEventListener('keydown', (e) => {
             themeModal.classList.add('hidden');
             return;
         }
+        if (document.body.classList.contains('zen-mode')) {
+            toggleZenMode();
+            return;
+        }
     }
 
     if (e.altKey && !e.ctrlKey) {
@@ -1458,6 +1623,7 @@ document.addEventListener('keydown', (e) => {
         if (key === 'T') { e.preventDefault(); todoInput.focus(); return; }
         if (key === 'P') { e.preventDefault(); pomoControl('toggle'); return; }
         if (key === 'R') { e.preventDefault(); initWeather(); showOutput('Refreshing weather...', 'info', 2000); return; }
+        if (key === 'Z') { e.preventDefault(); toggleZenMode(); return; }
         const link = document.querySelector(`.link-item[data-key="${key}"]`);
         if (link) { e.preventDefault(); link.click(); }
     }

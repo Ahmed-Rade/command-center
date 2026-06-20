@@ -36,6 +36,7 @@
                     <div class="shortcut-row"><kbd>Alt+T</kbd><span>Focus todo input</span></div>
                     <div class="shortcut-row"><kbd>Alt+P</kbd><span>Start/pause Pomodoro</span></div>
                     <div class="shortcut-row"><kbd>Alt+R</kbd><span>Refresh weather</span></div>
+                    <div class="shortcut-row"><kbd>Alt+Z</kbd><span>Toggle zen / focus mode</span></div>
                 </div>
                 <div class="shortcut-group">
                     <div class="shortcut-group-title">COMMAND INPUT</div>
@@ -58,6 +59,11 @@
                     <div class="shortcut-row"><kbd>:log clear</kbd><span>Clear command log</span></div>
                     <div class="shortcut-row"><kbd>:clip &lt;n&gt;</kbd><span>Recall clipboard item</span></div>
                     <div class="shortcut-row"><kbd>:weather</kbd><span>Refresh weather</span></div>
+                    <div class="shortcut-row"><kbd>:convert &lt;n&gt; &lt;a&gt; &lt;b&gt;</kbd><span>Unit converter</span></div>
+                    <div class="shortcut-row"><kbd>:flip</kbd><span>Coin flip</span></div>
+                    <div class="shortcut-row"><kbd>:roll &lt;n&gt;</kbd><span>Dice roll</span></div>
+                    <div class="shortcut-row"><kbd>:export / :import</kbd><span>Backup & restore data</span></div>
+                    <div class="shortcut-row"><kbd>:zen</kbd><span>Zen / focus mode</span></div>
                     <div class="shortcut-row"><kbd>:clear</kbd><span>Wipe notes</span></div>
                     <div class="shortcut-row"><kbd>:help</kbd><span>Show all commands</span></div>
                 </div>
@@ -305,6 +311,20 @@
                 <div class="habits-list" id="habitsList"></div>
             </section>
 
+            <!-- QUOTE PANEL -->
+            <section class="panel quote-panel" id="panel-quote">
+                <h2 class="panel-title">
+                    <span class="title-bracket">[</span> QUOTE <span class="title-bracket">]</span>
+                    <button class="panel-fs-btn" onclick="enterFullscreen('quote')" title="Fullscreen">⛶</button>
+                </h2>
+                <div class="quote-body">
+                    <div class="quote-text" id="quoteText"></div>
+                    <div class="quote-footer">
+                        <button class="quote-refresh-btn" id="quoteRefresh">↻ NEW</button>
+                    </div>
+                </div>
+            </section>
+
             <!-- LOG PANEL -->
             <section class="panel log-panel" id="panel-log">
                 <h2 class="panel-title">
@@ -331,7 +351,13 @@
             <span>|</span>
             <span><kbd>:engine</kbd> search</span>
             <span>|</span>
+            <span><kbd>Alt+Z</kbd> zen mode</span>
+            <span>|</span>
             <span><kbd>:help</kbd> all cmds</span>
+            <span>|</span>
+            <span><button class="backup-btn" id="exportBtn">⇩ EXPORT</button></span>
+            <span><button class="backup-btn" id="importBtn">⇧ IMPORT</button></span>
+            <input type="file" id="importFile" accept="application/json" class="hidden">
             <span>|</span>
             <span><button class="footer-clear-btn" onclick="clearAllData()">⚠ CLEAR ALL DATA</button></span>
         </footer>

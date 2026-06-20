@@ -32,9 +32,14 @@ command-center/
 | 🖥 Log | Command history log |
 | ⚡ Quick Links | 8 shortcuts with Alt+Key bindings |
 | 🔋 Battery | Live battery % + charging indicator |
-| 🎨 Themes | 14 themes · pick via 🎨 THEME button or `:theme <name>` |
+| 🎨 Themes | 20 themes · pick via 🎨 THEME button or `:theme <name>` |
 | 🌌 Backgrounds | matrix / stars / grid / clean |
 | 🔍 Search | Google / DuckDuckGo / Bing (switchable) |
+| 💬 Quote | Daily rotating quote · refresh for a random one |
+| 🧘 Zen Mode | Hides all panels but Notes · `Alt+Z` or `:zen` |
+| ⇅ Backup | Export/import all data as JSON · `:export` / `:import` |
+| 🔁 Convert | Unit converter · km/mi, kg/lb, °C/°F, m/ft, L/gal, cm/in |
+| 🎲 Random | Coin flip & dice roll · `:flip` / `:roll <n>` |
 
 ---
 
@@ -45,12 +50,18 @@ command-center/
 :todo add <task>       # Add task
 :todo clear            # Clear all tasks
 :pomo start/stop       # Pomodoro control
-:theme dark            # Switch theme (dark/light/solarized/dracula/minimal/cyber/nord/mocha/amber/synthwave/ocean/forest/sakura/monokai)
+:theme dark            # Switch theme (20 themes — see 🎨 THEME button)
 :engine google         # Switch search engine (google/duckduckgo/bing)
 :bg matrix             # Switch background (matrix/stars/grid/clean)
 :price <ticker>        # Crypto/currency price
 :myip                  # Show network info
 :weather               # Refresh weather
+:convert <n> <a> <b>   # Unit conversion  e.g. :convert 10 km mi
+:flip                  # Coin flip
+:roll <n>              # Dice roll (default d6)
+:export                # Download full backup (JSON)
+:import                # Restore from backup file
+:zen                   # Toggle zen / focus mode
 :log clear             # Clear command log
 :clear                 # Wipe notes
 :help                  # Show all commands
@@ -69,6 +80,7 @@ command-center/
 | `Alt+T` | Focus todo input |
 | `Alt+P` | Start/pause Pomodoro |
 | `Alt+R` | Refresh weather |
+| `Alt+Z` | Toggle zen / focus mode |
 | `Alt+G/M/D/Y/A/C` | Open GitHub / Mail / Drive / YouTube / ChatGPT / Claude |
 
 ---
