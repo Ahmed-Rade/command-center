@@ -1761,6 +1761,7 @@ html.theme-minimal #notes { border-radius: 8px; font-family: 'Inter', sans-serif
 
 .sound-control { position: relative; display: inline-block; }
 
+.sound-popover.hidden { display: none; }
 .sound-popover {
     position: absolute;
     top: calc(100% + 6px);
