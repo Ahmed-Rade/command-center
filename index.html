@@ -151,6 +151,7 @@
                         <div class="sound-popover-row"><span>Hover</span><button class="sound-toggle-pill" data-kind="hover">ON</button></div>
                         <div class="sound-popover-row"><span>Click</span><button class="sound-toggle-pill" data-kind="click">ON</button></div>
                         <div class="sound-popover-row"><span>Type</span><button class="sound-toggle-pill" data-kind="type">ON</button></div>
+                        <div class="sound-popover-row"><span>Alert</span><button class="sound-toggle-pill" data-kind="alert">ON</button></div>
                     </div>
                 </span></div>
             </div>
@@ -241,6 +242,40 @@
                 <h2 class="panel-title">
                     <span class="title-bracket">[</span> POMODORO <span class="title-bracket">]</span>
                     <span class="pomo-tomatoes" id="pomoTomatoes"></span>
+                    <span class="pomo-settings-wrap">
+                        <button class="panel-fs-btn" id="pomoSettingsBtn" title="Pomodoro settings" aria-label="Pomodoro settings">⚙</button>
+                        <div class="sound-popover hidden pomo-settings-popover" id="pomoSettingsPopover">
+                            <div class="sound-popover-row">
+                                <span>Preset</span>
+                                <select class="pomo-select" id="pomoPresetSelect">
+                                    <option value="25/5">25 / 5 — Classic</option>
+                                    <option value="50/10">50 / 10 — Deep Work</option>
+                                    <option value="15/3">15 / 3 — Sprint</option>
+                                    <option value="90/20">90 / 20 — Ultradian</option>
+                                    <option value="custom">Custom</option>
+                                </select>
+                            </div>
+                            <div class="sound-popover-row pomo-custom-row" id="pomoCustomRow" hidden>
+                                <span>Work / Break (min)</span>
+                                <span class="pomo-num-pair">
+                                    <input class="pomo-num" type="number" id="pomoCustomWork" min="1" max="180" value="25">
+                                    <input class="pomo-num" type="number" id="pomoCustomBreak" min="1" max="60" value="5">
+                                </span>
+                            </div>
+                            <div class="sound-popover-row">
+                                <span>Long break every</span>
+                                <input class="pomo-num" type="number" id="pomoLongEvery" min="2" max="10" value="4">
+                            </div>
+                            <div class="sound-popover-row">
+                                <span>Long break (min)</span>
+                                <input class="pomo-num" type="number" id="pomoLongLen" min="5" max="60" value="15">
+                            </div>
+                            <div class="sound-popover-row">
+                                <span>Auto-start next</span>
+                                <input type="checkbox" id="pomoAutoStart">
+                            </div>
+                        </div>
+                    </span>
                     <button class="panel-fs-btn" onclick="enterFullscreen('pomo')" title="Fullscreen" aria-label="Fullscreen pomo panel">⛶</button>
                 </h2>
                 <div class="pomo-container">

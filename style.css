@@ -1910,6 +1910,27 @@ html.theme-minimal #notes { border-radius: 8px; font-family: 'Inter', sans-serif
 
 .sound-control { position: relative; display: inline-block; }
 
+/* ─── POMODORO SETTINGS POPOVER ─── */
+.pomo-settings-wrap { position: relative; display: inline-block; }
+.pomo-settings-popover {
+    left: auto;
+    right: 0;
+    min-width: 220px;
+}
+.pomo-select, .pomo-num {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    border-radius: 3px;
+    padding: 2px 6px;
+}
+.pomo-num { width: 48px; text-align: center; }
+.pomo-num-pair { display: flex; gap: 4px; }
+.pomo-settings-popover .sound-popover-row span:first-child { white-space: nowrap; }
+#pomoAutoStart { width: 14px; height: 14px; accent-color: var(--text-accent); cursor: pointer; }
+
 .sound-popover.hidden { display: none; }
 .sound-popover {
     position: absolute;

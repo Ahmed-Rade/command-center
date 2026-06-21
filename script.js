@@ -7,6 +7,7 @@ const SK = {
     BG:          'cc_bg',
     POMO_SESS:   'cc_pomo_sessions',
     POMO_STATE:  'cc_pomo_state',
+    POMO_SET:    'cc_pomo_settings',
     TIMER_STATE: 'cc_timer_state',
     LINKS:       'cc_links',
     HABITS:      'cc_habits',
@@ -556,7 +557,7 @@ const AUDIO_PROFILES = {
     copper:    { hover: { wave: 'triangle', freq: 440 }, click: { wave: 'triangle', freq: 660  }, type: { wave: 'square',   freq: 1000 } },
 };
 
-let soundSettings = Object.assign({ hover: true, click: true, type: true },
+let soundSettings = Object.assign({ hover: true, click: true, type: true, alert: true },
     JSON.parse(localStorage.getItem(SK.SOUND) || 'null') || {});
 let audioCtx = null;
 const soundToggleBtn = document.getElementById('soundToggleBtn');
@@ -609,8 +610,52 @@ function saveSoundSettings() {
     localStorage.setItem(SK.SOUND, JSON.stringify(soundSettings));
 }
 
+// ─── ALARM / RINGTONE (for finished pomodoro & timer) ───────
+// Repeats a two-tone chime until the user clicks/presses anything,
+// or after 60s of no interaction — whichever comes first.
+let alarmInterval = null;
+let alarmTimeout  = null;
+
+function playAlarmChime() {
+    const ctx = ensureAudioCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    [ [0, 880], [0.18, 1175], [0.36, 880] ].forEach(([offset, freq]) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + offset);
+        gain.gain.setValueAtTime(0.0001, now + offset);
+        gain.gain.exponentialRampToValueAtTime(0.22, now + offset + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.16);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(now + offset);
+        osc.stop(now + offset + 0.18);
+    });
+}
+
+function stopAlarm() {
+    if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; }
+    if (alarmTimeout)  { clearTimeout(alarmTimeout); alarmTimeout = null; }
+    document.removeEventListener('click', stopAlarm, true);
+    document.removeEventListener('keydown', stopAlarm, true);
+    document.removeEventListener('touchstart', stopAlarm, true);
+}
+
+function startAlarm() {
+    if (!soundSettings.alert) return;
+    stopAlarm();
+    playAlarmChime();
+    alarmInterval = setInterval(playAlarmChime, 1100);
+    alarmTimeout  = setTimeout(stopAlarm, 60000); // auto-stop after 1 min
+    document.addEventListener('click', stopAlarm, true);
+    document.addEventListener('keydown', stopAlarm, true);
+    document.addEventListener('touchstart', stopAlarm, true);
+}
+window.stopAlarm = stopAlarm;
+
 function updateSoundUI() {
-    const anyOn = soundSettings.hover || soundSettings.click || soundSettings.type;
+    const anyOn = soundSettings.hover || soundSettings.click || soundSettings.type || soundSettings.alert;
     soundToggleBtn.textContent = anyOn ? '🔊 SOUND' : '🔇 MUTED';
     soundPopover.querySelectorAll('.sound-toggle-pill').forEach(btn => {
         const on = soundSettings[btn.dataset.kind];
@@ -621,7 +666,7 @@ function updateSoundUI() {
 updateSoundUI();
 
 function setAllSound(on) {
-    soundSettings.hover = on; soundSettings.click = on; soundSettings.type = on;
+    soundSettings.hover = on; soundSettings.click = on; soundSettings.type = on; soundSettings.alert = on;
     saveSoundSettings();
     updateSoundUI();
 }
@@ -976,12 +1021,28 @@ fullscreenOverlay.addEventListener('click', (e) => {
 });
 
 // ─── POMODORO ──────────────────────────────────────────────
+const POMO_PRESETS = {
+    '25/5':  { work: 25, brk: 5 },
+    '50/10': { work: 50, brk: 10 },
+    '15/3':  { work: 15, brk: 3 },
+    '90/20': { work: 90, brk: 20 },
+};
+
+let pomoSettings = Object.assign(
+    { preset: '25/5', work: 25, brk: 5, longEvery: 4, longLen: 15, autoStart: false },
+    JSON.parse(localStorage.getItem(SK.POMO_SET) || 'null') || {}
+);
+
+function savePomoSettings() {
+    localStorage.setItem(SK.POMO_SET, JSON.stringify(pomoSettings));
+}
+
 const _savedPomo = JSON.parse(localStorage.getItem(SK.POMO_STATE) || 'null');
 let pomoState = {
     running: false,
     phase:     _savedPomo?.phase     || 'work',
-    total:     _savedPomo?.total     || 25 * 60,
-    remaining: _savedPomo?.remaining || 25 * 60,
+    total:     _savedPomo?.total     || pomoSettings.work * 60,
+    remaining: _savedPomo?.remaining || pomoSettings.work * 60,
     sessions:  parseInt(localStorage.getItem(SK.POMO_SESS) || '0'),
     interval: null,
 };
@@ -1020,25 +1081,36 @@ function pomoTick() {
         if (pomoState.phase === 'work') {
             pomoState.sessions++;
             localStorage.setItem(SK.POMO_SESS, pomoState.sessions);
+            const isLong = pomoState.sessions % pomoSettings.longEvery === 0;
+            const brkMin = isLong ? pomoSettings.longLen : pomoSettings.brk;
             pomoState.phase = 'break';
-            pomoState.total = 5 * 60;
-            pomoState.remaining = 5 * 60;
-            showOutput('🍅 Work session complete! Take a break.', 'success', 6000);
+            pomoState.total = brkMin * 60;
+            pomoState.remaining = brkMin * 60;
+            showOutput(`🍅 Work session complete! ${isLong ? 'Long break' : 'Take a break'} — ${brkMin} min.`, 'success', 6000);
         } else {
             pomoState.phase = 'work';
-            pomoState.total = 25 * 60;
-            pomoState.remaining = 25 * 60;
+            pomoState.total = pomoSettings.work * 60;
+            pomoState.remaining = pomoSettings.work * 60;
             showOutput('Break over — back to work!', 'info', 6000);
         }
 
         notify('Pomodoro', {
-            body: pomoState.phase === 'work' ? 'Break over! Back to work.' : 'Session done! Take a 5 min break.',
+            body: pomoState.phase === 'work' ? 'Break over! Back to work.' : 'Session done! Take a break.',
             icon: '🍅',
         });
+        startAlarm();
 
-        pomoStartBtn.textContent = '▶ START';
+        savePomoState();
         updatePomoDisplay();
         addLog('result', `Pomodoro: ${pomoState.phase === 'break' ? 'work done' : 'break done'}`);
+
+        if (pomoSettings.autoStart) {
+            pomoState.running = true;
+            pomoState.interval = setInterval(pomoTick, 1000);
+            pomoStartBtn.textContent = '⏸ PAUSE';
+        } else {
+            pomoStartBtn.textContent = '▶ START';
+        }
         return;
     }
     pomoState.remaining--;
@@ -1064,8 +1136,8 @@ window.pomoControl = function(action) {
         clearInterval(pomoState.interval);
         pomoState.running = false;
         pomoState.phase = 'work';
-        pomoState.total = 25 * 60;
-        pomoState.remaining = 25 * 60;
+        pomoState.total = pomoSettings.work * 60;
+        pomoState.remaining = pomoSettings.work * 60;
         pomoStartBtn.textContent = '▶ START';
         savePomoState();
         updatePomoDisplay();
@@ -1075,6 +1147,76 @@ window.pomoControl = function(action) {
 
 updatePomoDisplay();
 if (pomoState.remaining < pomoState.total) pomoStartBtn.textContent = '▶ RESUME';
+
+// ─── POMODORO SETTINGS POPOVER ──────────────────────────────
+const pomoSettingsBtn      = document.getElementById('pomoSettingsBtn');
+const pomoSettingsPopover  = document.getElementById('pomoSettingsPopover');
+const pomoPresetSelect     = document.getElementById('pomoPresetSelect');
+const pomoCustomRow        = document.getElementById('pomoCustomRow');
+const pomoCustomWork       = document.getElementById('pomoCustomWork');
+const pomoCustomBreak      = document.getElementById('pomoCustomBreak');
+const pomoLongEvery        = document.getElementById('pomoLongEvery');
+const pomoLongLen          = document.getElementById('pomoLongLen');
+const pomoAutoStart        = document.getElementById('pomoAutoStart');
+
+function renderPomoSettingsUI() {
+    pomoPresetSelect.value = pomoSettings.preset;
+    pomoCustomRow.hidden = pomoSettings.preset !== 'custom';
+    pomoCustomWork.value = pomoSettings.work;
+    pomoCustomBreak.value = pomoSettings.brk;
+    pomoLongEvery.value = pomoSettings.longEvery;
+    pomoLongLen.value = pomoSettings.longLen;
+    pomoAutoStart.checked = pomoSettings.autoStart;
+}
+renderPomoSettingsUI();
+
+function applyPomoSettingsFromUI() {
+    const preset = pomoPresetSelect.value;
+    pomoSettings.preset = preset;
+    if (preset === 'custom') {
+        pomoSettings.work = Math.min(180, Math.max(1, parseInt(pomoCustomWork.value) || 25));
+        pomoSettings.brk  = Math.min(60,  Math.max(1, parseInt(pomoCustomBreak.value) || 5));
+    } else {
+        const p = POMO_PRESETS[preset];
+        pomoSettings.work = p.work;
+        pomoSettings.brk  = p.brk;
+    }
+    pomoSettings.longEvery = Math.min(10, Math.max(2, parseInt(pomoLongEvery.value) || 4));
+    pomoSettings.longLen   = Math.min(60, Math.max(5, parseInt(pomoLongLen.value) || 15));
+    pomoSettings.autoStart = pomoAutoStart.checked;
+    savePomoSettings();
+    renderPomoSettingsUI();
+
+    // Only resync the live countdown if the timer isn't already running mid-phase
+    if (!pomoState.running) {
+        pomoState.phase = 'work';
+        pomoState.total = pomoSettings.work * 60;
+        pomoState.remaining = pomoSettings.work * 60;
+        pomoStartBtn.textContent = '▶ START';
+        savePomoState();
+        updatePomoDisplay();
+    }
+    showOutput(`Pomodoro settings saved — ${pomoSettings.work}/${pomoSettings.brk} min.`, 'success', 3000);
+    addLog('cmd', 'pomo settings updated');
+}
+
+pomoSettingsBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    pomoSettingsPopover.classList.toggle('hidden');
+});
+document.addEventListener('click', (e) => {
+    if (!pomoSettingsPopover.classList.contains('hidden') && !e.target.closest('.pomo-settings-wrap')) {
+        pomoSettingsPopover.classList.add('hidden');
+    }
+});
+pomoPresetSelect.addEventListener('change', () => {
+    pomoCustomRow.hidden = pomoPresetSelect.value !== 'custom';
+    applyPomoSettingsFromUI();
+});
+[pomoCustomWork, pomoCustomBreak, pomoLongEvery, pomoLongLen].forEach(el => {
+    el.addEventListener('change', applyPomoSettingsFromUI);
+});
+pomoAutoStart.addEventListener('change', applyPomoSettingsFromUI);
 
 // ─── TIMER (STOPWATCH + COUNTDOWN) ─────────────────────────
 const _savedTimer = JSON.parse(localStorage.getItem(SK.TIMER_STATE) || 'null');
@@ -1149,6 +1291,7 @@ function timerTick() {
             showOutput('⏰ Timer finished!', 'success', 6000);
             addLog('result', 'Timer: countdown done');
             notify('Timer', { body: 'Countdown complete!' });
+            startAlarm();
             return;
         }
         updateTimerDisplay();
@@ -1828,7 +1971,7 @@ const COMMANDS = {
         const sub = args.trim().toLowerCase();
         if (sub === 'on') setAllSound(true);
         else if (sub === 'off') setAllSound(false);
-        else if (['hover', 'click', 'type'].includes(sub)) {
+        else if (['hover', 'click', 'type', 'alert'].includes(sub)) {
             soundSettings[sub] = !soundSettings[sub];
             saveSoundSettings();
             updateSoundUI();
@@ -1836,9 +1979,9 @@ const COMMANDS = {
             addLog('cmd', `:sound ${sub}`);
             return;
         } else {
-            setAllSound(!(soundSettings.hover || soundSettings.click || soundSettings.type));
+            setAllSound(!(soundSettings.hover || soundSettings.click || soundSettings.type || soundSettings.alert));
         }
-        const anyOn = soundSettings.hover || soundSettings.click || soundSettings.type;
+        const anyOn = soundSettings.hover || soundSettings.click || soundSettings.type || soundSettings.alert;
         showOutput(`Sound effects ${anyOn ? 'on' : 'off'}.`, 'info', 2000);
         addLog('cmd', `:sound ${anyOn ? 'on' : 'off'}`);
     },
