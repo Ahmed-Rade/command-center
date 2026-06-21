@@ -74,6 +74,57 @@ function notify(title, opts) {
     if (hasNotifications && Notification.permission === 'granted') new Notification(title, opts);
 }
 
+// ─── GREETING PHRASES ───────────────────────────────────────
+// Picked randomly per time-bucket, re-rolled only when the bucket changes
+// (not every second) so the header doesn't flicker.
+const GREETING_BANKS = {
+    dawn: [ // 4–7am
+        '> RISE AND GRIND,', '> EARLY BIRD ENERGY,', '> UP BEFORE THE SUN,',
+        '> DAWN PATROL,', '> THE GRIND STARTS EARLY,',
+    ],
+    morning: [ // 7–12
+        '> GOOD MORNING,', '> MORNING, LEGEND,', '> COFFEE LOADING...',
+        '> SYSTEMS ONLINE,', '> FRESH BOOT, FRESH START,', '> MORNING SHIFT,',
+    ],
+    afternoon: [ // 12–17
+        '> GOOD AFTERNOON,', '> MIDDAY CHECK-IN,', '> STILL CRUSHING IT,',
+        '> AFTERNOON OPS,', '> HALFWAY THROUGH THE DAY,',
+    ],
+    evening: [ // 17–21
+        '> GOOD EVENING,', '> WINDING DOWN,', '> EVENING SHIFT,',
+        '> GOLDEN HOUR,', '> DAY\'S ALMOST DONE,',
+    ],
+    night: [ // 21–00
+        '> GOOD NIGHT,', '> NIGHT OWL MODE,', '> BURNING MIDNIGHT OIL,',
+        '> LATE SHIFT,', '> THE NIGHT IS YOUNG,',
+    ],
+    deepNight: [ // 00–4, the niche/meme bucket
+        '> BACK AT IT AGAIN, NIGHT OWL,', '> WHY ARE YOU STILL UP,',
+        '> 3AM THOUGHTS HIT DIFFERENT,', '> INSOMNIA SQUAD, ASSEMBLE,',
+        '> THE GRIND NEVER SLEEPS,', '> RUNNING ON VIBES AND CAFFEINE,',
+        '> ONLY BUGS ARE AWAKE WITH YOU,',
+    ],
+};
+
+let _greetingBucket = null;
+let _greetingPhrase = '> GOOD EVENING,';
+function getGreetingPrefix(h) {
+    let bucket;
+    if (h >= 0 && h < 4)        bucket = 'deepNight';
+    else if (h >= 4 && h < 7)   bucket = 'dawn';
+    else if (h >= 7 && h < 12)  bucket = 'morning';
+    else if (h >= 12 && h < 17) bucket = 'afternoon';
+    else if (h >= 17 && h < 21) bucket = 'evening';
+    else                         bucket = 'night';
+
+    if (bucket !== _greetingBucket) {
+        _greetingBucket = bucket;
+        const bank = GREETING_BANKS[bucket];
+        _greetingPhrase = bank[Math.floor(Math.random() * bank.length)];
+    }
+    return _greetingPhrase;
+}
+
 // ─── CLOCK & GREETING ──────────────────────────────────────
 function updateTime() {
     const now = new Date();
@@ -84,12 +135,7 @@ function updateTime() {
     const ampm = h < 12 ? 'AM' : 'PM';
     clockEl.textContent = `${String(h12).padStart(2, '0')}:${m}:${s} ${ampm}`;
 
-    let prefix;
-    if (h >= 4 && h < 12)       prefix = '> GOOD MORNING,';
-    else if (h >= 12 && h < 17) prefix = '> GOOD AFTERNOON,';
-    else if (h >= 17 && h < 21) prefix = '> GOOD EVENING,';
-    else                         prefix = '> GOOD NIGHT,';
-    greetingPrefixEl.textContent = prefix;
+    greetingPrefixEl.textContent = getGreetingPrefix(h);
 
     const opts = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
     dateEl.textContent = now.toLocaleDateString('en-US', opts);
@@ -196,6 +242,23 @@ function initWeather() {
 initWeather();
 setInterval(initWeather, 30 * 60 * 1000);
 
+// ─── SHARED RAF SCHEDULER (perf) ───────────────────────────
+// Single requestAnimationFrame loop drives both background canvases.
+// Pauses entirely when tab hidden, or when behind an opaque overlay
+// (fullscreen panel / zen mode) since the background isn't visible there.
+let bgPaused = false;
+let pageHidden = document.hidden;
+document.addEventListener('visibilitychange', () => { pageHidden = document.hidden; });
+function bgShouldRun() { return !pageHidden && !bgPaused; }
+window.setBgPaused = (v) => { bgPaused = v; };
+
+// debounce helper — collapses rapid-fire resize events (mobile URL-bar
+// show/hide fires many of these) into one
+function debounce(fn, wait) {
+    let t;
+    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
+}
+
 // ─── MATRIX BACKGROUND ─────────────────────────────────────
 const matrixCanvas = document.getElementById('matrixCanvas');
 let matrixEnabled = true;
@@ -211,12 +274,11 @@ let matrixEnabled = true;
         drops = Array(cols).fill(1);
     }
     resize();
-    window.addEventListener('resize', resize);
+    window.addEventListener('resize', debounce(resize, 150));
 
     const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノ';
 
     function draw() {
-        if (!matrixEnabled) return;
         ctx.fillStyle = 'rgba(6, 10, 15, 0.05)';
         ctx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
         ctx.fillStyle = '#39d353';
@@ -229,7 +291,15 @@ let matrixEnabled = true;
         });
     }
 
-    setInterval(draw, 80);
+    let last = 0;
+    function loop(ts) {
+        requestAnimationFrame(loop);
+        if (!matrixEnabled || !bgShouldRun()) return;
+        if (ts - last < 80) return; // throttle to ~12.5fps, matches original cadence
+        last = ts;
+        draw();
+    }
+    requestAnimationFrame(loop);
 })();
 
 // ─── STARS BACKGROUND ──────────────────────────────────────
@@ -255,7 +325,7 @@ document.body.appendChild(starsCanvas);
         }));
     }
     resize();
-    window.addEventListener('resize', resize);
+    window.addEventListener('resize', debounce(resize, 150));
 
     window.setStarsBg = (enabled) => {
         starsEnabled = enabled;
@@ -263,7 +333,6 @@ document.body.appendChild(starsCanvas);
     };
 
     function draw() {
-        if (!starsEnabled) return;
         ctx.clearRect(0, 0, starsCanvas.width, starsCanvas.height);
         stars.forEach(s => {
             ctx.beginPath();
@@ -278,7 +347,15 @@ document.body.appendChild(starsCanvas);
         });
     }
 
-    setInterval(draw, 50);
+    let last = 0;
+    function loop(ts) {
+        requestAnimationFrame(loop);
+        if (!starsEnabled || !bgShouldRun()) return;
+        if (ts - last < 50) return; // throttle to ~20fps, matches original cadence
+        last = ts;
+        draw();
+    }
+    requestAnimationFrame(loop);
 })();
 
 // ─── BACKGROUND SWITCHER ───────────────────────────────────
@@ -826,6 +903,9 @@ const PANEL_MAP = {
     quote:  'panel-quote',
 };
 
+let fsScrollY = 0;
+let fsHistoryPushed = false;
+
 window.enterFullscreen = function(panelKey) {
     const panelId = PANEL_MAP[panelKey];
     if (!panelId) return;
@@ -835,11 +915,27 @@ window.enterFullscreen = function(panelKey) {
     fullscreenOrigPanel = { panel, parent: panel.parentNode, next: panel.nextSibling };
     fullscreenInner.appendChild(panel);
     fullscreenOverlay.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
+
+    // Real scroll-lock instead of plain overflow:hidden — fixing the body
+    // in place (and restoring scrollY on exit) avoids a mobile WebKit bug
+    // where the main page renders blank/frozen after the lock is lifted.
+    fsScrollY = window.scrollY || window.pageYOffset || 0;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${fsScrollY}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+
+    bgPaused = true; // background canvases are hidden behind the overlay anyway
+
+    // So Android/iOS back-gesture closes the overlay instead of leaving the page
+    history.pushState({ ccFullscreen: true }, '');
+    fsHistoryPushed = true;
+
     addLog('cmd', `fullscreen: ${panelKey}`);
 };
 
-function exitFullscreen() {
+function exitFullscreen(fromPopstate) {
     if (!fullscreenOrigPanel) return;
     const { panel, parent, next } = fullscreenOrigPanel;
     if (next) {
@@ -848,11 +944,33 @@ function exitFullscreen() {
         parent.appendChild(panel);
     }
     fullscreenOverlay.classList.add('hidden');
-    document.body.style.overflow = '';
+
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.body.style.width = '';
+    window.scrollTo(0, fsScrollY);
+
+    bgPaused = false;
     fullscreenOrigPanel = null;
+
+    if (fsHistoryPushed && !fromPopstate) history.back();
+    fsHistoryPushed = false;
+
+    // Force a reflow on mobile WebKit so the restored page actually repaints
+    requestAnimationFrame(() => {
+        document.body.style.display = 'none';
+        void document.body.offsetHeight;
+        document.body.style.display = '';
+    });
 }
 
-fullscreenClose.addEventListener('click', exitFullscreen);
+window.addEventListener('popstate', () => {
+    if (fullscreenOrigPanel) exitFullscreen(true);
+});
+
+fullscreenClose.addEventListener('click', () => exitFullscreen());
 fullscreenOverlay.addEventListener('click', (e) => {
     if (e.target === fullscreenOverlay) exitFullscreen();
 });
@@ -1951,7 +2069,9 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-commandInput.focus();
+// Autofocus only on non-touch devices — popping the mobile keyboard
+// immediately on load causes a jarring viewport/layout shift on phones.
+if (!window.matchMedia('(pointer: coarse)').matches) commandInput.focus();
 
 // ─── SHORTCUT MODAL ────────────────────────────────────────
 function toggleModal() {
