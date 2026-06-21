@@ -1,3 +1,13 @@
+// ─── SERVICE WORKER (offline + instant repeat loads) ───────
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {
+            // Non-fatal — site still works fully without it, just without
+            // offline caching (e.g. if served from file:// or an unsupported host).
+        });
+    });
+}
+
 // ─── STORAGE KEYS ───────────────────────────────────────────
 const SK = {
     NOTES:       'cc_notes',
@@ -515,9 +525,10 @@ if (storedAccent) {
     accentColorInput.value = (THEME_META[localStorage.getItem(SK.THEME) || 'dark'] || THEME_META.dark).swatch[1];
 }
 
+const saveAccentDebounced = debounce((val) => localStorage.setItem(SK.ACCENT, val), 200);
 accentColorInput.addEventListener('input', () => {
     applyCustomAccent(accentColorInput.value);
-    localStorage.setItem(SK.ACCENT, accentColorInput.value);
+    saveAccentDebounced(accentColorInput.value);
 });
 
 accentResetBtn.addEventListener('click', () => {
@@ -767,10 +778,21 @@ const ENGINES = {
     google:     q => `https://www.google.com/search?q=${q}`,
     duckduckgo: q => `https://duckduckgo.com/?q=${q}`,
     bing:       q => `https://www.bing.com/search?q=${q}`,
+    brave:      q => `https://search.brave.com/search?q=${q}`,
+    ecosia:     q => `https://www.ecosia.org/search?q=${q}`,
+    startpage:  q => `https://www.startpage.com/sp/search?query=${q}`,
+    yahoo:      q => `https://search.yahoo.com/search?p=${q}`,
+    perplexity: q => `https://www.perplexity.ai/search?q=${q}`,
 };
+const ENGINE_LIST = Object.keys(ENGINES);
 
 let currentEngine = localStorage.getItem(SK.ENGINE) || 'google';
 engineInd.textContent = currentEngine.toUpperCase();
+engineInd.title = 'Click to cycle search engine';
+engineInd.addEventListener('click', () => {
+    const idx = ENGINE_LIST.indexOf(currentEngine);
+    setEngine(ENGINE_LIST[(idx + 1) % ENGINE_LIST.length]);
+});
 
 function setEngine(name) {
     if (!ENGINES[name]) { showOutput(`Unknown engine. Options: ${Object.keys(ENGINES).join(', ')}`, 'error'); return; }
@@ -1326,7 +1348,7 @@ function updateTimerDisplay() {
 function timerTick() {
     if (timerState.mode === 'stopwatch') {
         timerState.elapsed += 100;
-        saveTimerState();
+        if (timerState.elapsed % 1000 === 0) saveTimerState(); // persist ~1x/sec, not 10x/sec
         updateTimerDisplay();
     } else {
         timerState.countdownRemaining -= 100;
@@ -1344,7 +1366,7 @@ function timerTick() {
             return;
         }
         updateTimerDisplay();
-        saveTimerState();
+        if (timerState.countdownRemaining % 1000 === 0) saveTimerState(); // persist ~1x/sec
     }
 }
 
@@ -1354,6 +1376,7 @@ window.timerControl = function(action) {
             clearInterval(timerState.interval);
             timerState.running = false;
             timerStartBtn.textContent = '▶ RESUME';
+            saveTimerState();
             addLog('cmd', 'timer pause');
         } else {
             if (timerState.mode === 'countdown' && timerState.countdownRemaining <= 0) {
@@ -2179,9 +2202,10 @@ function updateDropdownActive() {
 
 commandInput.addEventListener('blur', () => setTimeout(hideDropdown, 150));
 
+const cmdHint = document.getElementById('cmdHint');
 commandInput.addEventListener('input', () => {
     const val = commandInput.value;
-    const hint = document.getElementById('cmdHint');
+    const hint = cmdHint;
 
     if (val.startsWith(':')) {
         const hasArgs = val.includes(' ');
@@ -2195,7 +2219,7 @@ commandInput.addEventListener('input', () => {
         if (trimmed.startsWith(':calc '))        hint.textContent = 'e.g. 2+2*3';
         else if (trimmed.startsWith(':todo '))   hint.textContent = 'add <task> | clear';
         else if (trimmed.startsWith(':theme '))  hint.textContent = '26 themes — try dark/light/cyber/sakura/void/midnight/lavender/copper...';
-        else if (trimmed.startsWith(':engine ')) hint.textContent = 'google / duckduckgo / bing';
+        else if (trimmed.startsWith(':engine ')) hint.textContent = 'google / duckduckgo / bing / brave / ecosia / startpage / yahoo / perplexity';
         else if (trimmed.startsWith(':bg '))     hint.textContent = 'matrix / stars / clean / grid / aurora';
         else if (trimmed.startsWith(':pomo'))    hint.textContent = 'start / stop / reset / status';
         else if (trimmed.startsWith(':timer '))  hint.textContent = 'HH:MM:SS or MM:SS (countdown) | lap | reset | stopwatch';
@@ -2282,13 +2306,16 @@ shortcutModal.addEventListener('click', (e) => {
 notesArea.value = localStorage.getItem(SK.NOTES) || '';
 
 let notesTimer = null;
+const saveNotesDebounced = debounce(() => localStorage.setItem(SK.NOTES, notesArea.value), 400);
 notesArea.addEventListener('input', () => {
-    localStorage.setItem(SK.NOTES, notesArea.value);
+    saveNotesDebounced();
     notesSaved.textContent = 'SAVED';
     notesSaved.classList.add('show');
     clearTimeout(notesTimer);
     notesTimer = setTimeout(() => notesSaved.classList.remove('show'), 1500);
 });
+// Flush immediately when leaving the field so nothing is lost mid-debounce
+notesArea.addEventListener('blur', () => localStorage.setItem(SK.NOTES, notesArea.value));
 
 // ─── TODO ──────────────────────────────────────────────────
 let todos = JSON.parse(localStorage.getItem(SK.TODOS) || '[]');

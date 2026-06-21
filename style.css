@@ -707,7 +707,10 @@ html.theme-minimal .sub-greeting { letter-spacing: 0; font-size: 0.78rem; }
 #engineIndicator {
     color: var(--text-accent);
     font-weight: 700;
+    cursor: pointer;
+    transition: text-shadow 0.15s;
 }
+#engineIndicator:hover { text-shadow: 0 0 8px var(--glow-green); }
 
 /* ─── WEATHER HEADER ─── */
 .weather-header {
