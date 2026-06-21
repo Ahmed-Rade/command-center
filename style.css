@@ -922,7 +922,8 @@ html.theme-minimal .command-section::before { display: none; }
     grid-template-areas:
         "status  links   pomo"
         "timer   todo    habits"
-        "notes   notes   quote"
+        "notes   notes   notes"
+        "quote   quote   quote"
         "log     log     log";
     gap: 16px;
     margin-bottom: 16px;
@@ -2472,39 +2473,68 @@ kbd {
 }
 
 /* ─── QUOTE PANEL ───────────────────────────────────────── */
+.quote-panel { padding: 28px 20px; }
 .quote-body {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    height: 100%;
-    gap: 10px;
+    align-items: center;
+    gap: 20px;
 }
 .quote-text {
-    font-size: 0.85rem;
-    line-height: 1.7;
+    font-size: 1.4rem;
+    line-height: 1.65;
     color: var(--text-primary);
+    font-family: Georgia, 'Times New Roman', serif;
     font-style: italic;
+    font-weight: 500;
+    text-align: center;
+    max-width: 760px;
     position: relative;
-    padding-left: 14px;
-    border-left: 2px solid var(--text-accent);
+    padding: 0 44px;
 }
+.quote-text::before,
+.quote-text::after {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: normal;
+    font-size: 3.2rem;
+    color: var(--text-accent);
+    opacity: 0.4;
+    position: absolute;
+    line-height: 1;
+}
+.quote-text::before { content: '\201C'; left: -6px; top: -14px; }
+.quote-text::after  { content: '\201D'; right: -6px; bottom: -36px; }
+
+html.theme-minimal .quote-text { font-family: 'Inter', sans-serif; font-style: normal; font-weight: 400; }
+
 .quote-footer {
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
 }
 .quote-refresh-btn {
     background: transparent;
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
     font-family: var(--font-mono);
-    font-size: 0.65rem;
-    padding: 3px 9px;
-    border-radius: 3px;
+    font-size: 0.68rem;
+    padding: 5px 14px;
+    border-radius: 4px;
     cursor: pointer;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
     transition: all 0.15s;
 }
-.quote-refresh-btn:hover { color: var(--text-accent); border-color: var(--text-accent); }
+.quote-refresh-btn:hover {
+    color: var(--text-accent);
+    border-color: var(--text-accent);
+    box-shadow: 0 0 10px var(--glow-green);
+}
+
+@media (max-width: 768px) {
+    .quote-panel { padding: 22px 16px; }
+    .quote-text { font-size: 1.05rem; padding: 0 28px; line-height: 1.6; }
+    .quote-text::before, .quote-text::after { font-size: 2.2rem; }
+    .quote-text::after { bottom: -26px; }
+}
 
 /* ─── ZEN MODE ──────────────────────────────────────────── */
 body.zen-mode .main-grid > .panel:not(.notes-panel) { display: none; }

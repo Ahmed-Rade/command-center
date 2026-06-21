@@ -1745,6 +1745,62 @@ const QUOTES = [
     "What you tolerate, you teach others to repeat.",
     "Asking for help is a system design choice, not a weakness.",
     "Every version of you that kept going is still in here somewhere.",
+
+    // More craft & systems
+    "Test in staging what you can't afford to break in production.",
+    "The configuration you didn't write is the one that breaks at 3am.",
+    "A well-named variable saves a future debugging session.",
+    "Redundancy is paranoia with a maintenance schedule.",
+    "The root cause is rarely where the symptom shows up.",
+    "Version control isn't bureaucracy — it's a memory you can trust.",
+    "Optimize for the engineer who inherits this, not just for now.",
+    "A runbook written calmly is read calmly during chaos.",
+    "Latency hides until someone finally measures it.",
+    "The simplest architecture that works is the right one — for now.",
+
+    // More discipline & growth
+    "Motivation gets you started. Infrastructure keeps you going.",
+    "Big leaps are just small steps you stopped counting.",
+    "What you repeat, you become — on purpose or by accident.",
+    "The boring version of the plan is usually the one that ships.",
+    "Skill is just patience that learned to read documentation.",
+    "Every expert was once mediocre, just for longer than they admit.",
+    "You don't need more time, you need fewer distractions running in the background.",
+    "The hardest part of any task is opening the first file.",
+    "Discipline is choosing what you want most over what you want now.",
+    "Improvement is invisible day to day and obvious year to year.",
+
+    // More reflection & mindset
+    "A calm mind processes more requests than an anxious one.",
+    "Burnout is just unhandled load over time.",
+    "You're allowed to log off — the queue will still be there tomorrow.",
+    "Some days the win is just staying online.",
+    "Comparison is a process that never returns a useful result.",
+    "The voice that says 'not good enough' is rarely citing real data.",
+    "Rest isn't a reward for finishing — it's part of the build.",
+    "Most anxiety is your mind running a simulation with bad inputs.",
+    "You are not behind. You are exactly where your path has taken you.",
+    "Healing, like deployment, rarely goes in a straight line.",
+
+    // Curiosity & learning
+    "Curiosity is the only debugger that never gets tired.",
+    "Ask the dumb question before the expensive mistake.",
+    "The fastest way to learn a system is to break it gently.",
+    "Every error message is a small lesson, reluctantly given.",
+    "Stay a beginner at something — it keeps the rest of you sharp.",
+    "Read the docs once fully before you need them urgently.",
+    "Understanding beats memorizing — one survives an update, the other doesn't.",
+    "The expert was once the person who just kept asking why.",
+
+    // Focus & momentum
+    "One tab closed is one less decision pulling at your attention.",
+    "Momentum is fragile in the morning and stubborn by noon.",
+    "Deep work starts the moment notifications stop winning.",
+    "Energy spent switching tasks is energy that built nothing.",
+    "A short task done now beats a big task planned forever.",
+    "The first ten minutes decide the next two hours.",
+    "Protect the first hour — it sets the tone for the rest.",
+    "Progress prefers a narrow lane over an open field.",
 ];
 
 const quoteTextEl = document.getElementById('quoteText');
