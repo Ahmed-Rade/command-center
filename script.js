@@ -81,29 +81,45 @@ function notify(title, opts) {
 const GREETING_BANKS = {
     dawn: [ // 4–7am
         '> RISE AND GRIND,', '> EARLY BIRD ENERGY,', '> UP BEFORE THE SUN,',
-        '> DAWN PATROL,', '> THE GRIND STARTS EARLY,',
+        '> DAWN PATROL,', '> THE GRIND STARTS EARLY,', '> FIRST LIGHT, FIRST LOGIN,',
+        '> ROOSTER MODE ACTIVATED,', '> WHILE THE WORLD SLEEPS,',
+        '> SUNRISE SHIFT INITIATED,', '> ALARM WON, YOU SHOWED UP,',
     ],
     morning: [ // 7–12
         '> GOOD MORNING,', '> MORNING, LEGEND,', '> COFFEE LOADING...',
         '> SYSTEMS ONLINE,', '> FRESH BOOT, FRESH START,', '> MORNING SHIFT,',
+        '> CACHE CLEARED, READY TO GO,', '> TODAY\'S UPTIME: 100%,',
+        '> NEW DAY, ZERO BUGS SO FAR,', '> MAIN CHARACTER ENERGY,',
+        '> PING SUCCESSFUL, YOU\'RE ALIVE,',
     ],
     afternoon: [ // 12–17
         '> GOOD AFTERNOON,', '> MIDDAY CHECK-IN,', '> STILL CRUSHING IT,',
-        '> AFTERNOON OPS,', '> HALFWAY THROUGH THE DAY,',
+        '> AFTERNOON OPS,', '> HALFWAY THROUGH THE DAY,', '> POST-LUNCH POWER MODE,',
+        '> PEAK PRODUCTIVITY WINDOW,', '> SECOND WIND LOADING,',
+        '> KEEP THE MOMENTUM GOING,', '> ON SCHEDULE, MOSTLY,',
     ],
     evening: [ // 17–21
         '> GOOD EVENING,', '> WINDING DOWN,', '> EVENING SHIFT,',
-        '> GOLDEN HOUR,', '> DAY\'S ALMOST DONE,',
+        '> GOLDEN HOUR,', '> DAY\'S ALMOST DONE,', '> SUNSET SYNC,',
+        '> CLOSING TICKETS FOR THE DAY,', '> OFFLINE SOON, FINISH STRONG,',
+        '> EVENING DEBRIEF TIME,', '> ALMOST AT THE FINISH LINE,',
     ],
     night: [ // 21–00
         '> GOOD NIGHT,', '> NIGHT OWL MODE,', '> BURNING MIDNIGHT OIL,',
-        '> LATE SHIFT,', '> THE NIGHT IS YOUNG,',
+        '> LATE SHIFT,', '> THE NIGHT IS YOUNG,', '> DARK MODE: ACTIVATED,',
+        '> NIGHT CREW REPORTING IN,', '> QUIET HOURS, LOUD THOUGHTS,',
+        '> WINDING DOWN, NOT SHUTTING DOWN,', '> LAST CALL BEFORE BED,',
     ],
     deepNight: [ // 00–4, the niche/meme bucket
         '> BACK AT IT AGAIN, NIGHT OWL,', '> WHY ARE YOU STILL UP,',
         '> 3AM THOUGHTS HIT DIFFERENT,', '> INSOMNIA SQUAD, ASSEMBLE,',
         '> THE GRIND NEVER SLEEPS,', '> RUNNING ON VIBES AND CAFFEINE,',
-        '> ONLY BUGS ARE AWAKE WITH YOU,',
+        '> ONLY BUGS ARE AWAKE WITH YOU,', '> ROGUE PROCESS DETECTED: YOU,',
+        '> THIS IS A NO-JUDGMENT TIMEZONE,', '> CIRCADIAN RHYTHM: OFFLINE,',
+        '> SLEEP IS FOR PRODUCTION ENVIRONMENTS,',
+        '> CONGRATS, YOU UNLOCKED THE SECRET HOURS,',
+        '> ANOTHER LATE NIGHT, ANOTHER LEGEND BORN,',
+        '> THE WIFI IS CALM AT THIS HOUR,',
     ],
 };
 
@@ -949,7 +965,28 @@ const PANEL_MAP = {
 };
 
 let fsScrollY = 0;
-let fsHistoryPushed = false;
+
+function restoreFullscreenPanel() {
+    if (!fullscreenOrigPanel) return;
+    const { panel, parent, next } = fullscreenOrigPanel;
+    // Guard against a stale 'next' reference (e.g. that sibling was itself
+    // removed/moved meanwhile) — fall back to appending at the end.
+    if (next && next.parentNode === parent) {
+        parent.insertBefore(panel, next);
+    } else {
+        parent.appendChild(panel);
+    }
+    fullscreenOrigPanel = null;
+}
+
+function unlockScroll() {
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.body.style.width = '';
+    window.scrollTo(0, fsScrollY);
+}
 
 window.enterFullscreen = function(panelKey) {
     const panelId = PANEL_MAP[panelKey];
@@ -957,14 +994,23 @@ window.enterFullscreen = function(panelKey) {
     const panel = document.getElementById(panelId);
     if (!panel) return;
 
+    // Defensive: if a panel is already fullscreened (shouldn't normally
+    // happen, but guards against the previous panel ever getting stuck
+    // and two panels stacking on top of each other), restore it first.
+    if (fullscreenOrigPanel) {
+        restoreFullscreenPanel();
+        unlockScroll();
+    } else {
+        // Real scroll-lock instead of plain overflow:hidden — fixing the body
+        // in place (and restoring scrollY on exit) avoids a mobile WebKit bug
+        // where the main page renders blank/frozen after the lock is lifted.
+        fsScrollY = window.scrollY || window.pageYOffset || 0;
+    }
+
     fullscreenOrigPanel = { panel, parent: panel.parentNode, next: panel.nextSibling };
     fullscreenInner.appendChild(panel);
     fullscreenOverlay.classList.remove('hidden');
 
-    // Real scroll-lock instead of plain overflow:hidden — fixing the body
-    // in place (and restoring scrollY on exit) avoids a mobile WebKit bug
-    // where the main page renders blank/frozen after the lock is lifted.
-    fsScrollY = window.scrollY || window.pageYOffset || 0;
     document.body.style.position = 'fixed';
     document.body.style.top = `-${fsScrollY}px`;
     document.body.style.left = '0';
@@ -972,48 +1018,19 @@ window.enterFullscreen = function(panelKey) {
     document.body.style.width = '100%';
 
     bgPaused = true; // background canvases are hidden behind the overlay anyway
-
-    // So Android/iOS back-gesture closes the overlay instead of leaving the page
-    history.pushState({ ccFullscreen: true }, '');
-    fsHistoryPushed = true;
-
     addLog('cmd', `fullscreen: ${panelKey}`);
 };
 
-function exitFullscreen(fromPopstate) {
-    if (!fullscreenOrigPanel) return;
-    const { panel, parent, next } = fullscreenOrigPanel;
-    if (next) {
-        parent.insertBefore(panel, next);
-    } else {
-        parent.appendChild(panel);
+function exitFullscreen() {
+    if (!fullscreenOrigPanel) {
+        fullscreenOverlay.classList.add('hidden');
+        return;
     }
+    restoreFullscreenPanel();
     fullscreenOverlay.classList.add('hidden');
-
-    document.body.style.position = '';
-    document.body.style.top = '';
-    document.body.style.left = '';
-    document.body.style.right = '';
-    document.body.style.width = '';
-    window.scrollTo(0, fsScrollY);
-
+    unlockScroll();
     bgPaused = false;
-    fullscreenOrigPanel = null;
-
-    if (fsHistoryPushed && !fromPopstate) history.back();
-    fsHistoryPushed = false;
-
-    // Force a reflow on mobile WebKit so the restored page actually repaints
-    requestAnimationFrame(() => {
-        document.body.style.display = 'none';
-        void document.body.offsetHeight;
-        document.body.style.display = '';
-    });
 }
-
-window.addEventListener('popstate', () => {
-    if (fullscreenOrigPanel) exitFullscreen(true);
-});
 
 fullscreenClose.addEventListener('click', () => exitFullscreen());
 fullscreenOverlay.addEventListener('click', (e) => {
@@ -1166,7 +1183,8 @@ function renderPomoSettingsUI() {
     pomoCustomBreak.value = pomoSettings.brk;
     pomoLongEvery.value = pomoSettings.longEvery;
     pomoLongLen.value = pomoSettings.longLen;
-    pomoAutoStart.checked = pomoSettings.autoStart;
+    pomoAutoStart.textContent = pomoSettings.autoStart ? 'ON' : 'OFF';
+    pomoAutoStart.classList.toggle('active', pomoSettings.autoStart);
 }
 renderPomoSettingsUI();
 
@@ -1183,7 +1201,6 @@ function applyPomoSettingsFromUI() {
     }
     pomoSettings.longEvery = Math.min(10, Math.max(2, parseInt(pomoLongEvery.value) || 4));
     pomoSettings.longLen   = Math.min(60, Math.max(5, parseInt(pomoLongLen.value) || 15));
-    pomoSettings.autoStart = pomoAutoStart.checked;
     savePomoSettings();
     renderPomoSettingsUI();
 
@@ -1216,7 +1233,25 @@ pomoPresetSelect.addEventListener('change', () => {
 [pomoCustomWork, pomoCustomBreak, pomoLongEvery, pomoLongLen].forEach(el => {
     el.addEventListener('change', applyPomoSettingsFromUI);
 });
-pomoAutoStart.addEventListener('change', applyPomoSettingsFromUI);
+pomoAutoStart.addEventListener('click', () => {
+    pomoSettings.autoStart = !pomoSettings.autoStart;
+    savePomoSettings();
+    renderPomoSettingsUI();
+    showOutput(`Auto-start next phase ${pomoSettings.autoStart ? 'on' : 'off'}.`, 'info', 2000);
+});
+
+// Stepper +/- buttons for the number fields
+document.querySelectorAll('.pomo-stepper-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const input = document.getElementById(btn.dataset.target);
+        const dir = parseInt(btn.dataset.dir, 10);
+        const min = parseInt(input.min, 10), max = parseInt(input.max, 10);
+        let val = (parseInt(input.value, 10) || 0) + dir;
+        val = Math.max(min, Math.min(max, val));
+        input.value = val;
+        input.dispatchEvent(new Event('change'));
+    });
+});
 
 // ─── TIMER (STOPWATCH + COUNTDOWN) ─────────────────────────
 const _savedTimer = JSON.parse(localStorage.getItem(SK.TIMER_STATE) || 'null');

@@ -244,9 +244,11 @@
                     <span class="pomo-tomatoes" id="pomoTomatoes"></span>
                     <span class="pomo-settings-wrap">
                         <button class="panel-fs-btn" id="pomoSettingsBtn" title="Pomodoro settings" aria-label="Pomodoro settings">⚙</button>
-                        <div class="sound-popover hidden pomo-settings-popover" id="pomoSettingsPopover">
-                            <div class="sound-popover-row">
-                                <span>Preset</span>
+                        <div class="pomo-popover hidden" id="pomoSettingsPopover">
+                            <div class="pomo-popover-header">⚙ POMODORO SETUP</div>
+
+                            <div class="pomo-popover-block">
+                                <label class="pomo-popover-label" for="pomoPresetSelect">Preset</label>
                                 <select class="pomo-select" id="pomoPresetSelect">
                                     <option value="25/5">25 / 5 — Classic</option>
                                     <option value="50/10">50 / 10 — Deep Work</option>
@@ -255,24 +257,52 @@
                                     <option value="custom">Custom</option>
                                 </select>
                             </div>
-                            <div class="sound-popover-row pomo-custom-row" id="pomoCustomRow" hidden>
-                                <span>Work / Break (min)</span>
-                                <span class="pomo-num-pair">
-                                    <input class="pomo-num" type="number" id="pomoCustomWork" min="1" max="180" value="25">
-                                    <input class="pomo-num" type="number" id="pomoCustomBreak" min="1" max="60" value="5">
-                                </span>
+
+                            <div class="pomo-popover-row pomo-custom-row" id="pomoCustomRow" hidden>
+                                <div class="pomo-stepper-group">
+                                    <span class="pomo-popover-label">Work</span>
+                                    <div class="pomo-stepper">
+                                        <button type="button" class="pomo-stepper-btn" data-target="pomoCustomWork" data-dir="-1" aria-label="Decrease work minutes">−</button>
+                                        <input class="pomo-num" type="number" id="pomoCustomWork" min="1" max="180" value="25">
+                                        <button type="button" class="pomo-stepper-btn" data-target="pomoCustomWork" data-dir="1" aria-label="Increase work minutes">+</button>
+                                    </div>
+                                </div>
+                                <div class="pomo-stepper-group">
+                                    <span class="pomo-popover-label">Break</span>
+                                    <div class="pomo-stepper">
+                                        <button type="button" class="pomo-stepper-btn" data-target="pomoCustomBreak" data-dir="-1" aria-label="Decrease break minutes">−</button>
+                                        <input class="pomo-num" type="number" id="pomoCustomBreak" min="1" max="60" value="5">
+                                        <button type="button" class="pomo-stepper-btn" data-target="pomoCustomBreak" data-dir="1" aria-label="Increase break minutes">+</button>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="sound-popover-row">
-                                <span>Long break every</span>
-                                <input class="pomo-num" type="number" id="pomoLongEvery" min="2" max="10" value="4">
+
+                            <div class="pomo-popover-divider"></div>
+
+                            <div class="pomo-popover-row">
+                                <div class="pomo-stepper-group">
+                                    <span class="pomo-popover-label">Long break every</span>
+                                    <div class="pomo-stepper">
+                                        <button type="button" class="pomo-stepper-btn" data-target="pomoLongEvery" data-dir="-1" aria-label="Decrease session count">−</button>
+                                        <input class="pomo-num" type="number" id="pomoLongEvery" min="2" max="10" value="4">
+                                        <button type="button" class="pomo-stepper-btn" data-target="pomoLongEvery" data-dir="1" aria-label="Increase session count">+</button>
+                                    </div>
+                                </div>
+                                <div class="pomo-stepper-group">
+                                    <span class="pomo-popover-label">Length (min)</span>
+                                    <div class="pomo-stepper">
+                                        <button type="button" class="pomo-stepper-btn" data-target="pomoLongLen" data-dir="-1" aria-label="Decrease long break minutes">−</button>
+                                        <input class="pomo-num" type="number" id="pomoLongLen" min="5" max="60" value="15">
+                                        <button type="button" class="pomo-stepper-btn" data-target="pomoLongLen" data-dir="1" aria-label="Increase long break minutes">+</button>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="sound-popover-row">
-                                <span>Long break (min)</span>
-                                <input class="pomo-num" type="number" id="pomoLongLen" min="5" max="60" value="15">
-                            </div>
-                            <div class="sound-popover-row">
-                                <span>Auto-start next</span>
-                                <input type="checkbox" id="pomoAutoStart">
+
+                            <div class="pomo-popover-divider"></div>
+
+                            <div class="pomo-popover-row-toggle">
+                                <span class="pomo-popover-label">Auto-start next phase</span>
+                                <button type="button" class="sound-toggle-pill" id="pomoAutoStart">OFF</button>
                             </div>
                         </div>
                     </span>
