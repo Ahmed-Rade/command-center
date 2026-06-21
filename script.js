@@ -168,20 +168,34 @@ updateTime();
 setInterval(updateTime, 1000);
 
 // ─── BATTERY ───────────────────────────────────────────────
+// The Battery Status API only exists in Chromium browsers (Chrome/Edge/
+// Brave/Opera). Firefox removed it in 2016 and Safari never implemented
+// it (both cite fingerprinting/privacy concerns) — so on Zen Browser,
+// Firefox, or any Safari/iOS browser this will always be unsupported.
+// That's a browser limitation, not a bug: there's no other web API that
+// exposes real battery level, so the best we can do is make that clear
+// instead of showing a bare, broken-looking "N/A".
+function setBatteryUnsupported() {
+    batteryVal.textContent = 'N/SUPP';
+    batteryVal.style.color = 'var(--text-secondary)';
+    batteryVal.title = 'Battery API isn\'t supported in this browser (Firefox/Safari removed it for privacy). Try Chrome or Edge.';
+}
+
 async function updateBattery() {
-    if (!navigator.getBattery) { batteryVal.textContent = 'N/A'; return; }
+    if (!navigator.getBattery) { setBatteryUnsupported(); return; }
     try {
         const bat = await navigator.getBattery();
         const pct = Math.round(bat.level * 100);
         const charging = bat.charging ? ' ⚡' : '';
         batteryVal.textContent = `${pct}%${charging}`;
+        batteryVal.title = '';
         batteryVal.style.color = pct > 50 ? 'var(--text-accent)' : pct > 20 ? 'var(--text-yellow)' : 'var(--text-red)';
         if (!updateBattery._bound) {
             bat.addEventListener('levelchange', updateBattery);
             bat.addEventListener('chargingchange', updateBattery);
             updateBattery._bound = true;
         }
-    } catch { batteryVal.textContent = 'N/A'; }
+    } catch { setBatteryUnsupported(); }
 }
 updateBattery();
 
