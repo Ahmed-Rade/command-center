@@ -2143,7 +2143,7 @@ const CMD_CATALOG = [
     { cmd: ':pomo',    desc: 'Pomodoro timer',        usage: ':pomo start/stop/reset' },
     { cmd: ':timer',   desc: 'Stopwatch/Countdown',   usage: ':timer 5:00 | :timer lap' },
     { cmd: ':theme',   desc: 'Switch theme',          usage: '26 themes · or click 🎨 THEME' },
-    { cmd: ':engine',  desc: 'Search engine',         usage: 'google/duckduckgo/bing' },
+    { cmd: ':engine',  desc: 'Search engine',         usage: 'google/duckduckgo/bing/brave/ecosia/startpage/yahoo/perplexity' },
     { cmd: ':bg',      desc: 'Background mode',       usage: 'matrix/stars/clean/grid/aurora' },
     { cmd: ':price',   desc: 'Crypto/currency price', usage: ':price BTC' },
     { cmd: ':weather', desc: 'Refresh weather',       usage: ':weather' },
