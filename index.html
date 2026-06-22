@@ -396,6 +396,52 @@
                 <textarea id="notes" placeholder="// scratchpad..."></textarea>
             </section>
 
+            <!-- CALC PANEL -->
+            <section class="panel calc-panel" id="panel-calc">
+                <h2 class="panel-title">
+                    <span class="title-bracket">[</span> CALCULATOR <span class="title-bracket">]</span>
+                    <button class="panel-fs-btn" onclick="enterFullscreen('calc')" title="Fullscreen" aria-label="Fullscreen calc panel">⛶</button>
+                </h2>
+                <div class="calc-container">
+                    <div class="calc-display">
+                        <div class="calc-expr" id="calcExpr">0</div>
+                        <div class="calc-result" id="calcResult"></div>
+                    </div>
+                    <div class="calc-grid">
+                        <button class="calc-btn calc-wide calc-fn" onclick="calcAction('clear')">AC</button>
+                        <button class="calc-btn calc-fn" onclick="calcAction('sign')">±</button>
+                        <button class="calc-btn calc-op" onclick="calcAction('op','/')">÷</button>
+                        <button class="calc-btn" onclick="calcAction('num','7')">7</button>
+                        <button class="calc-btn" onclick="calcAction('num','8')">8</button>
+                        <button class="calc-btn" onclick="calcAction('num','9')">9</button>
+                        <button class="calc-btn calc-op" onclick="calcAction('op','*')">×</button>
+                        <button class="calc-btn" onclick="calcAction('num','4')">4</button>
+                        <button class="calc-btn" onclick="calcAction('num','5')">5</button>
+                        <button class="calc-btn" onclick="calcAction('num','6')">6</button>
+                        <button class="calc-btn calc-op" onclick="calcAction('op','-')">−</button>
+                        <button class="calc-btn" onclick="calcAction('num','1')">1</button>
+                        <button class="calc-btn" onclick="calcAction('num','2')">2</button>
+                        <button class="calc-btn" onclick="calcAction('num','3')">3</button>
+                        <button class="calc-btn calc-op" onclick="calcAction('op','+')">+</button>
+                        <button class="calc-btn calc-wide" onclick="calcAction('num','0')">0</button>
+                        <button class="calc-btn" onclick="calcAction('dot')">.</button>
+                        <button class="calc-btn calc-eq" onclick="calcAction('eq')">=</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CLIPBOARD PANEL -->
+            <section class="panel clipboard-panel" id="panel-clipboard">
+                <h2 class="panel-title">
+                    <span class="title-bracket">[</span> CLIPBOARD <span class="title-bracket">]</span>
+                    <button class="clip-clear-btn" id="clipClearBtn">CLEAR</button>
+                    <button class="panel-fs-btn" onclick="enterFullscreen('clipboard')" title="Fullscreen" aria-label="Fullscreen clipboard panel">⛶</button>
+                </h2>
+                <div class="clip-list" id="clipList">
+                    <div class="clip-empty">No clips yet — copy text in Notes (Ctrl+C)</div>
+                </div>
+            </section>
+
             <!-- HABITS TRACKER -->
             <section class="panel habits-panel" id="panel-habits">
                 <h2 class="panel-title">

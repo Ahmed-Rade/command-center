@@ -866,12 +866,7 @@ function addClip(text) {
     sessionStorage.setItem('cc_clips', JSON.stringify(clipHistory));
 }
 
-notesArea.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
-        const sel = window.getSelection().toString() || notesArea.value;
-        if (sel.trim()) { addClip(sel.trim()); }
-    }
-});
+// Clipboard history is managed via window.addClip defined later
 
 // ─── QUICK LINKS ───────────────────────────────────────────
 const DEFAULT_LINKS = [
@@ -989,15 +984,17 @@ const fullscreenClose   = document.getElementById('fullscreenClose');
 let fullscreenOrigPanel = null;
 
 const PANEL_MAP = {
-    status: 'panel-status',
-    links:  'panel-links',
-    pomo:   'panel-pomo',
-    timer:  'panel-timer',
-    todo:   'panel-todo',
-    notes:  'panel-notes',
-    log:    'panel-log',
-    habits: 'panel-habits',
-    quote:  'panel-quote',
+    status:    'panel-status',
+    links:     'panel-links',
+    pomo:      'panel-pomo',
+    timer:     'panel-timer',
+    todo:      'panel-todo',
+    notes:     'panel-notes',
+    log:       'panel-log',
+    habits:    'panel-habits',
+    quote:     'panel-quote',
+    calc:      'panel-calc',
+    clipboard: 'panel-clipboard',
 };
 
 let fsScrollY = 0;
@@ -2442,6 +2439,191 @@ window.clearAllData = function() {
     sessionStorage.clear();
     location.reload();
 };
+
+// ─── CALCULATOR PANEL ──────────────────────────────────────
+let calcState = {
+    expr: '0',
+    result: '',
+    justEvaled: false,
+    hasDecimal: false,
+};
+
+const calcExprEl   = document.getElementById('calcExpr');
+const calcResultEl = document.getElementById('calcResult');
+
+function calcRender() {
+    calcExprEl.textContent = calcState.expr || '0';
+    calcResultEl.textContent = calcState.result;
+}
+
+function calcSafeEval(expr) {
+    try {
+        const safe = expr
+            .replace(/×/g, '*')
+            .replace(/÷/g, '/')
+            .replace(/[^0-9+\-*/.() ]/g, '');
+        if (!safe.trim()) return '';
+        const val = Function('"use strict"; return (' + safe + ')')();
+        if (!isFinite(val)) return 'ERR';
+        // Format nicely
+        return parseFloat(val.toPrecision(12)).toString();
+    } catch { return ''; }
+}
+
+window.calcAction = function(type, val) {
+    const s = calcState;
+
+    if (type === 'clear') {
+        s.expr = '0'; s.result = ''; s.justEvaled = false; s.hasDecimal = false;
+        calcRender(); return;
+    }
+
+    if (type === 'sign') {
+        if (s.justEvaled && s.result) {
+            s.expr = s.result.startsWith('-') ? s.result.slice(1) : '-' + s.result;
+            s.result = ''; s.justEvaled = false;
+        } else {
+            s.expr = s.expr.startsWith('-') ? s.expr.slice(1) : '-' + s.expr;
+        }
+        calcRender(); return;
+    }
+
+    if (type === 'dot') {
+        if (s.justEvaled) { s.expr = '0.'; s.result = ''; s.justEvaled = false; s.hasDecimal = true; calcRender(); return; }
+        if (!s.hasDecimal) { s.expr += '.'; s.hasDecimal = true; }
+        calcRender(); return;
+    }
+
+    if (type === 'num') {
+        if (s.justEvaled) { s.expr = val; s.result = ''; s.justEvaled = false; s.hasDecimal = false; }
+        else { s.expr = (s.expr === '0' && val !== '.') ? val : s.expr + val; }
+        // Live preview
+        const preview = calcSafeEval(s.expr);
+        s.result = preview && preview !== s.expr ? '= ' + preview : '';
+        calcRender(); return;
+    }
+
+    if (type === 'op') {
+        // If just evaluated, continue from result
+        if (s.justEvaled && s.result) {
+            s.expr = s.result.replace('= ','');
+        } else if (s.justEvaled) {
+            s.expr = s.expr;
+        }
+        // Replace trailing operator if any
+        s.expr = s.expr.replace(/[+\-*/]$/, '') + val;
+        s.result = '';
+        s.justEvaled = false;
+        s.hasDecimal = false;
+        calcRender(); return;
+    }
+
+    if (type === 'eq') {
+        const computed = calcSafeEval(s.expr);
+        if (computed && computed !== 'ERR') {
+            s.result = '';
+            addLog('result', `:calc ${s.expr} = ${computed}`);
+            s.expr = computed;
+            s.justEvaled = true;
+            s.hasDecimal = computed.includes('.');
+        } else if (computed === 'ERR') {
+            s.result = 'ERROR';
+        }
+        calcRender(); return;
+    }
+};
+
+// Keyboard support for calc when panel is in fullscreen
+document.addEventListener('keydown', (e) => {
+    if (document.getElementById('fullscreenOverlay').classList.contains('hidden')) return;
+    if (!document.getElementById('panel-calc')?.closest('#fullscreenInner')) return;
+    const tag = e.target.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    if ('0123456789'.includes(e.key)) calcAction('num', e.key);
+    else if (e.key === '+') calcAction('op', '+');
+    else if (e.key === '-') calcAction('op', '-');
+    else if (e.key === '*') calcAction('op', '*');
+    else if (e.key === '/') { e.preventDefault(); calcAction('op', '/'); }
+    else if (e.key === '.' || e.key === ',') calcAction('dot');
+    else if (e.key === 'Enter' || e.key === '=') calcAction('eq');
+    else if (e.key === 'Escape' || e.key === 'c' || e.key === 'C') calcAction('clear');
+    else if (e.key === 'Backspace') {
+        if (calcState.expr.length > 1) calcState.expr = calcState.expr.slice(0, -1);
+        else calcState.expr = '0';
+        const preview = calcSafeEval(calcState.expr);
+        calcState.result = preview && preview !== calcState.expr ? '= ' + preview : '';
+        calcRender();
+    }
+});
+
+calcRender();
+
+// ─── CLIPBOARD PANEL ───────────────────────────────────────
+function renderClipboard() {
+    const listEl = document.getElementById('clipList');
+    if (!listEl) return;
+    listEl.innerHTML = '';
+    if (!clipHistory.length) {
+        listEl.innerHTML = '<div class="clip-empty">No clips yet — copy text in Notes (Ctrl+C)</div>';
+        return;
+    }
+    clipHistory.forEach((text, i) => {
+        const div = document.createElement('div');
+        div.className = 'clip-item';
+        div.title = text;
+        div.innerHTML = `
+            <span class="clip-num">${i}</span>
+            <span class="clip-text">${escapeHtml(text.substring(0, 80))}${text.length > 80 ? '…' : ''}</span>
+            <span class="clip-copy-icon">⎘</span>
+        `;
+        div.addEventListener('click', () => {
+            navigator.clipboard.writeText(text).then(() => {
+                showOutput(`Copied clip [${i}] to clipboard.`, 'success', 2000);
+            }).catch(() => {
+                showOutput(`[${i}] ${text.substring(0, 60)}`, 'info', 5000);
+            });
+        });
+        listEl.appendChild(div);
+    });
+}
+
+// Override addClip to also refresh the panel
+const _origAddClip = addClip;
+window.addClip = function(text) {
+    clipHistory.unshift(text);
+    if (clipHistory.length > 10) clipHistory.pop();
+    sessionStorage.setItem('cc_clips', JSON.stringify(clipHistory));
+    renderClipboard();
+};
+// Patch so notes-copy calls the new one
+notesArea.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+        const sel = window.getSelection().toString() || notesArea.value;
+        if (sel.trim()) { window.addClip(sel.trim()); }
+    }
+}, true); // capture phase so it runs first
+
+document.getElementById('clipClearBtn').addEventListener('click', () => {
+    clipHistory = [];
+    sessionStorage.removeItem('cc_clips');
+    renderClipboard();
+    showOutput('Clipboard history cleared.', 'info', 2000);
+});
+
+renderClipboard();
+
+// Also apply pomo ring glow when running
+const _origPomoTick = pomoTick;
+function applyPomoRingGlow() {
+    pomoRingEl.classList.toggle('running-glow', pomoState.running);
+}
+// Hook into pomoControl
+const _origPomoControl = window.pomoControl;
+window.pomoControl = function(action) {
+    _origPomoControl(action);
+    applyPomoRingGlow();
+};
+applyPomoRingGlow();
 
 // ─── INIT LOG ──────────────────────────────────────────────
 addLog('result', 'Command Center initialized');

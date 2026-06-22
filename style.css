@@ -922,22 +922,24 @@ html.theme-minimal .command-section::before { display: none; }
     grid-template-areas:
         "status  links   pomo"
         "timer   todo    habits"
-        "notes   notes   notes"
+        "notes   calc    clipboard"
         "quote   quote   quote"
         "log     log     log";
     gap: 16px;
     margin-bottom: 16px;
 }
 
-.status-panel  { grid-area: status; }
-.links-panel   { grid-area: links; }
-.pomo-panel    { grid-area: pomo; }
-.timer-panel   { grid-area: timer; }
-.todo-panel    { grid-area: todo; }
-.habits-panel  { grid-area: habits; }
-.notes-panel   { grid-area: notes; }
-.log-panel     { grid-area: log; }
-.quote-panel   { grid-area: quote; }
+.status-panel    { grid-area: status; }
+.links-panel     { grid-area: links; }
+.pomo-panel      { grid-area: pomo; }
+.timer-panel     { grid-area: timer; }
+.todo-panel      { grid-area: todo; }
+.habits-panel    { grid-area: habits; }
+.notes-panel     { grid-area: notes; }
+.calc-panel      { grid-area: calc; }
+.clipboard-panel { grid-area: clipboard; }
+.log-panel       { grid-area: log; }
+.quote-panel     { grid-area: quote; }
 
 /* ─── PANEL BASE ─── */
 .panel {
@@ -1076,7 +1078,6 @@ html.theme-minimal .title-bracket { display: none; }
 
 .fullscreen-close:hover { color: var(--text-red); border-color: var(--text-red); }
 
-/* Override panel styles in fullscreen */
 .fullscreen-inner .panel {
     flex: 1;
     animation: none;
@@ -1092,6 +1093,10 @@ html.theme-minimal .title-bracket { display: none; }
 .fullscreen-inner .links-grid { grid-template-columns: repeat(3, 1fr); }
 .fullscreen-inner .status-grid { grid-template-columns: repeat(4, 1fr); }
 .fullscreen-inner .habits-list { max-height: calc(100vh - 250px); }
+.fullscreen-inner .calc-container { flex: 1; }
+.fullscreen-inner .calc-btn { padding: 14px 8px; font-size: 1rem; }
+.fullscreen-inner .calc-expr { font-size: 2rem; }
+.fullscreen-inner .clip-list { max-height: calc(100vh - 200px); }
 
 /* ─── STATUS ─── */
 .status-grid {
@@ -1668,7 +1673,7 @@ html.theme-minimal .todo-item { border-radius: 8px; }
 .todo-item:hover .todo-del { opacity: 1; color: var(--text-red); }
 
 /* ─── NOTES ─── */
-.notes-panel { grid-column: span 2; }
+.notes-panel { display: flex; flex-direction: column; }
 
 .notes-saved {
     font-size: 0.65rem;
@@ -2209,15 +2214,17 @@ body, .panel, .panel-title, button, input, textarea, .modal, .status-value,
 .main-grid > .panel {
     animation: panelEntrance 0.45s ease backwards;
 }
-.main-grid > .panel:nth-child(1) { animation-delay: 0.02s; }
-.main-grid > .panel:nth-child(2) { animation-delay: 0.07s; }
-.main-grid > .panel:nth-child(3) { animation-delay: 0.12s; }
-.main-grid > .panel:nth-child(4) { animation-delay: 0.17s; }
-.main-grid > .panel:nth-child(5) { animation-delay: 0.22s; }
-.main-grid > .panel:nth-child(6) { animation-delay: 0.27s; }
-.main-grid > .panel:nth-child(7) { animation-delay: 0.32s; }
-.main-grid > .panel:nth-child(8) { animation-delay: 0.37s; }
-.main-grid > .panel:nth-child(9) { animation-delay: 0.42s; }
+.main-grid > .panel:nth-child(1)  { animation-delay: 0.02s; }
+.main-grid > .panel:nth-child(2)  { animation-delay: 0.07s; }
+.main-grid > .panel:nth-child(3)  { animation-delay: 0.12s; }
+.main-grid > .panel:nth-child(4)  { animation-delay: 0.17s; }
+.main-grid > .panel:nth-child(5)  { animation-delay: 0.22s; }
+.main-grid > .panel:nth-child(6)  { animation-delay: 0.27s; }
+.main-grid > .panel:nth-child(7)  { animation-delay: 0.32s; }
+.main-grid > .panel:nth-child(8)  { animation-delay: 0.37s; }
+.main-grid > .panel:nth-child(9)  { animation-delay: 0.42s; }
+.main-grid > .panel:nth-child(10) { animation-delay: 0.47s; }
+.main-grid > .panel:nth-child(11) { animation-delay: 0.52s; }
 
 /* ─── MICRO-INTERACTIONS ─── */
 button, .link-item, .theme-card, .habit-day, .todo-check {
@@ -2366,7 +2373,341 @@ kbd {
     color: var(--text-accent);
 }
 
-/* ─── RESPONSIVE ─── */
+/* ─── CALCULATOR PANEL ─── */
+.calc-panel { display: flex; flex-direction: column; }
+
+.calc-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+}
+
+.calc-display {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 10px 14px;
+    text-align: right;
+    min-height: 56px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 2px;
+    transition: border-color 0.2s;
+}
+
+.calc-display:focus-within { border-color: var(--text-accent); }
+
+.calc-expr {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 1px;
+    word-break: break-all;
+    line-height: 1.2;
+}
+
+.calc-result {
+    font-size: 0.75rem;
+    color: var(--text-accent);
+    letter-spacing: 1px;
+    min-height: 16px;
+}
+
+.calc-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+}
+
+.calc-btn {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 10px 8px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.12s;
+    letter-spacing: 0.5px;
+}
+
+.calc-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-active);
+}
+
+.calc-btn:active { transform: scale(0.92); }
+
+.calc-op {
+    color: var(--text-accent);
+    border-color: color-mix(in srgb, var(--border-color) 60%, var(--text-accent) 40%);
+}
+
+.calc-op:hover {
+    background: var(--text-accent);
+    color: var(--bg-primary);
+}
+
+.calc-fn {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+}
+
+.calc-fn:hover { color: var(--text-primary); }
+
+.calc-eq {
+    background: var(--text-accent);
+    color: var(--bg-primary);
+    border-color: var(--text-accent);
+    font-weight: 700;
+    box-shadow: 0 0 10px var(--glow-green);
+}
+
+.calc-eq:hover {
+    filter: brightness(1.15);
+    box-shadow: 0 0 18px var(--glow-green);
+}
+
+.calc-wide { grid-column: span 2; }
+
+/* ─── CLIPBOARD PANEL ─── */
+.clipboard-panel { display: flex; flex-direction: column; }
+
+.clip-clear-btn {
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    padding: 2px 8px;
+    cursor: pointer;
+    border-radius: 2px;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+}
+
+.clip-clear-btn:hover { color: var(--text-red); border-color: var(--text-red); }
+
+.clip-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    overflow-y: auto;
+    max-height: 240px;
+    flex: 1;
+}
+
+.clip-list::-webkit-scrollbar { width: 3px; }
+.clip-list::-webkit-scrollbar-thumb { background: var(--border-color); }
+
+.clip-empty {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 24px 12px;
+    opacity: 0.6;
+    font-style: italic;
+}
+
+.clip-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+    animation: slideDown 0.15s ease;
+}
+
+.clip-item:hover {
+    border-color: var(--text-accent);
+    background: var(--bg-hover);
+}
+
+.clip-num {
+    font-size: 0.6rem;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+    min-width: 16px;
+    text-align: center;
+}
+
+.clip-text {
+    flex: 1;
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.clip-copy-icon {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    opacity: 0;
+    transition: opacity 0.15s;
+    flex-shrink: 0;
+}
+
+.clip-item:hover .clip-copy-icon { opacity: 1; color: var(--text-accent); }
+
+/* ─── AESTHETIC ENHANCEMENTS ─── */
+
+/* Panel shimmer border on hover */
+.panel {
+    position: relative;
+    overflow: hidden;
+}
+
+.panel::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 60%; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--text-accent), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.panel:hover::after {
+    animation: shimmer 1.8s ease forwards;
+    opacity: 0.6;
+}
+
+@keyframes shimmer {
+    0%   { left: -60%; }
+    100% { left: 160%; }
+}
+
+html.theme-minimal .panel::after { display: none; }
+
+/* Better panel glow on hover — theme-aware */
+.panel:hover {
+    border-color: color-mix(in srgb, var(--border-color) 50%, var(--text-accent) 50%);
+    box-shadow: 0 0 24px color-mix(in srgb, transparent 85%, var(--text-accent) 15%),
+                inset 0 0 0 0 transparent;
+}
+
+/* Panel title accent underline */
+.panel-title {
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 14px;
+}
+
+html.theme-minimal .panel-title { border-bottom-color: var(--border-color); }
+
+/* Improved status items */
+.status-item {
+    position: relative;
+    overflow: hidden;
+}
+
+.status-item::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0;
+    width: 2px; height: 100%;
+    background: var(--border-color);
+    transition: background 0.2s;
+}
+
+.status-item:hover::before { background: var(--text-accent); }
+html.theme-minimal .status-item::before { display: none; }
+
+/* Glowing accent text values */
+.status-value.online {
+    text-shadow: 0 0 8px var(--online-color);
+}
+
+/* Command input glow ring */
+.command-section:focus-within {
+    border-color: var(--border-active);
+    box-shadow: 0 0 0 1px color-mix(in srgb, transparent 70%, var(--text-accent) 30%),
+                0 4px 20px color-mix(in srgb, transparent 85%, var(--text-accent) 15%);
+}
+
+/* Better scrollbars everywhere */
+* { scrollbar-width: thin; scrollbar-color: var(--border-color) transparent; }
+*::-webkit-scrollbar { width: 4px; height: 4px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 2px; }
+*::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+/* Log panel visual improvements */
+.log-entry {
+    border-radius: 3px;
+    transition: background 0.15s;
+}
+
+.log-entry:hover { background: var(--bg-hover); }
+
+/* Todo item improvements */
+.todo-item {
+    border-left: 2px solid transparent;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.todo-item:hover:not(.done) { border-left-color: var(--text-accent); }
+.todo-item.done { border-left-color: var(--border-color); }
+
+/* Habit day grid labels */
+.habit-days::before {
+    content: '';
+    display: none;
+}
+
+/* Quick link hover shimmer */
+.link-item {
+    border-left: 2px solid transparent;
+}
+
+.link-item:hover {
+    border-left-color: var(--text-accent);
+    transform: translateX(2px);
+}
+
+/* Pomodoro ring glow pulse when running */
+@keyframes ringGlow {
+    0%, 100% { filter: drop-shadow(0 0 4px var(--online-color)); }
+    50%       { filter: drop-shadow(0 0 10px var(--online-color)); }
+}
+
+.pomo-ring-progress.running-glow {
+    animation: ringGlow 2s ease-in-out infinite;
+}
+
+/* Quote panel decorative lines */
+.quote-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 40px; height: 2px;
+    background: var(--text-accent);
+    border-radius: 1px;
+    opacity: 0.5;
+}
+
+/* Header weather widget glow */
+.weather-header {
+    box-shadow: inset 0 0 20px color-mix(in srgb, transparent 92%, var(--text-accent) 8%);
+    transition: box-shadow 0.3s;
+}
+
+.weather-header:hover {
+    box-shadow: inset 0 0 20px color-mix(in srgb, transparent 85%, var(--text-accent) 15%);
+}
+
+/* ─── RESPONSIVE (updated for new grid) ─── */
 @media (max-width: 1200px) {
     .main-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -2374,7 +2715,8 @@ kbd {
             "status  links"
             "pomo    timer"
             "todo    habits"
-            "notes   notes"
+            "notes   calc"
+            "clipboard clipboard"
             "quote   quote"
             "log     log";
     }
@@ -2385,7 +2727,8 @@ kbd {
     .main-grid {
         grid-template-columns: 1fr;
         grid-template-areas:
-            "status" "links" "pomo" "timer" "todo" "habits" "notes" "quote" "log";
+            "status" "links" "pomo" "timer" "todo" "habits"
+            "notes" "calc" "clipboard" "quote" "log";
     }
     .header { flex-direction: column; gap: 10px; }
     .clock { font-size: 1.6rem; }
@@ -2610,12 +2953,9 @@ body.zen-mode .notes-panel textarea { min-height: 60vh; }
 @media (max-width: 768px) {
     /* Prevent iOS Safari auto-zoom on focus (needs >=16px) */
     #commandInput, #notes, .todo-input-row input, .habits-input-row input,
-    #timerInput, #timerTargetInput, .edit-link-row input {
+    #timerInput, #timerTargetInput, .edit-link-row input, .calc-expr {
         font-size: 16px;
     }
-
-    .quote-panel { grid-column: span 1; }
-    .notes-panel { grid-column: span 1; }
 
     .sub-greeting { flex-wrap: wrap; row-gap: 6px; }
     .sound-popover {
