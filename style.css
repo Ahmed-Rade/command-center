@@ -937,7 +937,7 @@ html.theme-minimal .command-section::before { display: none; }
 .habits-panel    { grid-area: habits; }
 .notes-panel     { grid-area: notes; }
 .calc-panel      { grid-area: calc; }
-.clipboard-panel { grid-area: clipboard; }
+.pins-panel      { grid-area: clipboard; }
 .log-panel       { grid-area: log; }
 .quote-panel     { grid-area: quote; }
 
@@ -1096,7 +1096,7 @@ html.theme-minimal .title-bracket { display: none; }
 .fullscreen-inner .calc-container { flex: 1; }
 .fullscreen-inner .calc-btn { padding: 14px 8px; font-size: 1rem; }
 .fullscreen-inner .calc-expr { font-size: 2rem; }
-.fullscreen-inner .clip-list { max-height: calc(100vh - 200px); }
+.fullscreen-inner .pins-list { max-height: calc(100vh - 200px); }
 
 /* ─── STATUS ─── */
 .status-grid {
@@ -1657,6 +1657,37 @@ html.theme-minimal .todo-item { border-radius: 8px; }
 }
 
 .todo-text { flex: 1; font-size: 0.82rem; color: var(--text-primary); }
+
+.todo-edit-btn {
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.8rem;
+    opacity: 0;
+    transition: all 0.15s;
+    background: none;
+    border: none;
+    font-family: var(--font-mono);
+    padding: 2px 5px;
+}
+.todo-item:hover .todo-edit-btn { opacity: 1; color: var(--text-blue); }
+
+.todo-edit-input {
+    flex: 1;
+    background: var(--bg-primary);
+    border: 1px solid var(--text-accent);
+    border-radius: 2px;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    padding: 2px 8px;
+    outline: none;
+    caret-color: var(--text-accent);
+    box-shadow: 0 0 8px var(--glow-green);
+}
+
+@media (hover: none), (pointer: coarse) {
+    .todo-edit-btn { opacity: 0.55; }
+}
 
 .todo-del {
     color: var(--text-secondary);
@@ -2478,6 +2509,105 @@ kbd {
 /* ─── CLIPBOARD PANEL ─── */
 .clipboard-panel { display: flex; flex-direction: column; }
 
+/* ─── PINS PANEL ─── */
+.pins-panel { display: flex; flex-direction: column; }
+
+.pins-input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.pins-input-row input {
+    flex: 1;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    outline: none;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    border-radius: 2px;
+    transition: border-color 0.2s;
+    caret-color: var(--text-accent);
+}
+
+.pins-input-row input:focus { border-color: var(--text-accent); }
+.pins-input-row input::placeholder { color: var(--text-secondary); }
+
+.pins-input-row button {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-accent);
+    font-family: var(--font-mono);
+    font-size: 1.2rem;
+    width: 36px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s;
+}
+.pins-input-row button:hover {
+    background: var(--text-accent);
+    color: var(--bg-primary);
+    border-color: var(--text-accent);
+}
+
+.pins-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    overflow-y: auto;
+    max-height: 240px;
+    flex: 1;
+}
+.pins-list::-webkit-scrollbar { width: 3px; }
+.pins-list::-webkit-scrollbar-thumb { background: var(--border-color); }
+
+.pin-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 2px;
+    cursor: default;
+    transition: all 0.15s;
+    animation: slideDown 0.15s ease;
+}
+.pin-item:hover { border-color: var(--text-accent); background: var(--bg-hover); }
+
+.pin-text {
+    flex: 1;
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pin-copy-btn, .pin-del-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    opacity: 0;
+    transition: opacity 0.15s, color 0.15s;
+    padding: 2px 5px;
+    flex-shrink: 0;
+}
+.pin-item:hover .pin-copy-btn,
+.pin-item:hover .pin-del-btn { opacity: 1; }
+.pin-copy-btn { color: var(--text-accent); }
+.pin-del-btn  { color: var(--text-secondary); }
+.pin-del-btn:hover  { color: var(--text-red); }
+.pin-copy-btn:hover { color: var(--text-primary); }
+
+@media (hover: none), (pointer: coarse) {
+    .pin-copy-btn, .pin-del-btn { opacity: 0.65; min-height: 34px; min-width: 28px; }
+}
+
 .clip-clear-btn {
     background: none;
     border: 1px solid var(--border-color);
@@ -2958,11 +3088,6 @@ body.zen-mode .notes-panel textarea { min-height: 60vh; }
     }
 
     .sub-greeting { flex-wrap: wrap; row-gap: 6px; }
-    .sound-popover {
-        left: 50%;
-        transform: translateX(-50%);
-        max-width: calc(100vw - 32px);
-    }
     .pomo-popover {
         left: 50%;
         right: auto;

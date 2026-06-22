@@ -27,6 +27,7 @@ const SK = {
     NAME:        'cc_display_name',
     FONT:        'cc_font',
     DENSITY:     'cc_density',
+    PINS:        'cc_pins',
 };
 
 // ─── ELEMENTS ───────────────────────────────────────────────
@@ -94,33 +95,51 @@ const GREETING_BANKS = {
         '> DAWN PATROL,', '> THE GRIND STARTS EARLY,', '> FIRST LIGHT, FIRST LOGIN,',
         '> ROOSTER MODE ACTIVATED,', '> WHILE THE WORLD SLEEPS,',
         '> SUNRISE SHIFT INITIATED,', '> ALARM WON, YOU SHOWED UP,',
+        '> FIRST ONE UP, LAST ONE DOWN,', '> DAWN FAVORS THE DISCIPLINED,',
+        '> THE SUN IS CATCHING UP TO YOU,', '> HOUR ZERO — FULL SEND,',
+        '> BEFORE THE WORLD WAKES, YOU BUILD,', '> SILENCE BEFORE THE STORM OF THE DAY,',
+        '> THE EARLY HOURS BELONG TO THOSE WHO CLAIM THEM,',
     ],
     morning: [ // 7–12
         '> GOOD MORNING,', '> MORNING, LEGEND,', '> COFFEE LOADING...',
         '> SYSTEMS ONLINE,', '> FRESH BOOT, FRESH START,', '> MORNING SHIFT,',
         '> CACHE CLEARED, READY TO GO,', '> TODAY\'S UPTIME: 100%,',
         '> NEW DAY, ZERO BUGS SO FAR,', '> MAIN CHARACTER ENERGY,',
-        '> PING SUCCESSFUL, YOU\'RE ALIVE,',
+        '> PING SUCCESSFUL, YOU\'RE ALIVE,', '> BUILD SOMETHING TODAY,',
+        '> ANOTHER DAY TO SHIP,', '> KERNEL LOADED, AWAITING INPUT,',
+        '> THE DAY IS BLANK CODE — WRITE IT WELL,',
+        '> COMPILE YOURSELF A GOOD ONE,', '> MORNING LIGHT IS PERMISSION ENOUGH,',
+        '> SHOW UP. THE REST FOLLOWS.,',
     ],
     afternoon: [ // 12–17
         '> GOOD AFTERNOON,', '> MIDDAY CHECK-IN,', '> STILL CRUSHING IT,',
         '> AFTERNOON OPS,', '> HALFWAY THROUGH THE DAY,', '> POST-LUNCH POWER MODE,',
         '> PEAK PRODUCTIVITY WINDOW,', '> SECOND WIND LOADING,',
         '> KEEP THE MOMENTUM GOING,', '> ON SCHEDULE, MOSTLY,',
+        '> PAST THE DIP, BACK IN THE ZONE,', '> AFTERNOON CLARITY UNLOCKED,',
+        '> HALF THE DAY IS YOURS TO KEEP,', '> THE AFTERNOON BELONGS TO FINISHERS,',
+        '> WHATEVER STARTED THIS MORNING — CLOSE IT,',
     ],
     evening: [ // 17–21
         '> GOOD EVENING,', '> WINDING DOWN,', '> EVENING SHIFT,',
         '> GOLDEN HOUR,', '> DAY\'S ALMOST DONE,', '> SUNSET SYNC,',
         '> CLOSING TICKETS FOR THE DAY,', '> OFFLINE SOON, FINISH STRONG,',
         '> EVENING DEBRIEF TIME,', '> ALMOST AT THE FINISH LINE,',
+        '> WHAT DID YOU BUILD TODAY,', '> THE DAY ENDS — THE WORK DOESN\'T,',
+        '> EVENING: REVIEW, REST, REPEAT,', '> EVERY ENDING IS DATA,',
+        '> WHAT GOT DONE TODAY COUNTS FOREVER,',
     ],
     night: [ // 21–00
         '> GOOD NIGHT,', '> NIGHT OWL MODE,', '> BURNING MIDNIGHT OIL,',
         '> LATE SHIFT,', '> THE NIGHT IS YOUNG,', '> DARK MODE: ACTIVATED,',
         '> NIGHT CREW REPORTING IN,', '> QUIET HOURS, LOUD THOUGHTS,',
         '> WINDING DOWN, NOT SHUTTING DOWN,', '> LAST CALL BEFORE BED,',
+        '> THE CITY SLEEPS — YOU SHIP,', '> NIGHT MODE: DEEP FOCUS,',
+        '> BUILD IN THE DARK, SHIP IN THE LIGHT,',
+        '> NIGHT BELONGS TO THE FOCUSED AND THE RESTLESS,',
+        '> LET THE DARK CARRY YOU A LITTLE FURTHER,',
     ],
-    deepNight: [ // 00–4, the niche/meme bucket
+    deepNight: [ // 00–4
         '> BACK AT IT AGAIN, NIGHT OWL,', '> WHY ARE YOU STILL UP,',
         '> 3AM THOUGHTS HIT DIFFERENT,', '> INSOMNIA SQUAD, ASSEMBLE,',
         '> THE GRIND NEVER SLEEPS,', '> RUNNING ON VIBES AND CAFFEINE,',
@@ -130,6 +149,10 @@ const GREETING_BANKS = {
         '> CONGRATS, YOU UNLOCKED THE SECRET HOURS,',
         '> ANOTHER LATE NIGHT, ANOTHER LEGEND BORN,',
         '> THE WIFI IS CALM AT THIS HOUR,',
+        '> EVERYONE ELSE CLOSED THEIR EYES,',
+        '> BETWEEN MIDNIGHT AND TOMORROW, SOMETHING GETS MADE,',
+        '> THE DARK HOURS KNOW YOUR NAME BY NOW,',
+        '> YOU AND THE MOON, STILL AT IT,',
     ],
 };
 
@@ -714,7 +737,22 @@ function setAllSound(on) {
 
 soundToggleBtn.addEventListener('click', (e) => {
     e.stopPropagation();
+    const wasHidden = soundPopover.classList.contains('hidden');
     soundPopover.classList.toggle('hidden');
+    if (wasHidden) {
+        // On touch/mobile devices, use fixed positioning calculated from button coords
+        // to avoid clipping inside the flex sub-greeting row
+        if (window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 768) {
+            const rect = soundToggleBtn.getBoundingClientRect();
+            soundPopover.style.position = 'fixed';
+            soundPopover.style.top  = (rect.bottom + 6) + 'px';
+            soundPopover.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 176)) + 'px';
+            soundPopover.style.right     = 'auto';
+            soundPopover.style.transform = 'none';
+        } else {
+            soundPopover.style.cssText = ''; // let CSS handle it on desktop
+        }
+    }
 });
 
 soundPopover.querySelectorAll('.sound-toggle-pill').forEach(btn => {
@@ -730,6 +768,7 @@ soundPopover.querySelectorAll('.sound-toggle-pill').forEach(btn => {
 document.addEventListener('click', (e) => {
     if (!soundPopover.classList.contains('hidden') && !e.target.closest('.sound-control')) {
         soundPopover.classList.add('hidden');
+        soundPopover.style.cssText = ''; // reset inline styles
     }
 });
 
@@ -857,16 +896,77 @@ function showOutput(msg, type = 'success', duration = 4000) {
 
 function hideOutput() { outputBar.className = 'output-bar hidden'; }
 
-// ─── CLIPBOARD MANAGER ─────────────────────────────────────
-let clipHistory = JSON.parse(sessionStorage.getItem('cc_clips') || '[]');
+// ─── PINS PANEL (replaces clipboard — actually useful on mobile) ──
+// Saved snippets: user types text, pins it, click to copy. Persisted in localStorage.
+let pins = JSON.parse(localStorage.getItem(SK.PINS) || '[]');
 
-function addClip(text) {
-    clipHistory.unshift(text);
-    if (clipHistory.length > 10) clipHistory.pop();
-    sessionStorage.setItem('cc_clips', JSON.stringify(clipHistory));
+function savePins() { localStorage.setItem(SK.PINS, JSON.stringify(pins)); }
+
+function addPin(text) {
+    if (!text.trim()) return;
+    pins.unshift({ id: Date.now(), text: text.trim() });
+    if (pins.length > 30) pins.pop();
+    savePins();
+    renderPins();
 }
 
-// Clipboard history is managed via window.addClip defined later
+function deletePin(id) {
+    pins = pins.filter(p => p.id !== id);
+    savePins();
+    renderPins();
+}
+
+function renderPins() {
+    const listEl = document.getElementById('pinsList');
+    if (!listEl) return;
+    listEl.innerHTML = '';
+    if (!pins.length) {
+        listEl.innerHTML = '<div class="clip-empty">No pins yet — type a snippet and press +</div>';
+        return;
+    }
+    pins.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'pin-item';
+        div.innerHTML = `
+            <span class="pin-text" title="${escapeHtml(p.text)}">${escapeHtml(p.text.substring(0, 80))}${p.text.length > 80 ? '…' : ''}</span>
+            <button class="pin-copy-btn" title="Copy">⎘</button>
+            <button class="pin-del-btn" title="Delete">✕</button>
+        `;
+        div.querySelector('.pin-copy-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            navigator.clipboard.writeText(p.text).then(() => {
+                showOutput('Copied!', 'success', 1500);
+            }).catch(() => {
+                showOutput(p.text.substring(0, 60), 'info', 5000);
+            });
+        });
+        div.querySelector('.pin-del-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            deletePin(p.id);
+        });
+        listEl.appendChild(div);
+    });
+}
+
+const pinsInput = document.getElementById('pinsInput');
+const pinsAddBtn = document.getElementById('pinsAdd');
+if (pinsInput && pinsAddBtn) {
+    pinsAddBtn.addEventListener('click', () => {
+        const text = pinsInput.value.trim();
+        if (text) { addPin(text); pinsInput.value = ''; addLog('cmd', ':pin add'); }
+    });
+    pinsInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const text = pinsInput.value.trim();
+            if (text) { addPin(text); pinsInput.value = ''; addLog('cmd', ':pin add'); }
+        }
+    });
+}
+document.getElementById('pinsClearBtn')?.addEventListener('click', () => {
+    pins = []; savePins(); renderPins();
+    showOutput('Pins cleared.', 'info', 2000);
+});
+renderPins();
 
 // ─── QUICK LINKS ───────────────────────────────────────────
 const DEFAULT_LINKS = [
@@ -994,7 +1094,7 @@ const PANEL_MAP = {
     habits:    'panel-habits',
     quote:     'panel-quote',
     calc:      'panel-calc',
-    clipboard: 'panel-clipboard',
+    pins:      'panel-pins',
 };
 
 let fsScrollY = 0;
@@ -1088,20 +1188,27 @@ function savePomoSettings() {
 }
 
 const _savedPomo = JSON.parse(localStorage.getItem(SK.POMO_STATE) || 'null');
+const _pomoWasRunning = !!(_savedPomo?.wasRunning && _savedPomo?.endEpoch > Date.now());
+let pomoEndEpoch = _savedPomo?.endEpoch || 0;
+
 let pomoState = {
     running: false,
     phase:     _savedPomo?.phase     || 'work',
     total:     _savedPomo?.total     || pomoSettings.work * 60,
-    remaining: _savedPomo?.remaining || pomoSettings.work * 60,
+    remaining: _pomoWasRunning
+        ? Math.max(0, Math.round((_savedPomo.endEpoch - Date.now()) / 1000))
+        : (_savedPomo?.remaining || pomoSettings.work * 60),
     sessions:  parseInt(localStorage.getItem(SK.POMO_SESS) || '0'),
     interval: null,
 };
 
 function savePomoState() {
     localStorage.setItem(SK.POMO_STATE, JSON.stringify({
-        phase:     pomoState.phase,
-        total:     pomoState.total,
-        remaining: pomoState.remaining,
+        phase:      pomoState.phase,
+        total:      pomoState.total,
+        remaining:  pomoState.remaining,
+        wasRunning: pomoState.running,
+        endEpoch:   pomoState.running ? pomoEndEpoch : 0,
     }));
 }
 
@@ -1124,9 +1231,13 @@ function updatePomoDisplay() {
 }
 
 function pomoTick() {
-    if (pomoState.remaining <= 0) {
+    const remaining = Math.max(0, Math.round((pomoEndEpoch - Date.now()) / 1000));
+    pomoState.remaining = remaining;
+
+    if (remaining <= 0) {
         pomoState.running = false;
         clearInterval(pomoState.interval);
+        pomoEndEpoch = 0;
 
         if (pomoState.phase === 'work') {
             pomoState.sessions++;
@@ -1155,15 +1266,15 @@ function pomoTick() {
         addLog('result', `Pomodoro: ${pomoState.phase === 'break' ? 'work done' : 'break done'}`);
 
         if (pomoSettings.autoStart) {
+            pomoEndEpoch = Date.now() + pomoState.remaining * 1000;
             pomoState.running = true;
-            pomoState.interval = setInterval(pomoTick, 1000);
+            pomoState.interval = setInterval(pomoTick, 500);
             pomoStartBtn.textContent = '⏸ PAUSE';
         } else {
             pomoStartBtn.textContent = '▶ START';
         }
         return;
     }
-    pomoState.remaining--;
     savePomoState();
     updatePomoDisplay();
 }
@@ -1173,18 +1284,23 @@ window.pomoControl = function(action) {
         if (pomoState.running) {
             clearInterval(pomoState.interval);
             pomoState.running = false;
+            pomoEndEpoch = 0;
+            savePomoState();
             pomoStartBtn.textContent = '▶ RESUME';
             addLog('cmd', ':pomo pause');
         } else {
             requestNotifyPermission();
+            pomoEndEpoch = Date.now() + pomoState.remaining * 1000;
             pomoState.running = true;
-            pomoState.interval = setInterval(pomoTick, 1000);
+            pomoState.interval = setInterval(pomoTick, 500);
+            savePomoState();
             pomoStartBtn.textContent = '⏸ PAUSE';
             addLog('cmd', ':pomo start');
         }
     } else if (action === 'reset') {
         clearInterval(pomoState.interval);
         pomoState.running = false;
+        pomoEndEpoch = 0;
         pomoState.phase = 'work';
         pomoState.total = pomoSettings.work * 60;
         pomoState.remaining = pomoSettings.work * 60;
@@ -1197,6 +1313,16 @@ window.pomoControl = function(action) {
 
 updatePomoDisplay();
 if (pomoState.remaining < pomoState.total) pomoStartBtn.textContent = '▶ RESUME';
+
+// Auto-resume if pomo was running when page was closed
+if (_pomoWasRunning && pomoState.remaining > 0) {
+    requestNotifyPermission();
+    pomoEndEpoch = _savedPomo.endEpoch;
+    pomoState.running = true;
+    pomoState.interval = setInterval(pomoTick, 500);
+    pomoStartBtn.textContent = '⏸ PAUSE';
+    addLog('result', `Pomodoro auto-resumed (${pomoState.remaining}s left)`);
+}
 
 // ─── POMODORO SETTINGS POPOVER ──────────────────────────────
 const pomoSettingsBtn      = document.getElementById('pomoSettingsBtn');
@@ -1288,12 +1414,24 @@ document.querySelectorAll('.pomo-stepper-btn').forEach(btn => {
 
 // ─── TIMER (STOPWATCH + COUNTDOWN) ─────────────────────────
 const _savedTimer = JSON.parse(localStorage.getItem(SK.TIMER_STATE) || 'null');
+const _timerWasRunning = !!_savedTimer?.wasRunning;
+let timerEndEpoch   = _savedTimer?.endEpoch   || 0;
+let timerStartEpoch = _savedTimer?.startEpoch || 0;
+
 let timerState = {
     mode:               _savedTimer?.mode               || 'stopwatch',
     running: false,
-    elapsed:            _savedTimer?.elapsed            || 0,
+    elapsed: (() => {
+        if (_timerWasRunning && _savedTimer?.mode === 'stopwatch' && timerStartEpoch)
+            return Date.now() - timerStartEpoch;
+        return _savedTimer?.elapsed || 0;
+    })(),
     countdownTotal:     _savedTimer?.countdownTotal     || 0,
-    countdownRemaining: _savedTimer?.countdownRemaining || 0,
+    countdownRemaining: (() => {
+        if (_timerWasRunning && _savedTimer?.mode === 'countdown' && timerEndEpoch)
+            return Math.max(0, timerEndEpoch - Date.now());
+        return _savedTimer?.countdownRemaining || 0;
+    })(),
     interval: null,
     laps:               _savedTimer?.laps               || [],
     lastLap:            _savedTimer?.lastLap            || 0,
@@ -1307,6 +1445,9 @@ function saveTimerState() {
         countdownRemaining: timerState.countdownRemaining,
         laps:               timerState.laps,
         lastLap:            timerState.lastLap,
+        wasRunning:         timerState.running,
+        endEpoch:   timerState.mode === 'countdown' ? timerEndEpoch   : 0,
+        startEpoch: timerState.mode === 'stopwatch' ? timerStartEpoch : 0,
     }));
 }
 
@@ -1344,15 +1485,16 @@ function updateTimerDisplay() {
 
 function timerTick() {
     if (timerState.mode === 'stopwatch') {
-        timerState.elapsed += 100;
-        if (timerState.elapsed % 1000 === 0) saveTimerState(); // persist ~1x/sec, not 10x/sec
+        timerState.elapsed = Date.now() - timerStartEpoch;
+        if (timerState.elapsed % 1000 < 220) saveTimerState(); // persist ~1x/sec
         updateTimerDisplay();
     } else {
-        timerState.countdownRemaining -= 100;
+        timerState.countdownRemaining = timerEndEpoch - Date.now();
         if (timerState.countdownRemaining <= 0) {
             timerState.countdownRemaining = 0;
             timerState.running = false;
             clearInterval(timerState.interval);
+            timerEndEpoch = 0;
             timerStartBtn.textContent = '▶ START';
             saveTimerState();
             updateTimerDisplay();
@@ -1363,7 +1505,7 @@ function timerTick() {
             return;
         }
         updateTimerDisplay();
-        if (timerState.countdownRemaining % 1000 === 0) saveTimerState(); // persist ~1x/sec
+        if (timerState.countdownRemaining % 1000 < 220) saveTimerState(); // persist ~1x/sec
     }
 }
 
@@ -1372,6 +1514,8 @@ window.timerControl = function(action) {
         if (timerState.running) {
             clearInterval(timerState.interval);
             timerState.running = false;
+            timerEndEpoch = 0;
+            timerStartEpoch = 0;
             timerStartBtn.textContent = '▶ RESUME';
             saveTimerState();
             addLog('cmd', 'timer pause');
@@ -1381,9 +1525,15 @@ window.timerControl = function(action) {
                 return;
             }
             requestNotifyPermission();
+            if (timerState.mode === 'countdown') {
+                timerEndEpoch = Date.now() + timerState.countdownRemaining;
+            } else {
+                timerStartEpoch = Date.now() - timerState.elapsed;
+            }
             timerState.running = true;
-            timerState.interval = setInterval(timerTick, 100);
+            timerState.interval = setInterval(timerTick, 200);
             timerStartBtn.textContent = '⏸ PAUSE';
+            saveTimerState();
             addLog('cmd', 'timer start');
         }
     } else if (action === 'reset') {
@@ -1393,6 +1543,8 @@ window.timerControl = function(action) {
         timerState.countdownRemaining = timerState.countdownTotal;
         timerState.laps = [];
         timerState.lastLap = 0;
+        timerEndEpoch = 0;
+        timerStartEpoch = 0;
         timerLapsEl.innerHTML = '';
         timerStartBtn.textContent = '▶ START';
         saveTimerState();
@@ -1474,9 +1626,11 @@ window.setCountdown = function() {
         timerState.running = false;
     }
     requestNotifyPermission();
+    timerEndEpoch = Date.now() + timerState.countdownRemaining;
     timerState.running = true;
-    timerState.interval = setInterval(timerTick, 100);
+    timerState.interval = setInterval(timerTick, 200);
     timerStartBtn.textContent = '⏸ PAUSE';
+    saveTimerState();
     showOutput(`▶ Countdown started: ${formatMs(totalSeconds * 1000)}`, 'success', 2000);
     addLog('cmd', `timer set+start: ${formatMs(totalSeconds * 1000)}`);
 };
@@ -1505,9 +1659,11 @@ window.setCountdownToTime = function() {
         timerState.running = false;
     }
     requestNotifyPermission();
+    timerEndEpoch = Date.now() + timerState.countdownRemaining;
     timerState.running = true;
-    timerState.interval = setInterval(timerTick, 100);
+    timerState.interval = setInterval(timerTick, 200);
     timerStartBtn.textContent = '⏸ PAUSE';
+    saveTimerState();
 
     const h = String(parseInt(hStr) % 12 || 12).padStart(2, '0');
     const ampm = parseInt(hStr) < 12 ? 'AM' : 'PM';
@@ -1525,9 +1681,11 @@ window.setCountdownPreset = function(minutes) {
         timerState.running = false;
     }
     requestNotifyPermission();
+    timerEndEpoch = Date.now() + timerState.countdownRemaining;
     timerState.running = true;
-    timerState.interval = setInterval(timerTick, 100);
+    timerState.interval = setInterval(timerTick, 200);
     timerStartBtn.textContent = '⏸ PAUSE';
+    saveTimerState();
     showOutput(`▶ ${minutes}m countdown started`, 'success', 2000);
     addLog('cmd', `timer preset: ${minutes}m`);
 };
@@ -1548,6 +1706,46 @@ if (_savedTimer?.mode === 'countdown') {
 }
 if (_savedTimer?.laps?.length) renderLaps();
 updateTimerDisplay();
+
+// Auto-resume timer if it was running when page was closed
+if (_timerWasRunning) {
+    if (timerState.mode === 'countdown' && timerEndEpoch > Date.now()) {
+        requestNotifyPermission();
+        timerState.running = true;
+        timerState.interval = setInterval(timerTick, 200);
+        timerStartBtn.textContent = '⏸ PAUSE';
+        addLog('result', 'Timer auto-resumed');
+    } else if (timerState.mode === 'stopwatch' && timerStartEpoch > 0) {
+        timerState.running = true;
+        timerStartEpoch = Date.now() - timerState.elapsed; // re-anchor
+        timerState.interval = setInterval(timerTick, 200);
+        timerStartBtn.textContent = '⏸ PAUSE';
+        addLog('result', 'Stopwatch auto-resumed');
+    }
+}
+
+// ─── VISIBILITY CHANGE — sync wall-clock timers on tab/app return ──
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) return;
+    // Re-sync Pomodoro
+    if (pomoState.running && pomoEndEpoch > 0) {
+        const rem = Math.max(0, Math.round((pomoEndEpoch - Date.now()) / 1000));
+        pomoState.remaining = rem;
+        updatePomoDisplay();
+        if (rem <= 0) pomoTick();
+    }
+    // Re-sync Timer
+    if (timerState.running) {
+        if (timerState.mode === 'countdown' && timerEndEpoch > 0) {
+            timerState.countdownRemaining = Math.max(0, timerEndEpoch - Date.now());
+            updateTimerDisplay();
+            if (timerState.countdownRemaining <= 0) timerTick();
+        } else if (timerState.mode === 'stopwatch' && timerStartEpoch > 0) {
+            timerState.elapsed = Date.now() - timerStartEpoch;
+            updateTimerDisplay();
+        }
+    }
+});
 
 // ─── IP INFO ───────────────────────────────────────────────
 async function fetchMyIP() {
@@ -1798,6 +1996,47 @@ const QUOTES = [
     "The first ten minutes decide the next two hours.",
     "Protect the first hour — it sets the tone for the rest.",
     "Progress prefers a narrow lane over an open field.",
+
+    // Deep / philosophical
+    "The quality of your attention is the quality of your work.",
+    "Boredom is the mind asking for a harder problem.",
+    "Every shortcut is a debt you'll pay with interest.",
+    "The gap between who you are and who you want to be is called work.",
+    "Pressure doesn't build character — it reveals it.",
+    "What you resist, you carry. What you accept, you can move.",
+    "The person you're becoming will thank you for the decision you made today.",
+    "You have more time than you think, and less than you feel.",
+    "A clear conscience moves fast.",
+    "The best time to rest was before exhaustion. The second best is now.",
+    "Stillness isn't emptiness — it's where the real signal hides.",
+    "The things worth having are rarely the things you were promised.",
+    "Focus is not doing more — it's saying no to almost everything.",
+    "Hard conversations have shorter half-lives than avoided ones.",
+    "What looks like laziness is often fear wearing comfortable clothes.",
+    "Silence is the loudest response to things that don't deserve one.",
+    "The version of you ten years from now is built from choices that feel small today.",
+    "Not everything broken needs to be fixed. Some things need to be released.",
+    "Clarity about what matters is the rarest form of intelligence.",
+    "Strong opinions, held lightly — that's the balance worth chasing.",
+    "You don't need permission to start. You just need to stop waiting for it.",
+    "The work reveals the worker. Show up honestly.",
+    "Everything hard becomes a story. Everything avoided becomes a weight.",
+    "Pain is information. Suffering is the story you add to it.",
+    "Who you are in private eventually becomes who you are everywhere.",
+    "The mind that can sit with uncertainty is more powerful than the one that needs answers.",
+    "Trust is built in moments nobody was watching.",
+    "You are the sum of every response you gave when no one was looking.",
+    "The most important decisions feel the least urgent.",
+    "Your future is not found — it's made, one ignored distraction at a time.",
+    "Nothing lasts forever except the impact of what you chose to care about.",
+    "The loudest voice in the room rarely has the deepest thought.",
+    "Depth is built in silence. Breadth is built in exposure. You need both.",
+    "The price of a clear mind is paid in difficult conversations.",
+    "Some doors only open from the inside.",
+    "You can't go back and change the beginning. You can start where you are and change the ending.",
+    "What you call impossible is often just unfamiliar.",
+    "The right question is always more powerful than the right answer.",
+    "Regret is the tax on playing it safe.",
 ];
 
 const quoteTextEl = document.getElementById('quoteText');
@@ -1872,7 +2111,7 @@ document.getElementById('importFile').addEventListener('change', (e) => {
 const AUTOCOMPLETE_LIST = [
     ':calc', ':clear', ':todo', ':time', ':help', ':ping',
     ':theme', ':engine', ':bg', ':pomo', ':myip', ':price',
-    ':weather', ':log', ':timer', ':links', ':clip',
+    ':weather', ':log', ':timer', ':links', ':pin',
     ':convert', ':flip', ':roll', ':zen', ':sound', ':export', ':import',
 ];
 
@@ -1920,7 +2159,7 @@ const COMMANDS = {
     },
 
     ':help': () => {
-        showOutput(':calc :todo :clear :time :ping :pomo :timer :theme :engine :bg :price :myip :weather :log :clip :convert :flip :roll :zen :export :import — or type to search', 'info', 10000);
+        showOutput(':calc :todo :clear :time :ping :pomo :timer :theme :engine :bg :price :myip :weather :log :pin :convert :flip :roll :zen :export :import — or type to search', 'info', 10000);
         addLog('cmd', ':help');
     },
 
@@ -2038,20 +2277,23 @@ const COMMANDS = {
         }
     },
 
-    ':clip': (args) => {
+    ':pin': (args) => {
         const n = parseInt(args.trim());
         if (!args.trim()) {
-            if (clipHistory.length === 0) { showOutput('Clipboard history empty.', 'info'); return; }
-            const list = clipHistory.map((c, i) => `[${i}] ${c.substring(0, 40)}`).join(' · ');
+            if (!pins.length) { showOutput('No pins saved. Use :pin <text> to add one.', 'info'); return; }
+            const list = pins.map((p, i) => `[${i}] ${p.text.substring(0, 35)}`).join(' · ');
             showOutput(list, 'info', 10000);
-        } else if (!isNaN(n) && clipHistory[n]) {
-            navigator.clipboard.writeText(clipHistory[n]).then(() => {
-                showOutput(`Copied item ${n} to clipboard.`, 'success');
+        } else if (!isNaN(n) && pins[n]) {
+            navigator.clipboard.writeText(pins[n].text).then(() => {
+                showOutput(`Copied pin [${n}].`, 'success');
             }).catch(() => {
-                showOutput(`[${n}] ${clipHistory[n].substring(0, 80)}`, 'info', 8000);
+                showOutput(`[${n}] ${pins[n].text.substring(0, 80)}`, 'info', 8000);
             });
         } else {
-            showOutput('Usage: :clip (list) | :clip <n>', 'info');
+            // treat remaining text as new pin
+            addPin(args.trim());
+            showOutput(`Pinned: ${args.trim().substring(0, 50)}`, 'success', 2000);
+            addLog('cmd', `:pin "${args.trim()}"`);
         }
     },
 
@@ -2202,7 +2444,7 @@ const CMD_CATALOG = [
     { cmd: ':weather', desc: 'Refresh weather',       usage: ':weather' },
     { cmd: ':myip',    desc: 'Network info',          usage: ':myip' },
     { cmd: ':log',     desc: 'Command log',           usage: ':log clear' },
-    { cmd: ':clip',    desc: 'Clipboard history',     usage: ':clip <n>' },
+    { cmd: ':pin',     desc: 'Saved snippets / pins', usage: ':pin <text> or :pin <n> to copy' },
     { cmd: ':links',   desc: 'Edit quick access',     usage: ':links edit | :links reset' },
     { cmd: ':convert', desc: 'Unit converter',        usage: ':convert 10 km mi' },
     { cmd: ':flip',    desc: 'Coin flip',             usage: ':flip' },
@@ -2401,14 +2643,60 @@ function renderTodos() {
     [...active, ...done].forEach(t => {
         const li = document.createElement('li');
         li.className = `todo-item${t.done ? ' done' : ''}`;
+        li.dataset.id = t.id;
         li.innerHTML = `
             <div class="todo-check" onclick="toggleTodo(${t.id})">${t.done ? '✓' : ''}</div>
             <span class="todo-text">${escapeHtml(t.text)}</span>
+            <button class="todo-edit-btn" onclick="startEditTodo(${t.id})" title="Edit task">✎</button>
             <button class="todo-del" onclick="deleteTodo(${t.id})">✕</button>
         `;
         todoList.appendChild(li);
     });
 }
+
+function startEditTodo(id) {
+    const t = todos.find(t => t.id === id);
+    if (!t) return;
+    const li = todoList.querySelector(`li[data-id="${id}"]`);
+    if (!li) return;
+
+    const textEl  = li.querySelector('.todo-text');
+    const editBtn = li.querySelector('.todo-edit-btn');
+
+    const input = document.createElement('input');
+    input.type  = 'text';
+    input.className = 'todo-edit-input';
+    input.value = t.text;
+    input.autocomplete = 'off';
+    input.spellcheck   = false;
+
+    textEl.replaceWith(input);
+    editBtn.textContent = '✓';
+    editBtn.onclick = () => saveEditTodo(id, input.value);
+
+    input.focus();
+    input.select();
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter')  { e.preventDefault(); saveEditTodo(id, input.value); }
+        if (e.key === 'Escape') { renderTodos(); }
+    });
+    // blur → save after short delay (lets the ✓ button click register first)
+    input.addEventListener('blur', () => {
+        setTimeout(() => {
+            const li2 = todoList.querySelector(`li[data-id="${id}"]`);
+            if (li2?.querySelector('.todo-edit-input')) saveEditTodo(id, input.value);
+        }, 160);
+    });
+}
+
+function saveEditTodo(id, newText) {
+    const text = newText.trim();
+    const t = todos.find(t => t.id === id);
+    if (t && text) { t.text = text; saveTodos(); addLog('cmd', `todo edited`); }
+    renderTodos();
+}
+window.startEditTodo = startEditTodo;
 
 function escapeHtml(str) {
     if (typeof str !== 'string') return String(str);
@@ -2557,60 +2845,6 @@ document.addEventListener('keydown', (e) => {
 });
 
 calcRender();
-
-// ─── CLIPBOARD PANEL ───────────────────────────────────────
-function renderClipboard() {
-    const listEl = document.getElementById('clipList');
-    if (!listEl) return;
-    listEl.innerHTML = '';
-    if (!clipHistory.length) {
-        listEl.innerHTML = '<div class="clip-empty">No clips yet — copy text in Notes (Ctrl+C)</div>';
-        return;
-    }
-    clipHistory.forEach((text, i) => {
-        const div = document.createElement('div');
-        div.className = 'clip-item';
-        div.title = text;
-        div.innerHTML = `
-            <span class="clip-num">${i}</span>
-            <span class="clip-text">${escapeHtml(text.substring(0, 80))}${text.length > 80 ? '…' : ''}</span>
-            <span class="clip-copy-icon">⎘</span>
-        `;
-        div.addEventListener('click', () => {
-            navigator.clipboard.writeText(text).then(() => {
-                showOutput(`Copied clip [${i}] to clipboard.`, 'success', 2000);
-            }).catch(() => {
-                showOutput(`[${i}] ${text.substring(0, 60)}`, 'info', 5000);
-            });
-        });
-        listEl.appendChild(div);
-    });
-}
-
-// Override addClip to also refresh the panel
-const _origAddClip = addClip;
-window.addClip = function(text) {
-    clipHistory.unshift(text);
-    if (clipHistory.length > 10) clipHistory.pop();
-    sessionStorage.setItem('cc_clips', JSON.stringify(clipHistory));
-    renderClipboard();
-};
-// Patch so notes-copy calls the new one
-notesArea.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
-        const sel = window.getSelection().toString() || notesArea.value;
-        if (sel.trim()) { window.addClip(sel.trim()); }
-    }
-}, true); // capture phase so it runs first
-
-document.getElementById('clipClearBtn').addEventListener('click', () => {
-    clipHistory = [];
-    sessionStorage.removeItem('cc_clips');
-    renderClipboard();
-    showOutput('Clipboard history cleared.', 'info', 2000);
-});
-
-renderClipboard();
 
 // Also apply pomo ring glow when running
 const _origPomoTick = pomoTick;
