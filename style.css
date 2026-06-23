@@ -1611,6 +1611,7 @@ html.theme-minimal .link-item { border-radius: 8px; }
     color: var(--text-primary);
     letter-spacing: 3px;
     line-height: 1;
+    font-variant-numeric: tabular-nums;
     transition: color 0.3s, font-size 0.3s;
 }
 

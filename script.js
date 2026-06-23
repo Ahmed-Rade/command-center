@@ -1491,8 +1491,8 @@ function formatMs(ms, showCs = false) {
     const s = totalSec % 60;
     const base = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
     if (!showCs) return base;
-    const cs = Math.floor((ms % 1000) / 10);
-    return base + `<span class="timer-cs">.${String(cs).padStart(2,'0')}</span>`;
+    const msPart = ms % 1000;
+    return base + `<span class="timer-cs">.${String(msPart).padStart(3,'0')}</span>`;
 }
 
 function updateTimerDisplay() {
@@ -1513,7 +1513,7 @@ function updateTimerDisplay() {
 function timerTick() {
     if (timerState.mode === 'stopwatch') {
         timerState.elapsed = Date.now() - timerStartEpoch;
-        if (timerState.elapsed % 1000 < 220) saveTimerState(); // persist ~1x/sec
+        if (timerState.elapsed % 1000 < 35) saveTimerState(); // persist ~1x/sec
         updateTimerDisplay();
     } else {
         timerState.countdownRemaining = timerEndEpoch - Date.now();
@@ -1532,7 +1532,7 @@ function timerTick() {
             return;
         }
         updateTimerDisplay();
-        if (timerState.countdownRemaining % 1000 < 220) saveTimerState(); // persist ~1x/sec
+        if (timerState.countdownRemaining % 1000 < 35) saveTimerState(); // persist ~1x/sec
     }
 }
 
@@ -1558,7 +1558,7 @@ window.timerControl = function(action) {
                 timerStartEpoch = Date.now() - timerState.elapsed;
             }
             timerState.running = true;
-            timerState.interval = setInterval(timerTick, 200);
+            timerState.interval = setInterval(timerTick, 30);
             timerStartBtn.textContent = '⏸ PAUSE';
             saveTimerState();
             addLog('cmd', 'timer start');
@@ -1655,7 +1655,7 @@ window.setCountdown = function() {
     requestNotifyPermission();
     timerEndEpoch = Date.now() + timerState.countdownRemaining;
     timerState.running = true;
-    timerState.interval = setInterval(timerTick, 200);
+    timerState.interval = setInterval(timerTick, 30);
     timerStartBtn.textContent = '⏸ PAUSE';
     saveTimerState();
     showOutput(`▶ Countdown started: ${formatMs(totalSeconds * 1000)}`, 'success', 2000);
@@ -1688,7 +1688,7 @@ window.setCountdownToTime = function() {
     requestNotifyPermission();
     timerEndEpoch = Date.now() + timerState.countdownRemaining;
     timerState.running = true;
-    timerState.interval = setInterval(timerTick, 200);
+    timerState.interval = setInterval(timerTick, 30);
     timerStartBtn.textContent = '⏸ PAUSE';
     saveTimerState();
 
@@ -1710,7 +1710,7 @@ window.setCountdownPreset = function(minutes) {
     requestNotifyPermission();
     timerEndEpoch = Date.now() + timerState.countdownRemaining;
     timerState.running = true;
-    timerState.interval = setInterval(timerTick, 200);
+    timerState.interval = setInterval(timerTick, 30);
     timerStartBtn.textContent = '⏸ PAUSE';
     saveTimerState();
     showOutput(`▶ ${minutes}m countdown started`, 'success', 2000);
@@ -1739,13 +1739,13 @@ if (_timerWasRunning) {
     if (timerState.mode === 'countdown' && timerEndEpoch > Date.now()) {
         requestNotifyPermission();
         timerState.running = true;
-        timerState.interval = setInterval(timerTick, 200);
+        timerState.interval = setInterval(timerTick, 30);
         timerStartBtn.textContent = '⏸ PAUSE';
         addLog('result', 'Timer auto-resumed');
     } else if (timerState.mode === 'stopwatch' && timerStartEpoch > 0) {
         timerState.running = true;
         timerStartEpoch = Date.now() - timerState.elapsed; // re-anchor
-        timerState.interval = setInterval(timerTick, 200);
+        timerState.interval = setInterval(timerTick, 30);
         timerStartBtn.textContent = '⏸ PAUSE';
         addLog('result', 'Stopwatch auto-resumed');
     }
