@@ -495,6 +495,7 @@ body {
     background: var(--bg-primary);
     color: var(--text-primary);
     min-height: 100vh;
+    min-height: 100dvh;
     padding: 24px;
     line-height: 1.6;
     position: relative;
@@ -1114,15 +1115,15 @@ html.theme-minimal .title-bracket { display: none; }
     border-color: var(--border-active);
 }
 
-.fullscreen-inner #notes { min-height: calc(100vh - 200px); }
-.fullscreen-inner .todo-list { max-height: calc(100vh - 250px); }
-.fullscreen-inner .log-entries { max-height: calc(100vh - 200px); }
+.fullscreen-inner #notes { min-height: calc(100vh - 200px); min-height: calc(100dvh - 200px); }
+.fullscreen-inner .todo-list { max-height: calc(100vh - 250px); max-height: calc(100dvh - 250px); }
+.fullscreen-inner .log-entries { max-height: calc(100vh - 200px); max-height: calc(100dvh - 200px); }
 .fullscreen-inner .pomo-ring-wrapper { width: 240px; height: 240px; }
 .fullscreen-inner .pomo-time { font-size: 2.4rem; }
 .fullscreen-inner .timer-display { font-size: 5rem; }
 .fullscreen-inner .links-grid { grid-template-columns: repeat(3, 1fr); }
 .fullscreen-inner .status-grid { grid-template-columns: repeat(4, 1fr); }
-.fullscreen-inner .habits-list { max-height: calc(100vh - 250px); }
+.fullscreen-inner .habits-list { max-height: calc(100vh - 250px); max-height: calc(100dvh - 250px); }
 .fullscreen-inner .calc-container { flex: 1; }
 .fullscreen-inner .calc-advanced .calc-btn { padding: 16px 8px; font-size: 1.05rem; }
 .fullscreen-inner .calc-advanced .calc-sci,
@@ -1258,7 +1259,7 @@ html.theme-minimal .title-bracket { display: none; }
     padding: 6px 0;
     letter-spacing: 1px;
 }
-.fullscreen-inner .pins-list { max-height: calc(100vh - 200px); }
+.fullscreen-inner .pins-list { max-height: calc(100vh - 200px); max-height: calc(100dvh - 200px); }
 
 /* ─── STATUS ─── */
 .status-grid {
@@ -3253,7 +3254,8 @@ body.zen-mode .notes-panel textarea { min-height: 60vh; }
 @media (max-width: 768px) {
     /* Prevent iOS Safari auto-zoom on focus (needs >=16px) */
     #commandInput, #notes, .todo-input-row input, .habits-input-row input,
-    #timerInput, #timerTargetInput, .edit-link-row input, .calc-expr {
+    #timerInput, #timerTargetInput, .edit-link-row input, .calc-expr,
+    #pinsInput, #habitInput {
         font-size: 16px;
     }
 

@@ -30,6 +30,18 @@ const SK = {
     PINS:        'cc_pins',
 };
 
+// ─── SAFE STORAGE (corrupted/old JSON must never crash boot) ───
+function lsGet(key, fallback) {
+    try {
+        const raw = localStorage.getItem(key);
+        if (raw === null) return fallback;
+        return JSON.parse(raw);
+    } catch { return fallback; }
+}
+function lsSet(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+}
+
 // ─── ELEMENTS ───────────────────────────────────────────────
 const greetingEl   = document.getElementById('greeting');
 const greetingPrefixEl = document.getElementById('greetingPrefix');
@@ -336,6 +348,7 @@ let matrixEnabled = true;
         matrixCanvas.height = window.innerHeight;
         cols = Math.floor(matrixCanvas.width / 18);
         drops = Array(cols).fill(1);
+        ctx.font = '12px JetBrains Mono, monospace'; // resizing resets canvas context state
     }
     resize();
     window.addEventListener('resize', debounce(resize, 150));
@@ -346,7 +359,6 @@ let matrixEnabled = true;
         ctx.fillStyle = 'rgba(6, 10, 15, 0.05)';
         ctx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
         ctx.fillStyle = '#39d353';
-        ctx.font = '12px JetBrains Mono, monospace';
         drops.forEach((y, i) => {
             const char = chars[Math.floor(Math.random() * chars.length)];
             ctx.fillText(char, i * 18, y * 18);
@@ -622,7 +634,7 @@ const AUDIO_PROFILES = {
 };
 
 let soundSettings = Object.assign({ hover: true, click: true, type: true, alert: true },
-    JSON.parse(localStorage.getItem(SK.SOUND) || 'null') || {});
+    lsGet(SK.SOUND, {}));
 let audioCtx = null;
 const soundToggleBtn = document.getElementById('soundToggleBtn');
 const soundPopover    = document.getElementById('soundPopover');
@@ -842,7 +854,7 @@ function setEngine(name) {
 }
 
 // ─── COMMAND HISTORY ───────────────────────────────────────
-let cmdHistory = JSON.parse(sessionStorage.getItem('cc_cmd_history') || '[]');
+let cmdHistory = (() => { try { return JSON.parse(sessionStorage.getItem('cc_cmd_history') || '[]'); } catch { return []; } })();
 let histIdx = -1;
 
 function pushHistory(cmd) {
@@ -854,7 +866,7 @@ function pushHistory(cmd) {
 }
 
 // ─── LOG ───────────────────────────────────────────────────
-let logStore = JSON.parse(localStorage.getItem(SK.LOG) || '[]');
+let logStore = lsGet(SK.LOG, []);
 
 function addLog(type, msg) {
     const now = new Date();
@@ -898,7 +910,7 @@ function hideOutput() { outputBar.className = 'output-bar hidden'; }
 
 // ─── PINS PANEL (replaces clipboard — actually useful on mobile) ──
 // Saved snippets: user types text, pins it, click to copy. Persisted in localStorage.
-let pins = JSON.parse(localStorage.getItem(SK.PINS) || '[]');
+let pins = lsGet(SK.PINS, []);
 
 function savePins() { localStorage.setItem(SK.PINS, JSON.stringify(pins)); }
 
@@ -980,7 +992,7 @@ const DEFAULT_LINKS = [
     { icon: '🐧', text: 'Linux Docs', url: 'https://linux.die.net',    key: 'L' },
 ];
 
-let userLinks = JSON.parse(localStorage.getItem(SK.LINKS) || 'null') || DEFAULT_LINKS;
+let userLinks = lsGet(SK.LINKS, DEFAULT_LINKS);
 
 function renderLinks() {
     linksGrid.innerHTML = '';
@@ -1191,14 +1203,14 @@ const POMO_PRESETS = {
 
 let pomoSettings = Object.assign(
     { preset: '25/5', work: 25, brk: 5, longEvery: 4, longLen: 15, autoStart: false },
-    JSON.parse(localStorage.getItem(SK.POMO_SET) || 'null') || {}
+    lsGet(SK.POMO_SET, {})
 );
 
 function savePomoSettings() {
     localStorage.setItem(SK.POMO_SET, JSON.stringify(pomoSettings));
 }
 
-const _savedPomo = JSON.parse(localStorage.getItem(SK.POMO_STATE) || 'null');
+const _savedPomo = lsGet(SK.POMO_STATE, null);
 const _pomoWasRunning = !!(_savedPomo?.wasRunning && _savedPomo?.endEpoch > Date.now());
 let pomoEndEpoch = _savedPomo?.endEpoch || 0;
 
@@ -1424,7 +1436,7 @@ document.querySelectorAll('.pomo-stepper-btn').forEach(btn => {
 });
 
 // ─── TIMER (STOPWATCH + COUNTDOWN) ─────────────────────────
-const _savedTimer = JSON.parse(localStorage.getItem(SK.TIMER_STATE) || 'null');
+const _savedTimer = lsGet(SK.TIMER_STATE, null);
 const _timerWasRunning = !!_savedTimer?.wasRunning;
 let timerEndEpoch   = _savedTimer?.endEpoch   || 0;
 let timerStartEpoch = _savedTimer?.startEpoch || 0;
@@ -1800,7 +1812,7 @@ async function fetchPrice(ticker) {
 }
 
 // ─── HABITS ────────────────────────────────────────────────
-let habits = JSON.parse(localStorage.getItem(SK.HABITS) || '[]');
+let habits = lsGet(SK.HABITS, []);
 
 function saveHabits() { localStorage.setItem(SK.HABITS, JSON.stringify(habits)); }
 
@@ -2628,7 +2640,7 @@ notesArea.addEventListener('input', () => {
 notesArea.addEventListener('blur', () => localStorage.setItem(SK.NOTES, notesArea.value));
 
 // ─── TODO ──────────────────────────────────────────────────
-let todos = JSON.parse(localStorage.getItem(SK.TODOS) || '[]');
+let todos = lsGet(SK.TODOS, []);
 
 function saveTodos() { localStorage.setItem(SK.TODOS, JSON.stringify(todos)); }
 
