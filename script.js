@@ -1472,21 +1472,25 @@ const tabCountdown    = document.getElementById('tabCountdown');
 const timerInputRow   = document.getElementById('timerInputRow');
 const timerInput      = document.getElementById('timerInput');
 
-function formatMs(ms) {
+function formatMs(ms, showCs = false) {
     const totalSec = Math.floor(ms / 1000);
     const h = Math.floor(totalSec / 3600);
     const m = Math.floor((totalSec % 3600) / 60);
     const s = totalSec % 60;
-    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    const base = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    if (!showCs) return base;
+    const cs = Math.floor((ms % 1000) / 10);
+    return base + `<span class="timer-cs">.${String(cs).padStart(2,'0')}</span>`;
 }
 
 function updateTimerDisplay() {
     if (timerState.mode === 'stopwatch') {
-        timerDisplayEl.textContent = formatMs(timerState.elapsed);
+        timerDisplayEl.innerHTML = formatMs(timerState.elapsed, true);
         timerDisplayEl.className = `timer-display${timerState.running ? ' running' : ''}`;
     } else {
-        timerDisplayEl.textContent = formatMs(timerState.countdownRemaining);
-        if (timerState.countdownRemaining <= 0) {
+        const rem = Math.max(0, timerState.countdownRemaining);
+        timerDisplayEl.innerHTML = formatMs(rem, true);
+        if (rem <= 0) {
             timerDisplayEl.className = 'timer-display finished';
         } else {
             timerDisplayEl.className = `timer-display${timerState.running ? ' running' : ''}`;
@@ -1577,7 +1581,7 @@ function renderLaps() {
         const idx = timerState.laps.length - i;
         const div = document.createElement('div');
         div.className = 'timer-lap-item';
-        div.innerHTML = `<span>LAP ${idx}</span><span>${formatMs(l.lap)}</span>`;
+        div.innerHTML = `<span>LAP ${idx}</span><span>${formatMs(l.lap, false)}</span>`;
         timerLapsEl.appendChild(div);
     });
 }
