@@ -2,6 +2,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* ─── THEMES ─── */
@@ -1080,6 +1081,8 @@ html.theme-minimal .title-bracket { display: none; }
 
 .fullscreen-inner .calc-advanced .calc-history {
     flex-shrink: 0;   /* fixed height — never pushes grid down */
+    height: 130px;
+    min-height: 130px;
     max-height: 130px;
 }
 
@@ -1132,7 +1135,6 @@ html.theme-minimal .title-bracket { display: none; }
 .fullscreen-inner .calc-expr { font-size: 2rem; }
 .fullscreen-inner .calc-advanced .calc-expr { font-size: 2.4rem; }
 .fullscreen-inner .calc-advanced .calc-result { font-size: 0.95rem; min-height: 22px; }
-.fullscreen-inner .calc-advanced .calc-history { max-height: 150px; }
 
 /* ─── ADVANCED CALC — hidden in panel, revealed in fullscreen ──────── */
 .calc-adv-grid,

@@ -330,6 +330,20 @@ window.setBgPaused = (v) => { bgPaused = v; };
 
 // debounce helper — collapses rapid-fire resize events (mobile URL-bar
 // show/hide fires many of these) into one
+// ─── ANDROID CHROME "JIGGLE" FIX ────────────────────────────
+// Tapping a <button> inside any scrollable container can make Chrome
+// auto-scroll to keep the newly-focused element in view — even when it's
+// already fully visible. With buttons at different positions (calculator
+// grid, etc.) this shows up as the whole panel nudging on every tap.
+// Buttons don't need to keep focus after a tap, so drop it immediately.
+const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+if (isCoarsePointer) {
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (btn) btn.blur();
+    });
+}
+
 function debounce(fn, wait) {
     let t;
     return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
