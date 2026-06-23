@@ -403,9 +403,30 @@
                     <button class="panel-fs-btn" onclick="enterFullscreen('calc')" title="Fullscreen" aria-label="Fullscreen calc panel">⛶</button>
                 </h2>
                 <div class="calc-container">
+                    <!-- History tape — hidden in panel, visible in fullscreen advanced mode -->
+                    <div class="calc-history" id="calcHistory"></div>
                     <div class="calc-display">
+                        <div class="calc-angle-indicator" id="calcAngleIndicator"></div>
                         <div class="calc-expr" id="calcExpr">0</div>
                         <div class="calc-result" id="calcResult"></div>
+                    </div>
+                    <!-- Scientific buttons — hidden in panel, visible in fullscreen -->
+                    <div class="calc-adv-grid">
+                        <button class="calc-btn calc-sci" onclick="calcAction('fn','sin')">sin</button>
+                        <button class="calc-btn calc-sci" onclick="calcAction('fn','cos')">cos</button>
+                        <button class="calc-btn calc-sci" onclick="calcAction('fn','tan')">tan</button>
+                        <button class="calc-btn calc-sci" onclick="calcAction('fn','log')">log</button>
+                        <button class="calc-btn calc-sci" onclick="calcAction('fn','ln')">ln</button>
+                        <button class="calc-btn calc-sci" onclick="calcAction('fn','sqrt')">√</button>
+                        <button class="calc-btn calc-sci" onclick="calcAction('fn','sq')">x²</button>
+                        <button class="calc-btn calc-sci-op" onclick="calcAction('op','^')">xʸ</button>
+                        <button class="calc-btn calc-sci" onclick="calcAction('const','pi')">π</button>
+                        <button class="calc-btn calc-sci" onclick="calcAction('const','e')">ℯ</button>
+                        <button class="calc-btn calc-sci-op" onclick="calcAction('paren','(')">(</button>
+                        <button class="calc-btn calc-sci-op" onclick="calcAction('paren',')')">)</button>
+                        <button class="calc-btn calc-sci" onclick="calcAction('pct')">%</button>
+                        <button class="calc-btn calc-fn" onclick="calcAction('del')">DEL</button>
+                        <button class="calc-btn calc-sci-angle" id="calcAngleBtn" onclick="calcAction('angle')">DEG</button>
                     </div>
                     <div class="calc-grid">
                         <button class="calc-btn calc-wide calc-fn" onclick="calcAction('clear')">AC</button>

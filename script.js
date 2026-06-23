@@ -1151,6 +1151,13 @@ window.enterFullscreen = function(panelKey) {
     document.body.style.width = '100%';
 
     bgPaused = true; // background canvases are hidden behind the overlay anyway
+
+    // Advanced calculator mode when fullscreened
+    if (panelKey === 'calc') {
+        panel.classList.add('calc-advanced');
+        calcRender(); // render history immediately
+    }
+
     addLog('cmd', `fullscreen: ${panelKey}`);
 };
 
@@ -1158,6 +1165,10 @@ function exitFullscreen() {
     if (!fullscreenOrigPanel) {
         fullscreenOverlay.classList.add('hidden');
         return;
+    }
+    // Strip advanced calc class before restoring to panel
+    if (fullscreenOrigPanel.panel?.id === 'panel-calc') {
+        fullscreenOrigPanel.panel.classList.remove('calc-advanced');
     }
     restoreFullscreenPanel();
     fullscreenOverlay.classList.add('hidden');
@@ -2734,6 +2745,8 @@ let calcState = {
     result: '',
     justEvaled: false,
     hasDecimal: false,
+    history: [],
+    angleMode: 'deg',
 };
 
 const calcExprEl   = document.getElementById('calcExpr');
@@ -2742,19 +2755,78 @@ const calcResultEl = document.getElementById('calcResult');
 function calcRender() {
     calcExprEl.textContent = calcState.expr || '0';
     calcResultEl.textContent = calcState.result;
+    const angleInd = document.getElementById('calcAngleIndicator');
+    const angleBtn = document.getElementById('calcAngleBtn');
+    if (angleInd) angleInd.textContent = calcState.angleMode.toUpperCase();
+    if (angleBtn) angleBtn.textContent = calcState.angleMode.toUpperCase();
+    renderCalcHistory();
+}
+
+function renderCalcHistory() {
+    const histEl = document.getElementById('calcHistory');
+    if (!histEl) return;
+    histEl.innerHTML = '';
+    if (!calcState.history.length) {
+        histEl.innerHTML = '<div class="calc-hist-empty">— history empty —</div>';
+        return;
+    }
+    const clearBtn = document.createElement('button');
+    clearBtn.className = 'calc-hist-clear';
+    clearBtn.textContent = 'CLEAR HIST';
+    clearBtn.addEventListener('click', () => { calcState.history = []; calcRender(); });
+    histEl.appendChild(clearBtn);
+    // newest first
+    [...calcState.history].reverse().forEach(h => {
+        const div = document.createElement('div');
+        div.className = 'calc-hist-item';
+        div.innerHTML = `<span class="calc-hist-expr">${escapeHtml(h.expr)}</span><span class="calc-hist-res">= ${escapeHtml(h.result)}</span>`;
+        div.addEventListener('click', () => {
+            calcState.expr = h.result;
+            calcState.result = '';
+            calcState.justEvaled = true;
+            calcState.hasDecimal = h.result.includes('.');
+            calcRender();
+        });
+        histEl.appendChild(div);
+    });
 }
 
 function calcSafeEval(expr) {
     try {
-        const safe = expr
-            .replace(/×/g, '*')
-            .replace(/÷/g, '/')
-            .replace(/[^0-9+\-*/.() ]/g, '');
+        const deg = calcState.angleMode !== 'rad';
+        let safe = expr
+            .replace(/×/g, '*').replace(/÷/g, '/').replace(/\^/g, '**')
+            .replace(/π/g, '(' + Math.PI + ')')
+            .replace(/ℯ/g, '(' + Math.E + ')')
+            .replace(/sin\s*\(/g, '_sin(')
+            .replace(/cos\s*\(/g, '_cos(')
+            .replace(/tan\s*\(/g, '_tan(')
+            .replace(/log\s*\(/g, '_log(')
+            .replace(/ln\s*\(/g, '_ln(')
+            .replace(/sqrt\s*\(/g, '_sqrt(')
+            .replace(/sq\s*\(/g, '_sq(')
+            .replace(/abs\s*\(/g, '_abs(')
+            .replace(/[^0-9+\-*/.()% _a-zA-Z]/g, '');
         if (!safe.trim()) return '';
-        const val = Function('"use strict"; return (' + safe + ')')();
-        if (!isFinite(val)) return 'ERR';
-        // Format nicely
-        return parseFloat(val.toPrecision(12)).toString();
+        const toR = deg ? 'x*' + Math.PI + '/180' : 'x';
+        const frR = deg ? '*180/' + Math.PI : '';
+        const val = Function('"use strict";' +
+            `const _sin=x=>Math.sin(${toR});` +
+            `const _cos=x=>Math.cos(${toR});` +
+            `const _tan=x=>Math.tan(${toR});` +
+            `const _log=x=>Math.log10(x);` +
+            `const _ln=x=>Math.log(x);` +
+            `const _sqrt=x=>Math.sqrt(x);` +
+            `const _sq=x=>x*x;` +
+            `const _abs=x=>Math.abs(x);` +
+            `return (${safe});`
+        )();
+        if (val === Infinity)  return '∞';
+        if (val === -Infinity) return '-∞';
+        if (!isFinite(val) || isNaN(val)) return 'ERR';
+        // Up to 10 significant figures, strip trailing zeros
+        const rounded = parseFloat(val.toPrecision(10));
+        return Number.isInteger(rounded) ? rounded.toString() : rounded.toString();
     } catch { return ''; }
 }
 
@@ -2763,6 +2835,23 @@ window.calcAction = function(type, val) {
 
     if (type === 'clear') {
         s.expr = '0'; s.result = ''; s.justEvaled = false; s.hasDecimal = false;
+        calcRender(); return;
+    }
+
+    if (type === 'del') {
+        if (s.justEvaled) { s.expr = '0'; s.result = ''; s.justEvaled = false; s.hasDecimal = false; calcRender(); return; }
+        s.expr = s.expr.length > 1 ? s.expr.slice(0, -1) : '0';
+        s.hasDecimal = s.expr.includes('.');
+        const preview = calcSafeEval(s.expr);
+        s.result = preview && preview !== s.expr ? '= ' + preview : '';
+        calcRender(); return;
+    }
+
+    if (type === 'angle') {
+        s.angleMode = s.angleMode === 'deg' ? 'rad' : 'deg';
+        // Re-preview with new angle mode
+        const preview = calcSafeEval(s.expr);
+        s.result = preview && preview !== s.expr ? '= ' + preview : '';
         calcRender(); return;
     }
 
@@ -2782,24 +2871,82 @@ window.calcAction = function(type, val) {
         calcRender(); return;
     }
 
+    // Insert a math constant (π, ℯ)
+    if (type === 'const') {
+        const ch = val === 'pi' ? 'π' : 'ℯ';
+        if (s.expr === '0' || s.justEvaled) {
+            s.expr = ch; s.justEvaled = false; s.hasDecimal = false;
+        } else {
+            s.expr += ch;
+        }
+        const preview = calcSafeEval(s.expr);
+        s.result = preview && preview !== s.expr ? '= ' + preview : '';
+        calcRender(); return;
+    }
+
+    // Parentheses
+    if (type === 'paren') {
+        if (s.justEvaled && val === '(') { s.expr = '('; s.justEvaled = false; }
+        else if (s.expr === '0' && val === '(') { s.expr = '('; }
+        else { s.expr += val; }
+        const preview = calcSafeEval(s.expr);
+        s.result = preview && preview !== s.expr ? '= ' + preview : '';
+        calcRender(); return;
+    }
+
+    // Modulo operator
+    if (type === 'pct') {
+        s.expr = s.expr.replace(/[+\-*/^%]$/, '') + '%';
+        s.result = '';
+        s.justEvaled = false;
+        calcRender(); return;
+    }
+
+    // Scientific functions: if a bare number is on screen, evaluate immediately;
+    // otherwise append the function name + opening paren for manual arg entry.
+    if (type === 'fn') {
+        let arg = null;
+        if (s.justEvaled) {
+            arg = s.expr; // expr already holds the computed value
+            s.justEvaled = false;
+        } else if (/^-?[\d.πℯ]+$/.test(s.expr.trim())) {
+            arg = s.expr;
+        }
+        if (arg !== null) {
+            // immediate evaluation
+            s.expr = val + '(' + arg + ')';
+            const computed = calcSafeEval(s.expr);
+            if (computed && computed !== 'ERR') {
+                s.history.push({ expr: s.expr, result: computed });
+                if (s.history.length > 30) s.history.shift();
+                addLog('result', `:calc ${s.expr} = ${computed}`);
+                s.expr = computed;
+                s.result = '';
+                s.justEvaled = true;
+                s.hasDecimal = computed.includes('.');
+            } else {
+                s.result = computed || 'ERR';
+            }
+        } else {
+            // mid-expression: append function and open paren
+            if (s.expr === '0') s.expr = val + '(';
+            else s.expr += val + '(';
+            s.result = '';
+        }
+        calcRender(); return;
+    }
+
     if (type === 'num') {
         if (s.justEvaled) { s.expr = val; s.result = ''; s.justEvaled = false; s.hasDecimal = false; }
         else { s.expr = (s.expr === '0' && val !== '.') ? val : s.expr + val; }
-        // Live preview
         const preview = calcSafeEval(s.expr);
         s.result = preview && preview !== s.expr ? '= ' + preview : '';
         calcRender(); return;
     }
 
     if (type === 'op') {
-        // If just evaluated, continue from result
-        if (s.justEvaled && s.result) {
-            s.expr = s.result.replace('= ','');
-        } else if (s.justEvaled) {
-            s.expr = s.expr;
-        }
-        // Replace trailing operator if any
-        s.expr = s.expr.replace(/[+\-*/]$/, '') + val;
+        if (s.justEvaled && s.result) s.expr = s.result.replace(/^= /, '');
+        s.expr = s.expr.replace(/[+\-*/^%]$/, '') + val;
         s.result = '';
         s.justEvaled = false;
         s.hasDecimal = false;
@@ -2809,13 +2956,15 @@ window.calcAction = function(type, val) {
     if (type === 'eq') {
         const computed = calcSafeEval(s.expr);
         if (computed && computed !== 'ERR') {
+            s.history.push({ expr: s.expr, result: computed });
+            if (s.history.length > 30) s.history.shift();
             s.result = '';
             addLog('result', `:calc ${s.expr} = ${computed}`);
             s.expr = computed;
             s.justEvaled = true;
             s.hasDecimal = computed.includes('.');
-        } else if (computed === 'ERR') {
-            s.result = 'ERROR';
+        } else if (computed === 'ERR' || computed === '∞' || computed === '-∞') {
+            s.result = computed || 'ERROR';
         }
         calcRender(); return;
     }
@@ -2832,16 +2981,14 @@ document.addEventListener('keydown', (e) => {
     else if (e.key === '-') calcAction('op', '-');
     else if (e.key === '*') calcAction('op', '*');
     else if (e.key === '/') { e.preventDefault(); calcAction('op', '/'); }
+    else if (e.key === '^') calcAction('op', '^');
+    else if (e.key === '(') calcAction('paren', '(');
+    else if (e.key === ')') calcAction('paren', ')');
+    else if (e.key === '%') calcAction('pct');
     else if (e.key === '.' || e.key === ',') calcAction('dot');
     else if (e.key === 'Enter' || e.key === '=') calcAction('eq');
     else if (e.key === 'Escape' || e.key === 'c' || e.key === 'C') calcAction('clear');
-    else if (e.key === 'Backspace') {
-        if (calcState.expr.length > 1) calcState.expr = calcState.expr.slice(0, -1);
-        else calcState.expr = '0';
-        const preview = calcSafeEval(calcState.expr);
-        calcState.result = preview && preview !== calcState.expr ? '= ' + preview : '';
-        calcRender();
-    }
+    else if (e.key === 'Backspace') calcAction('del');
 });
 
 calcRender();

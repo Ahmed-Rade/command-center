@@ -1094,8 +1094,140 @@ html.theme-minimal .title-bracket { display: none; }
 .fullscreen-inner .status-grid { grid-template-columns: repeat(4, 1fr); }
 .fullscreen-inner .habits-list { max-height: calc(100vh - 250px); }
 .fullscreen-inner .calc-container { flex: 1; }
-.fullscreen-inner .calc-btn { padding: 14px 8px; font-size: 1rem; }
+.fullscreen-inner .calc-advanced .calc-btn { padding: 16px 8px; font-size: 1.05rem; }
+.fullscreen-inner .calc-advanced .calc-sci,
+.fullscreen-inner .calc-advanced .calc-sci-op,
+.fullscreen-inner .calc-advanced .calc-sci-angle { padding: 13px 6px; font-size: 0.82rem; }
 .fullscreen-inner .calc-expr { font-size: 2rem; }
+.fullscreen-inner .calc-advanced .calc-expr { font-size: 2.4rem; }
+.fullscreen-inner .calc-advanced .calc-result { font-size: 0.95rem; min-height: 22px; }
+.fullscreen-inner .calc-advanced .calc-history { max-height: 150px; }
+
+/* ─── ADVANCED CALC — hidden in panel, revealed in fullscreen ──────── */
+.calc-adv-grid,
+.calc-history,
+.calc-angle-indicator { display: none; }
+
+.calc-advanced .calc-adv-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+}
+
+.calc-advanced .calc-history {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    overflow-y: auto;
+    max-height: 110px;
+    padding: 8px 10px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+.calc-advanced .calc-history::-webkit-scrollbar { width: 3px; }
+.calc-advanced .calc-history::-webkit-scrollbar-thumb { background: var(--border-color); }
+
+.calc-advanced .calc-angle-indicator {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 1px;
+    color: var(--text-accent);
+    text-align: left;
+    opacity: 0.8;
+    margin-bottom: 2px;
+}
+
+/* Sci button variants */
+.calc-sci {
+    color: var(--text-blue, #58a6ff);
+    border-color: color-mix(in srgb, var(--border-color) 55%, var(--text-blue, #58a6ff) 45%);
+    font-size: 0.78rem;
+}
+.calc-sci:hover {
+    background: var(--text-blue, #58a6ff);
+    color: var(--bg-primary);
+    border-color: var(--text-blue, #58a6ff);
+}
+
+.calc-sci-op {
+    color: var(--text-accent);
+    border-color: color-mix(in srgb, var(--border-color) 55%, var(--text-accent) 45%);
+    font-size: 0.78rem;
+}
+.calc-sci-op:hover {
+    background: var(--text-accent);
+    color: var(--bg-primary);
+}
+
+.calc-sci-angle {
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+    font-size: 0.72rem;
+    letter-spacing: 1px;
+}
+.calc-sci-angle:hover { color: var(--text-primary); border-color: var(--border-active); }
+
+/* History items */
+.calc-hist-clear {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 1px;
+    cursor: pointer;
+    text-align: right;
+    padding: 0 2px 4px;
+    align-self: flex-end;
+    opacity: 0.6;
+    transition: color 0.15s, opacity 0.15s;
+}
+.calc-hist-clear:hover { color: var(--text-red, #f87171); opacity: 1; }
+
+.calc-hist-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 4px 6px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.1s;
+    animation: slideDown 0.1s ease;
+}
+.calc-hist-item:hover { background: var(--bg-hover); }
+
+.calc-hist-expr {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+}
+
+.calc-hist-res {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-accent);
+    flex-shrink: 0;
+}
+
+.calc-hist-empty {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    text-align: center;
+    opacity: 0.5;
+    padding: 6px 0;
+    letter-spacing: 1px;
+}
 .fullscreen-inner .pins-list { max-height: calc(100vh - 200px); }
 
 /* ─── STATUS ─── */
