@@ -39,7 +39,13 @@ function lsGet(key, fallback) {
     } catch { return fallback; }
 }
 function lsSet(key, value) {
-    try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+    try { localStorage.setItem(key, value); } catch {} // private-mode/quota errors must never break the app
+}
+function lsRaw(key, fallback = null) {
+    try { const v = localStorage.getItem(key); return v === null ? fallback : v; } catch { return fallback; }
+}
+function lsRemove(key) {
+    try { localStorage.removeItem(key); } catch {}
 }
 
 // ─── ELEMENTS ───────────────────────────────────────────────
@@ -48,11 +54,11 @@ const greetingPrefixEl = document.getElementById('greetingPrefix');
 const greetingNameEl   = document.getElementById('greetingName');
 
 // ─── DISPLAY NAME (editable greeting) ───────────────────────
-greetingNameEl.textContent = localStorage.getItem(SK.NAME) || 'USER';
+greetingNameEl.textContent = lsRaw(SK.NAME, 'USER');
 greetingNameEl.addEventListener('blur', () => {
     const val = greetingNameEl.textContent.trim().toUpperCase().slice(0, 24) || 'USER';
     greetingNameEl.textContent = val;
-    localStorage.setItem(SK.NAME, val);
+    lsSet(SK.NAME, val);
 });
 greetingNameEl.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); greetingNameEl.blur(); }
@@ -450,7 +456,7 @@ document.body.appendChild(starsCanvas);
 
 // ─── BACKGROUND SWITCHER ───────────────────────────────────
 function applyBg(mode) {
-    localStorage.setItem(SK.BG, mode);
+    lsSet(SK.BG, mode);
     matrixEnabled = false;
     matrixCanvas.style.opacity = '0';
     window.setStarsBg(false);
@@ -468,7 +474,7 @@ function applyBg(mode) {
     }
 }
 
-const savedBg = localStorage.getItem(SK.BG) || 'matrix';
+const savedBg = lsRaw(SK.BG, 'matrix');
 applyBg(savedBg);
 
 // ─── THEME ─────────────────────────────────────────────────
@@ -507,17 +513,17 @@ function applyTheme(name) {
     document.documentElement.className = document.documentElement.className
         .replace(/theme-\w+/g, '').trim();
     if (name !== 'dark') document.documentElement.classList.add(`theme-${name}`);
-    localStorage.setItem(SK.THEME, name);
+    lsSet(SK.THEME, name);
 }
 
-applyTheme(localStorage.getItem(SK.THEME) || 'dark');
+applyTheme(lsRaw(SK.THEME, 'dark'));
 
 // ─── THEME PICKER MODAL ────────────────────────────────────
 const themeModal = document.getElementById('themeModal');
 const themeGrid  = document.getElementById('themeGrid');
 
 function renderThemeGrid() {
-    const current = localStorage.getItem(SK.THEME) || 'dark';
+    const current = lsRaw(SK.THEME, 'dark');
     themeGrid.innerHTML = '';
     THEMES.forEach(name => {
         const meta = THEME_META[name] || { swatch: [] };
@@ -566,15 +572,15 @@ function clearCustomAccent() {
     ['--text-accent', '--border-active', '--online-color', '--glow-green'].forEach(p => root.removeProperty(p));
 }
 
-const storedAccent = localStorage.getItem(SK.ACCENT);
+const storedAccent = lsRaw(SK.ACCENT);
 if (storedAccent) {
     applyCustomAccent(storedAccent);
     accentColorInput.value = storedAccent;
 } else {
-    accentColorInput.value = (THEME_META[localStorage.getItem(SK.THEME) || 'dark'] || THEME_META.dark).swatch[1];
+    accentColorInput.value = (THEME_META[lsRaw(SK.THEME, 'dark')] || THEME_META.dark).swatch[1];
 }
 
-const saveAccentDebounced = debounce((val) => localStorage.setItem(SK.ACCENT, val), 200);
+const saveAccentDebounced = debounce((val) => lsSet(SK.ACCENT, val), 200);
 accentColorInput.addEventListener('input', () => {
     applyCustomAccent(accentColorInput.value);
     saveAccentDebounced(accentColorInput.value);
@@ -582,8 +588,8 @@ accentColorInput.addEventListener('input', () => {
 
 accentResetBtn.addEventListener('click', () => {
     clearCustomAccent();
-    localStorage.removeItem(SK.ACCENT);
-    accentColorInput.value = (THEME_META[localStorage.getItem(SK.THEME) || 'dark'] || THEME_META.dark).swatch[1];
+    lsRemove(SK.ACCENT);
+    accentColorInput.value = (THEME_META[lsRaw(SK.THEME, 'dark')] || THEME_META.dark).swatch[1];
     showOutput('Accent reset to theme default.', 'info', 2000);
 });
 
@@ -594,10 +600,10 @@ const fontSelect = document.getElementById('fontSelect');
 function applyFont(name) {
     document.documentElement.classList.remove(...FONT_CLASSES);
     if (name && name !== 'jetbrains') document.documentElement.classList.add(`font-${name}`);
-    localStorage.setItem(SK.FONT, name || 'jetbrains');
+    lsSet(SK.FONT, name || 'jetbrains');
 }
 
-const storedFont = localStorage.getItem(SK.FONT) || 'jetbrains';
+const storedFont = lsRaw(SK.FONT, 'jetbrains');
 applyFont(storedFont);
 fontSelect.value = storedFont;
 fontSelect.addEventListener('change', () => applyFont(fontSelect.value));
@@ -607,10 +613,10 @@ const densitySelect = document.getElementById('densitySelect');
 
 function applyDensity(name) {
     document.body.classList.toggle('density-compact', name === 'compact');
-    localStorage.setItem(SK.DENSITY, name);
+    lsSet(SK.DENSITY, name);
 }
 
-const storedDensity = localStorage.getItem(SK.DENSITY) || 'comfortable';
+const storedDensity = lsRaw(SK.DENSITY, 'comfortable');
 applyDensity(storedDensity);
 densitySelect.value = storedDensity;
 densitySelect.addEventListener('change', () => applyDensity(densitySelect.value));
@@ -663,7 +669,7 @@ function ensureAudioCtx() {
 }
 
 function currentAudioProfile() {
-    const theme = localStorage.getItem(SK.THEME) || 'dark';
+    const theme = lsRaw(SK.THEME, 'dark');
     return AUDIO_PROFILES[theme] || AUDIO_PROFILES.dark;
 }
 
@@ -697,7 +703,7 @@ function playSound(kind) {
 }
 
 function saveSoundSettings() {
-    localStorage.setItem(SK.SOUND, JSON.stringify(soundSettings));
+    lsSet(SK.SOUND, JSON.stringify(soundSettings));
 }
 
 // ─── ALARM / RINGTONE (for finished pomodoro & timer) ───────
@@ -851,7 +857,7 @@ const ENGINES = {
 };
 const ENGINE_LIST = Object.keys(ENGINES);
 
-let currentEngine = localStorage.getItem(SK.ENGINE) || 'google';
+let currentEngine = lsRaw(SK.ENGINE, 'google');
 engineInd.textContent = currentEngine.toUpperCase();
 engineInd.title = 'Click to cycle search engine';
 engineInd.addEventListener('click', () => {
@@ -862,7 +868,7 @@ engineInd.addEventListener('click', () => {
 function setEngine(name) {
     if (!ENGINES[name]) { showOutput(`Unknown engine. Options: ${Object.keys(ENGINES).join(', ')}`, 'error'); return; }
     currentEngine = name;
-    localStorage.setItem(SK.ENGINE, name);
+    lsSet(SK.ENGINE, name);
     engineInd.textContent = name.toUpperCase();
     showOutput(`Search engine → ${name.toUpperCase()}`, 'success');
 }
@@ -887,7 +893,7 @@ function addLog(type, msg) {
     const ts = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
     logStore.unshift({ type, msg, ts });
     if (logStore.length > 100) logStore.pop();
-    localStorage.setItem(SK.LOG, JSON.stringify(logStore));
+    lsSet(SK.LOG, JSON.stringify(logStore));
     renderLog();
 }
 
@@ -903,7 +909,7 @@ function renderLog() {
 
 function clearLog() {
     logStore = [];
-    localStorage.setItem(SK.LOG, '[]');
+    lsSet(SK.LOG, '[]');
     renderLog();
     showOutput('Log cleared.', 'info');
 }
@@ -926,7 +932,7 @@ function hideOutput() { outputBar.className = 'output-bar hidden'; }
 // Saved snippets: user types text, pins it, click to copy. Persisted in localStorage.
 let pins = lsGet(SK.PINS, []);
 
-function savePins() { localStorage.setItem(SK.PINS, JSON.stringify(pins)); }
+function savePins() { lsSet(SK.PINS, JSON.stringify(pins)); }
 
 function addPin(text) {
     if (!text.trim()) return;
@@ -1090,7 +1096,7 @@ document.getElementById('editLinksSave').addEventListener('click', () => {
         if (text && url) newLinks.push({ icon: icon || '🔗', text, url, key });
     });
     userLinks = newLinks;
-    localStorage.setItem(SK.LINKS, JSON.stringify(userLinks));
+    lsSet(SK.LINKS, JSON.stringify(userLinks));
     renderLinks();
     editLinksModal.classList.add('hidden');
     showOutput(`Quick access updated — ${newLinks.length} links saved.`, 'success');
@@ -1221,7 +1227,7 @@ let pomoSettings = Object.assign(
 );
 
 function savePomoSettings() {
-    localStorage.setItem(SK.POMO_SET, JSON.stringify(pomoSettings));
+    lsSet(SK.POMO_SET, JSON.stringify(pomoSettings));
 }
 
 const _savedPomo = lsGet(SK.POMO_STATE, null);
@@ -1235,12 +1241,12 @@ let pomoState = {
     remaining: _pomoWasRunning
         ? Math.max(0, Math.round((_savedPomo.endEpoch - Date.now()) / 1000))
         : (_savedPomo?.remaining || pomoSettings.work * 60),
-    sessions:  parseInt(localStorage.getItem(SK.POMO_SESS) || '0'),
+    sessions:  parseInt(lsRaw(SK.POMO_SESS, '0')),
     interval: null,
 };
 
 function savePomoState() {
-    localStorage.setItem(SK.POMO_STATE, JSON.stringify({
+    lsSet(SK.POMO_STATE, JSON.stringify({
         phase:      pomoState.phase,
         total:      pomoState.total,
         remaining:  pomoState.remaining,
@@ -1278,7 +1284,7 @@ function pomoTick() {
 
         if (pomoState.phase === 'work') {
             pomoState.sessions++;
-            localStorage.setItem(SK.POMO_SESS, pomoState.sessions);
+            lsSet(SK.POMO_SESS, pomoState.sessions);
             const isLong = pomoState.sessions % pomoSettings.longEvery === 0;
             const brkMin = isLong ? pomoSettings.longLen : pomoSettings.brk;
             pomoState.phase = 'break';
@@ -1475,7 +1481,7 @@ let timerState = {
 };
 
 function saveTimerState() {
-    localStorage.setItem(SK.TIMER_STATE, JSON.stringify({
+    lsSet(SK.TIMER_STATE, JSON.stringify({
         mode:               timerState.mode,
         elapsed:            timerState.elapsed,
         countdownTotal:     timerState.countdownTotal,
@@ -1828,7 +1834,7 @@ async function fetchPrice(ticker) {
 // ─── HABITS ────────────────────────────────────────────────
 let habits = lsGet(SK.HABITS, []);
 
-function saveHabits() { localStorage.setItem(SK.HABITS, JSON.stringify(habits)); }
+function saveHabits() { lsSet(SK.HABITS, JSON.stringify(habits)); }
 
 function todayKey() {
     const d = new Date();
@@ -2110,7 +2116,7 @@ window.toggleZenMode = toggleZenMode;
 function exportData() {
     const data = {};
     Object.entries(SK).forEach(([key, storageKey]) => {
-        const val = localStorage.getItem(storageKey);
+        const val = lsRaw(storageKey);
         if (val !== null) data[storageKey] = val;
     });
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -2131,7 +2137,7 @@ function importData(file) {
     reader.onload = () => {
         try {
             const data = JSON.parse(reader.result);
-            Object.entries(data).forEach(([k, v]) => localStorage.setItem(k, v));
+            Object.entries(data).forEach(([k, v]) => lsSet(k, v));
             showOutput('Backup restored. Reloading...', 'success', 2000);
             addLog('cmd', ':import');
             setTimeout(() => location.reload(), 1200);
@@ -2169,7 +2175,7 @@ const COMMANDS = {
 
     ':clear': () => {
         notesArea.value = '';
-        localStorage.removeItem(SK.NOTES);
+        lsRemove(SK.NOTES);
         showOutput('Notes cleared.', 'info');
         addLog('cmd', ':clear');
     },
@@ -2280,7 +2286,7 @@ const COMMANDS = {
             openEditLinks();
         } else if (sub === 'reset') {
             userLinks = [...DEFAULT_LINKS];
-            localStorage.removeItem(SK.LINKS);
+            lsRemove(SK.LINKS);
             renderLinks();
             showOutput('Quick access reset to defaults.', 'success');
         } else {
@@ -2639,10 +2645,10 @@ shortcutModal.addEventListener('click', (e) => {
 });
 
 // ─── NOTES ─────────────────────────────────────────────────
-notesArea.value = localStorage.getItem(SK.NOTES) || '';
+notesArea.value = lsRaw(SK.NOTES, '');
 
 let notesTimer = null;
-const saveNotesDebounced = debounce(() => localStorage.setItem(SK.NOTES, notesArea.value), 400);
+const saveNotesDebounced = debounce(() => lsSet(SK.NOTES, notesArea.value), 400);
 notesArea.addEventListener('input', () => {
     saveNotesDebounced();
     notesSaved.textContent = 'SAVED';
@@ -2651,12 +2657,12 @@ notesArea.addEventListener('input', () => {
     notesTimer = setTimeout(() => notesSaved.classList.remove('show'), 1500);
 });
 // Flush immediately when leaving the field so nothing is lost mid-debounce
-notesArea.addEventListener('blur', () => localStorage.setItem(SK.NOTES, notesArea.value));
+notesArea.addEventListener('blur', () => lsSet(SK.NOTES, notesArea.value));
 
 // ─── TODO ──────────────────────────────────────────────────
 let todos = lsGet(SK.TODOS, []);
 
-function saveTodos() { localStorage.setItem(SK.TODOS, JSON.stringify(todos)); }
+function saveTodos() { lsSet(SK.TODOS, JSON.stringify(todos)); }
 
 function addTodo(text) {
     todos.unshift({ id: Date.now(), text, done: false });
@@ -2764,7 +2770,7 @@ renderTodos();
 // ─── CLEAR ALL DATA ────────────────────────────────────────
 window.clearAllData = function() {
     if (!confirm('Clear ALL data? This cannot be undone.')) return;
-    Object.values(SK).forEach(k => localStorage.removeItem(k));
+    Object.values(SK).forEach(k => lsRemove(k));
     sessionStorage.clear();
     location.reload();
 };
@@ -2785,6 +2791,8 @@ const calcResultEl = document.getElementById('calcResult');
 function calcRender() {
     calcExprEl.textContent = calcState.expr || '0';
     calcResultEl.textContent = calcState.result;
+    const isError = calcState.result === 'ERR' || calcState.result === '∞' || calcState.result === '-∞';
+    calcResultEl.classList.toggle('calc-result-error', isError);
     const angleInd = document.getElementById('calcAngleIndicator');
     const angleBtn = document.getElementById('calcAngleBtn');
     if (angleInd) angleInd.textContent = calcState.angleMode.toUpperCase();
