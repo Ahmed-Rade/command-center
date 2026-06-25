@@ -29,6 +29,8 @@ const SK = {
     DENSITY:     'cc_density',
     PINS:        'cc_pins',
     FOCUS_TIME:  'cc_focus_time',
+    GEMINI_KEY:  'cc_gemini_key',
+    LANG:        'cc_lang',
 };
 
 // ─── SAFE STORAGE (corrupted/old JSON must never crash boot) ───
@@ -47,6 +49,154 @@ function lsRaw(key, fallback = null) {
 }
 function lsRemove(key) {
     try { localStorage.removeItem(key); } catch {}
+}
+
+// ─── I18N (English / Arabic) ───────────────────────────────
+// STRINGS holds every visible UI label keyed by data-i18n / data-i18n-ph
+// in index.html, plus a few strings only referenced from JS (output
+// messages, dynamic labels). Command syntax, clock/date values, weather
+// numbers, Gemini answers, and log values are NEVER in here — those are
+// excluded per spec and stay as-is regardless of language.
+const STRINGS = {
+    en: {
+        btnTheme: '🎨 THEME', btnSound: '🔊 SOUND',
+        soundHover: 'Hover', soundClick: 'Click', soundType: 'Type', soundAlert: 'Alert',
+        sysOperational: 'SYSTEM OPERATIONAL', loading: 'LOADING...',
+        cmdPlaceholder: 'ask CC anything, :calc 2+2, :pomo start, :timer 5:00, :theme minimal, :help...',
+        modalShortcutsTitle: '[ KEYBOARD SHORTCUTS ]',
+        grpGlobal: 'GLOBAL', grpCmdInput: 'COMMAND INPUT', grpCommands: 'COMMANDS', grpQuickLinks: 'QUICK LINKS (Alt+Key)',
+        scFocusInput: 'Focus command input', scClearClose: 'Clear / close', scToggleOverlay: 'Toggle this overlay',
+        scFocusNotes: 'Focus notes', scFocusTodo: 'Focus todo input', scPomo: 'Start/pause Pomodoro',
+        scWeather: 'Refresh weather', scZen: 'Toggle zen / focus mode',
+        scHistory: 'Navigate history', scAutocomplete: 'Autocomplete', scExecute: 'Execute / search',
+        scCalc: 'Calculator', scTodoAdd: 'Add task', scTodoClear: 'Clear all tasks', scPomoCmd: 'Pomodoro',
+        scTimerCmd: 'Countdown timer', scThemeCmd: '26 themes · or click 🎨 THEME', scEngineCmd: 'google/duckduckgo/bing',
+        scBgCmd: 'matrix/stars/clean/grid', scPriceCmd: 'Crypto/currency price', scMyip: 'Network info',
+        scLogClear: 'Clear command log', scClip: 'Recall clipboard item', scWeatherCmd: 'Refresh weather',
+        scConvert: 'Unit converter', scFlip: 'Coin flip', scRoll: 'Dice roll', scBackup: 'Backup & restore data',
+        scNoteWc: 'Notes word count', scStats: 'Dashboard summary', scZenCmd: 'Zen / focus mode', scClear: 'Wipe notes',
+        scLang: 'Switch language', scHelp: 'Show all commands',
+        modalEditLinksTitle: '[ EDIT QUICK ACCESS ]', btnAddLink: '+ ADD LINK', btnSaveChanges: 'SAVE CHANGES',
+        modalThemeTitle: '[ SELECT THEME ]', customAccent: 'Custom Accent', btnReset: 'RESET',
+        uiFont: 'UI Font', density: 'Density', comfortable: 'Comfortable', compact: 'Compact',
+        btnExitFullscreen: '✕ EXIT FULLSCREEN',
+        panelStatus: 'STATUS', lblSystem: 'SYSTEM', online: 'ONLINE', lblNetwork: 'NETWORK', lblDate: 'DATE',
+        lblSession: 'SESSION', lblWeather: 'WEATHER', lblBattery: 'BATTERY', lblHumidity: 'HUMIDITY', lblWind: 'WIND',
+        lblFocusTime: 'FOCUS TIME',
+        panelQuickAccess: 'QUICK ACCESS', btnEdit: '✎ EDIT',
+        panelPomodoro: 'POMODORO', pomoSetupHeader: '⚙ POMODORO SETUP', preset: 'Preset',
+        presetClassic: '25 / 5 — Classic', presetDeepWork: '50 / 10 — Deep Work', presetSprint: '15 / 3 — Sprint',
+        presetUltradian: '90 / 20 — Ultradian', presetCustom: 'Custom', work: 'Work', brk: 'BREAK',
+        longBreakEvery: 'Long break every', lengthMin: 'Length (min)', autoStartNext: 'Auto-start next phase',
+        btnStart: '▶ START', btnReset2: '↺ RESET', sessionsLbl: 'SESSIONS:', nextLbl: 'NEXT:',
+        btnPause: '⏸ PAUSE', btnResume: '▶ RESUME',
+        panelTimer: 'TIMER', stopwatch: 'STOPWATCH', countdown: 'COUNTDOWN', timerInputPh: 'HH:MM:SS or MM:SS',
+        btnSet: 'SET', until: 'UNTIL', btnGo: 'GO', btnLap: '◎ LAP',
+        panelTodo: 'TODO', todoInputPh: 'add task... (! = urgent)',
+        panelNotes: 'NOTES', saved: 'SAVED', notesPh: '// scratchpad...',
+        panelCalc: 'CALCULATOR',
+        panelPins: 'PINS', btnClear: 'CLEAR', pinsInputPh: 'pin a snippet...',
+        panelHabits: 'HABITS', habitInputPh: 'add habit...',
+        panelQuote: 'QUOTE', btnNewQuote: '↻ NEW',
+        panelLog: 'LOG',
+        footFocus: 'focus', footHistory: 'history', footShortcuts: 'shortcuts', footTimer: 'timer',
+        footStopwatch: 'stopwatch', footThemes: 'themes', footSearch: 'search', footZen: 'zen mode',
+        footAllCmds: 'all cmds', btnExport: '⇩ EXPORT', btnImport: '⇧ IMPORT', btnClearAll: '⚠ CLEAR ALL DATA',
+        askHint: '↵ ask CC',
+    },
+    ar: {
+        btnTheme: '🎨 السمات', btnSound: '🔊 الصوت',
+        soundHover: 'تمرير', soundClick: 'ضغط', soundType: 'كتابة', soundAlert: 'تنبيه',
+        sysOperational: 'النظام يعمل', loading: 'جارٍ التحميل...',
+        cmdPlaceholder: 'اسأل CC أي شيء، أو :calc 2+2، أو :pomo start، أو :help...',
+        modalShortcutsTitle: '[ اختصارات لوحة المفاتيح ]',
+        grpGlobal: 'عام', grpCmdInput: 'إدخال الأوامر', grpCommands: 'الأوامر', grpQuickLinks: 'روابط سريعة (Alt+مفتاح)',
+        scFocusInput: 'تركيز على إدخال الأوامر', scClearClose: 'مسح / إغلاق', scToggleOverlay: 'تبديل هذه النافذة',
+        scFocusNotes: 'تركيز على الملاحظات', scFocusTodo: 'تركيز على إدخال المهام', scPomo: 'بدء/إيقاف بومودورو',
+        scWeather: 'تحديث الطقس', scZen: 'تبديل وضع التركيز',
+        scHistory: 'تصفح السجل', scAutocomplete: 'الإكمال التلقائي', scExecute: 'تنفيذ / بحث',
+        scCalc: 'الآلة الحاسبة', scTodoAdd: 'إضافة مهمة', scTodoClear: 'مسح كل المهام', scPomoCmd: 'بومودورو',
+        scTimerCmd: 'مؤقت تنازلي', scThemeCmd: '26 سمة · أو اضغط 🎨 السمات', scEngineCmd: 'google/duckduckgo/bing',
+        scBgCmd: 'matrix/stars/clean/grid', scPriceCmd: 'سعر العملات/الكريبتو', scMyip: 'معلومات الشبكة',
+        scLogClear: 'مسح سجل الأوامر', scClip: 'استرجاع عنصر محفوظ', scWeatherCmd: 'تحديث الطقس',
+        scConvert: 'تحويل الوحدات', scFlip: 'قلب عملة', scRoll: 'رمي نرد', scBackup: 'نسخ احتياطي واستعادة',
+        scNoteWc: 'عدد كلمات الملاحظات', scStats: 'ملخص لوحة التحكم', scZenCmd: 'وضع التركيز', scClear: 'مسح الملاحظات',
+        scLang: 'تبديل اللغة', scHelp: 'عرض كل الأوامر',
+        modalEditLinksTitle: '[ تعديل الوصول السريع ]', btnAddLink: '+ إضافة رابط', btnSaveChanges: 'حفظ التغييرات',
+        modalThemeTitle: '[ اختر السمة ]', customAccent: 'لون مخصص', btnReset: 'إعادة ضبط',
+        uiFont: 'خط الواجهة', density: 'الكثافة', comfortable: 'مريح', compact: 'مضغوط',
+        btnExitFullscreen: '✕ الخروج من ملء الشاشة',
+        panelStatus: 'الحالة', lblSystem: 'النظام', online: 'متصل', lblNetwork: 'الشبكة', lblDate: 'التاريخ',
+        lblSession: 'الجلسة', lblWeather: 'الطقس', lblBattery: 'البطارية', lblHumidity: 'الرطوبة', lblWind: 'الرياح',
+        lblFocusTime: 'وقت التركيز',
+        panelQuickAccess: 'وصول سريع', btnEdit: '✎ تعديل',
+        panelPomodoro: 'بومودورو', pomoSetupHeader: '⚙ إعدادات بومودورو', preset: 'إعداد مسبق',
+        presetClassic: '25 / 5 — كلاسيكي', presetDeepWork: '50 / 10 — تركيز عميق', presetSprint: '15 / 3 — سريع',
+        presetUltradian: '90 / 20 — طويل', presetCustom: 'مخصص', work: 'عمل', brk: 'استراحة',
+        longBreakEvery: 'استراحة طويلة كل', lengthMin: 'المدة (دقيقة)', autoStartNext: 'بدء المرحلة التالية تلقائياً',
+        btnStart: '▶ بدء', btnReset2: '↺ إعادة ضبط', sessionsLbl: 'الجلسات:', nextLbl: 'التالي:',
+        btnPause: '⏸ إيقاف', btnResume: '▶ استئناف',
+        panelTimer: 'المؤقت', stopwatch: 'ساعة توقيت', countdown: 'تنازلي', timerInputPh: 'HH:MM:SS أو MM:SS',
+        btnSet: 'ضبط', until: 'حتى', btnGo: 'انطلق', btnLap: '◎ شوط',
+        panelTodo: 'المهام', todoInputPh: 'أضف مهمة... (! = عاجل)',
+        panelNotes: 'ملاحظات', saved: 'تم الحفظ', notesPh: '// مساحة للكتابة...',
+        panelCalc: 'الآلة الحاسبة',
+        panelPins: 'مثبتات', btnClear: 'مسح', pinsInputPh: 'ثبّت مقتطفاً...',
+        panelHabits: 'العادات', habitInputPh: 'أضف عادة...',
+        panelQuote: 'اقتباس', btnNewQuote: '↻ جديد',
+        panelLog: 'السجل',
+        footFocus: 'تركيز', footHistory: 'السجل', footShortcuts: 'الاختصارات', footTimer: 'مؤقت',
+        footStopwatch: 'ساعة توقيت', footThemes: 'السمات', footSearch: 'بحث', footZen: 'وضع التركيز',
+        footAllCmds: 'كل الأوامر', btnExport: '⇩ تصدير', btnImport: '⇧ استيراد', btnClearAll: '⚠ مسح كل البيانات',
+        askHint: '↵ اسأل CC',
+    },
+};
+
+let currentLang = lsRaw(SK.LANG, 'en');
+if (currentLang !== 'ar') currentLang = 'en'; // guard against corrupted storage
+
+function t(key) {
+    return (STRINGS[currentLang] && STRINGS[currentLang][key]) || STRINGS.en[key] || key;
+}
+
+// Re-renders every tagged element/placeholder/title to the active language.
+// Called once on boot (after DOM is parsed) and again on every :lang switch.
+function applyLanguage(lang) {
+    currentLang = lang === 'ar' ? 'ar' : 'en';
+    lsSet(SK.LANG, currentLang);
+
+    document.documentElement.setAttribute('lang', currentLang === 'ar' ? 'ar' : 'en');
+    document.documentElement.setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        el.textContent = t(el.getAttribute('data-i18n'));
+    });
+    document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+        el.setAttribute('placeholder', t(el.getAttribute('data-i18n-ph')));
+    });
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        el.setAttribute('title', t(el.getAttribute('data-i18n-title')));
+    });
+
+    const langBtnEn = document.getElementById('langBtnEn');
+    const langBtnAr = document.getElementById('langBtnAr');
+    if (langBtnEn && langBtnAr) {
+        langBtnEn.classList.toggle('active', currentLang === 'en');
+        langBtnAr.classList.toggle('active', currentLang === 'ar');
+    }
+
+    // Force a fresh greeting roll in the new language immediately (rather
+    // than waiting for the bucket to change on its own).
+    _greetingBucket = null;
+    if (typeof updateTime === 'function') updateTime();
+
+    // cmdHint's idle "↵ ask CC" text only applies when the input is empty
+    // and not a slash-command — re-sync it now if that's the current state.
+    const hintEl = document.getElementById('cmdHint');
+    const inputEl = document.getElementById('commandInput');
+    if (hintEl && inputEl && !inputEl.value.startsWith(':')) {
+        hintEl.textContent = inputEl.value.length > 0 ? t('askHint') : '';
+    }
 }
 
 // ─── ELEMENTS ───────────────────────────────────────────────
@@ -181,6 +331,17 @@ const GREETING_BANKS = {
     ],
 };
 
+// Arabic greeting bank — simpler 4-phrase set per spec, still time-aware,
+// mapped onto the same buckets used by the English banks above.
+const AR_GREETING_BANKS = {
+    deepNight: ['تصبح على خير،'],
+    dawn:      ['صباح الخير،'],
+    morning:   ['صباح الخير،'],
+    afternoon: ['مرحباً،'],
+    evening:   ['مساء الخير،'],
+    night:     ['تصبح على خير،'],
+};
+
 let _greetingBucket = null;
 let _greetingPhrase = '> GOOD EVENING,';
 function getGreetingPrefix(h) {
@@ -192,13 +353,15 @@ function getGreetingPrefix(h) {
     else if (h >= 17 && h < 21) bucket = 'evening';
     else                         bucket = 'night';
 
-    if (bucket !== _greetingBucket) {
+    if (bucket !== _greetingBucket || currentLang !== _greetingLangAtRoll) {
         _greetingBucket = bucket;
-        const bank = GREETING_BANKS[bucket];
+        _greetingLangAtRoll = currentLang;
+        const bank = (currentLang === 'ar' ? AR_GREETING_BANKS : GREETING_BANKS)[bucket];
         _greetingPhrase = bank[Math.floor(Math.random() * bank.length)];
     }
     return _greetingPhrase;
 }
+let _greetingLangAtRoll = null;
 
 // ─── CLOCK & GREETING ──────────────────────────────────────
 function updateTime() {
@@ -222,7 +385,15 @@ function updateTime() {
     uptimeEl.textContent = `${hrs}:${mins}:${secs}`;
 }
 
-updateTime();
+// ─── LANGUAGE TOGGLE WIRING ─────────────────────────────────
+document.getElementById('langBtnEn')?.addEventListener('click', () => {
+    if (currentLang !== 'en') { applyLanguage('en'); addLog('cmd', ':lang en'); showOutput('Language → English', 'success', 2000); }
+});
+document.getElementById('langBtnAr')?.addEventListener('click', () => {
+    if (currentLang !== 'ar') { applyLanguage('ar'); addLog('cmd', ':lang ar'); showOutput('اللغة ← العربية', 'success', 2000); }
+});
+
+applyLanguage(currentLang); // applies stored language to all tagged elements + calls updateTime() once
 setInterval(updateTime, 1000);
 
 // ─── BATTERY ───────────────────────────────────────────────
@@ -870,6 +1041,133 @@ document.addEventListener('keydown', (e) => {
 
 
 
+// ─── CC (Gemini-powered search bar) ────────────────────────
+const GEMINI_KEY = 'AQ.Ab8RN6JV1firRfViTRoWNiuWr3n_-jl68iPlEmm1GgBXSpk1XQ';
+// Falls back to hardcoded key if nothing is stored — works out of the box.
+function getGeminiKey() { return lsRaw(SK.GEMINI_KEY, '') || GEMINI_KEY; }
+function setGeminiKey(key) { lsSet(SK.GEMINI_KEY, key); }
+
+const GEMINI_ENDPOINT = (key) =>
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(key)}`;
+
+const CC_SYSTEM_SHORT = `You are CC — the built-in brain of a personal command center dashboard. You live in a browser tab. You are not a corporate assistant. You are the smart, slightly sarcastic friend who actually knows things. Rules:
+- Answer correctly and concisely. Accuracy is non-negotiable.
+- Keep it to 1-3 sentences max unless the user explicitly asks for more.
+- Add a dry, witty remark, observation, or punchline — but only if it fits naturally. Never force it.
+- Write like a human texting a friend, not like a manual. No markdown, no bullet points, no bold, no headers.
+- Never say: Great question, Certainly, Of course, As an AI, I should note, or any corporate filler.
+- If the answer is obvious, acknowledge that it's obvious while still answering.
+- If something is genuinely uncertain, say so briefly and move on.
+- If the question is dumb, you can gently roast it once, then answer it anyway.
+- No emojis unless the question was itself emoji-heavy.
+- You live in a dashboard. The user's name is Ahmed. You can reference that occasionally, sparingly, naturally.`;
+
+const CC_SYSTEM_LONG = `You are CC — a sharp, knowledgeable assistant who lives inside a personal dashboard. Answer thoroughly and correctly. Be direct, skip corporate filler. No markdown, no bullet points, plain text only. A bit of personality is fine but don't let it get in the way of a complete answer.`;
+
+const askCard        = document.getElementById('askCard');
+const askCardClose    = document.getElementById('askCardClose');
+const askCardQuery    = document.getElementById('askCardQuery');
+const askCardBody     = document.getElementById('askCardBody');
+const askCardActions  = document.getElementById('askCardActions');
+
+let _ccLastQuery = '';
+let _ccAbort = null;
+
+function ccOpenSearchFallback(query) {
+    const url = ENGINES[currentEngine](encodeURIComponent(query));
+    window.open(url, '_blank');
+}
+
+function ccShowCard() { askCard.classList.remove('hidden'); }
+function ccHideCard() {
+    askCard.classList.add('hidden');
+    if (_ccAbort) { _ccAbort.abort(); _ccAbort = null; }
+}
+
+function ccRenderLoading(query) {
+    askCardQuery.textContent = query;
+    askCardBody.className = 'ask-card-body ask-loading';
+    askCardBody.innerHTML = '<span class="ask-loading-dot"></span><span class="ask-loading-dot"></span><span class="ask-loading-dot"></span>';
+    askCardActions.innerHTML = '';
+    ccShowCard();
+}
+
+function ccRenderError(query) {
+    askCardBody.className = 'ask-card-body ask-error';
+    askCardBody.textContent = 'CC couldn\'t reach the network. Try again, or search instead.';
+    askCardActions.innerHTML = '';
+    const fallbackBtn = document.createElement('button');
+    fallbackBtn.className = 'ask-action-btn';
+    fallbackBtn.textContent = '↗ Search instead';
+    fallbackBtn.addEventListener('click', () => ccOpenSearchFallback(query));
+    askCardActions.appendChild(fallbackBtn);
+}
+
+function ccRenderAnswer(query, answer) {
+    askCardQuery.textContent = query;
+    askCardBody.className = 'ask-card-body';
+    askCardBody.textContent = answer;
+    askCardActions.innerHTML = '';
+
+    const searchBtn = document.createElement('button');
+    searchBtn.className = 'ask-action-btn';
+    searchBtn.textContent = `↗ Search ${currentEngine === 'google' ? 'Google' : currentEngine}`;
+    searchBtn.title = 'Opens this query in your fallback search engine';
+    searchBtn.addEventListener('click', () => ccOpenSearchFallback(query));
+    askCardActions.appendChild(searchBtn);
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'ask-action-btn';
+    copyBtn.textContent = '📋 Copy';
+    copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(answer).then(() => {
+            copyBtn.textContent = '✓ Copied';
+            setTimeout(() => { copyBtn.textContent = '📋 Copy'; }, 1500);
+        }).catch(() => {});
+    });
+    askCardActions.appendChild(copyBtn);
+
+    const longerBtn = document.createElement('button');
+    longerBtn.className = 'ask-action-btn';
+    longerBtn.textContent = '+ Longer';
+    longerBtn.addEventListener('click', () => ccAsk(query, true));
+    askCardActions.appendChild(longerBtn);
+}
+
+async function ccAsk(query, long = false) {
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    const key = getGeminiKey();
+    _ccLastQuery = trimmed;
+    ccRenderLoading(trimmed);
+    if (_ccAbort) _ccAbort.abort();
+    _ccAbort = new AbortController();
+
+    try {
+        const res = await fetch(GEMINI_ENDPOINT(key), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal: _ccAbort.signal,
+            body: JSON.stringify({
+                contents: [{ role: 'user', parts: [{ text: trimmed }] }],
+                systemInstruction: { parts: [{ text: long ? CC_SYSTEM_LONG : CC_SYSTEM_SHORT }] },
+            }),
+        });
+        if (!res.ok) throw new Error('bad status');
+        const data = await res.json();
+        const answer = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('').trim();
+        if (!answer) throw new Error('empty');
+        ccRenderAnswer(trimmed, answer);
+        addLog('result', `:ask ${trimmed}`);
+    } catch (err) {
+        if (err.name === 'AbortError') return;
+        ccRenderError(trimmed);
+        addLog('result', `:ask failed — ${trimmed}`);
+    }
+}
+
+askCardClose.addEventListener('click', () => ccHideCard());
+
 // ─── SEARCH ENGINE ─────────────────────────────────────────
 const ENGINES = {
     google:     q => `https://www.google.com/search?q=${q}`,
@@ -1292,9 +1590,9 @@ function updatePomoDisplay() {
     const m = String(Math.floor(pomoState.remaining / 60)).padStart(2, '0');
     const s = String(pomoState.remaining % 60).padStart(2, '0');
     pomoTimeEl.textContent = `${m}:${s}`;
-    pomoPhaseEl.textContent = pomoState.phase.toUpperCase();
+    pomoPhaseEl.textContent = pomoState.phase === 'work' ? t('work') : t('brk');
     pomoSessions.textContent = pomoState.sessions;
-    pomoNext.textContent = pomoState.phase === 'work' ? 'BREAK' : 'WORK';
+    pomoNext.textContent = pomoState.phase === 'work' ? t('brk') : t('work');
     pomoTomatoes.textContent = '🍅'.repeat(Math.min(pomoState.sessions, 8));
     updatePomoRing();
 }
@@ -1342,9 +1640,9 @@ function pomoTick() {
             pomoEndEpoch = Date.now() + pomoState.remaining * 1000;
             pomoState.running = true;
             pomoState.interval = setInterval(pomoTick, 500);
-            pomoStartBtn.textContent = '⏸ PAUSE';
+            pomoStartBtn.textContent = t('btnPause');
         } else {
-            pomoStartBtn.textContent = '▶ START';
+            pomoStartBtn.textContent = t('btnStart');
         }
         return;
     }
@@ -1359,7 +1657,7 @@ window.pomoControl = function(action) {
             pomoState.running = false;
             pomoEndEpoch = 0;
             savePomoState();
-            pomoStartBtn.textContent = '▶ RESUME';
+            pomoStartBtn.textContent = t('btnResume');
             addLog('cmd', ':pomo pause');
         } else {
             requestNotifyPermission();
@@ -1367,7 +1665,7 @@ window.pomoControl = function(action) {
             pomoState.running = true;
             pomoState.interval = setInterval(pomoTick, 500);
             savePomoState();
-            pomoStartBtn.textContent = '⏸ PAUSE';
+            pomoStartBtn.textContent = t('btnPause');
             addLog('cmd', ':pomo start');
         }
     } else if (action === 'reset') {
@@ -1377,7 +1675,7 @@ window.pomoControl = function(action) {
         pomoState.phase = 'work';
         pomoState.total = pomoSettings.work * 60;
         pomoState.remaining = pomoSettings.work * 60;
-        pomoStartBtn.textContent = '▶ START';
+        pomoStartBtn.textContent = t('btnStart');
         savePomoState();
         updatePomoDisplay();
         addLog('cmd', ':pomo reset');
@@ -1385,7 +1683,7 @@ window.pomoControl = function(action) {
 };
 
 updatePomoDisplay();
-if (pomoState.remaining < pomoState.total) pomoStartBtn.textContent = '▶ RESUME';
+if (pomoState.remaining < pomoState.total) pomoStartBtn.textContent = t('btnResume');
 
 // Auto-resume if pomo was running when page was closed
 if (_pomoWasRunning && pomoState.remaining > 0) {
@@ -1393,7 +1691,7 @@ if (_pomoWasRunning && pomoState.remaining > 0) {
     pomoEndEpoch = _savedPomo.endEpoch;
     pomoState.running = true;
     pomoState.interval = setInterval(pomoTick, 500);
-    pomoStartBtn.textContent = '⏸ PAUSE';
+    pomoStartBtn.textContent = t('btnPause');
     addLog('result', `Pomodoro auto-resumed (${pomoState.remaining}s left)`);
 }
 
@@ -1441,7 +1739,7 @@ function applyPomoSettingsFromUI() {
         pomoState.phase = 'work';
         pomoState.total = pomoSettings.work * 60;
         pomoState.remaining = pomoSettings.work * 60;
-        pomoStartBtn.textContent = '▶ START';
+        pomoStartBtn.textContent = t('btnStart');
         savePomoState();
         updatePomoDisplay();
     }
@@ -1572,7 +1870,7 @@ function timerTick() {
             timerState.running = false;
             clearInterval(timerState.interval);
             timerEndEpoch = 0;
-            timerStartBtn.textContent = '▶ START';
+            timerStartBtn.textContent = t('btnStart');
             saveTimerState();
             updateTimerDisplay();
             showOutput('⏰ Timer finished!', 'success', 6000);
@@ -1595,7 +1893,7 @@ window.timerControl = function(action) {
             timerState.running = false;
             timerEndEpoch = 0;
             timerStartEpoch = 0;
-            timerStartBtn.textContent = '▶ RESUME';
+            timerStartBtn.textContent = t('btnResume');
             saveTimerState();
             addLog('cmd', 'timer pause');
             swPost({ type: 'CANCEL_TIMER' }); // cancel background alarm on pause
@@ -1614,7 +1912,7 @@ window.timerControl = function(action) {
             }
             timerState.running = true;
             timerState.interval = setInterval(timerTick, 30);
-            timerStartBtn.textContent = '⏸ PAUSE';
+            timerStartBtn.textContent = t('btnPause');
             saveTimerState();
             addLog('cmd', 'timer start');
         }
@@ -1628,7 +1926,7 @@ window.timerControl = function(action) {
         timerEndEpoch = 0;
         timerStartEpoch = 0;
         timerLapsEl.innerHTML = '';
-        timerStartBtn.textContent = '▶ START';
+        timerStartBtn.textContent = t('btnStart');
         saveTimerState();
         updateTimerDisplay();
         addLog('cmd', 'timer reset');
@@ -1664,7 +1962,7 @@ window.switchTimerMode = function(mode) {
     timerState.laps = [];
     timerState.lastLap = 0;
     timerLapsEl.innerHTML = '';
-    timerStartBtn.textContent = '▶ START';
+    timerStartBtn.textContent = t('btnStart');
 
     tabStopwatch.classList.toggle('active', mode === 'stopwatch');
     tabCountdown.classList.toggle('active', mode === 'countdown');
@@ -1672,7 +1970,7 @@ window.switchTimerMode = function(mode) {
     document.getElementById('timerPresets').classList.toggle('hidden', mode !== 'countdown');
     document.getElementById('timerTargetRow').classList.toggle('hidden', mode !== 'countdown');
     timerLapBtn.style.display = mode === 'stopwatch' ? 'block' : 'none';
-    timerModeLabel.textContent = mode.toUpperCase();
+    timerModeLabel.textContent = mode === 'stopwatch' ? t('stopwatch') : t('countdown');
 
     if (mode === 'countdown') {
         timerState.countdownRemaining = 0;
@@ -1712,7 +2010,7 @@ window.setCountdown = function() {
     timerEndEpoch = Date.now() + timerState.countdownRemaining;
     timerState.running = true;
     timerState.interval = setInterval(timerTick, 30);
-    timerStartBtn.textContent = '⏸ PAUSE';
+    timerStartBtn.textContent = t('btnPause');
     saveTimerState();
     showOutput(`▶ Countdown started: ${formatMs(totalSeconds * 1000)}`, 'success', 2000);
     addLog('cmd', `timer set+start: ${formatMs(totalSeconds * 1000)}`);
@@ -1745,7 +2043,7 @@ window.setCountdownToTime = function() {
     timerEndEpoch = Date.now() + timerState.countdownRemaining;
     timerState.running = true;
     timerState.interval = setInterval(timerTick, 30);
-    timerStartBtn.textContent = '⏸ PAUSE';
+    timerStartBtn.textContent = t('btnPause');
     saveTimerState();
 
     const h = String(parseInt(hStr) % 12 || 12).padStart(2, '0');
@@ -1767,7 +2065,7 @@ window.setCountdownPreset = function(minutes) {
     timerEndEpoch = Date.now() + timerState.countdownRemaining;
     timerState.running = true;
     timerState.interval = setInterval(timerTick, 30);
-    timerStartBtn.textContent = '⏸ PAUSE';
+    timerStartBtn.textContent = t('btnPause');
     saveTimerState();
     showOutput(`▶ ${minutes}m countdown started`, 'success', 2000);
     addLog('cmd', `timer preset: ${minutes}m`);
@@ -1785,7 +2083,7 @@ if (_savedTimer?.mode === 'countdown') {
     document.getElementById('timerPresets').classList.remove('hidden');
     document.getElementById('timerTargetRow').classList.remove('hidden');
     timerLapBtn.style.display = 'none';
-    timerModeLabel.textContent = 'COUNTDOWN';
+    timerModeLabel.textContent = t('countdown');
 }
 if (_savedTimer?.laps?.length) renderLaps();
 updateTimerDisplay();
@@ -1796,13 +2094,13 @@ if (_timerWasRunning) {
         requestNotifyPermission();
         timerState.running = true;
         timerState.interval = setInterval(timerTick, 30);
-        timerStartBtn.textContent = '⏸ PAUSE';
+        timerStartBtn.textContent = t('btnPause');
         addLog('result', 'Timer auto-resumed');
     } else if (timerState.mode === 'stopwatch' && timerStartEpoch > 0) {
         timerState.running = true;
         timerStartEpoch = Date.now() - timerState.elapsed; // re-anchor
         timerState.interval = setInterval(timerTick, 30);
-        timerStartBtn.textContent = '⏸ PAUSE';
+        timerStartBtn.textContent = t('btnPause');
         addLog('result', 'Stopwatch auto-resumed');
     }
 }
@@ -2196,7 +2494,7 @@ const AUTOCOMPLETE_LIST = [
     ':theme', ':engine', ':bg', ':pomo', ':myip', ':price',
     ':weather', ':log', ':timer', ':links', ':pin',
     ':convert', ':flip', ':roll', ':zen', ':sound', ':export', ':import',
-    ':note', ':stats',
+    ':note', ':stats', ':search', ':ask', ':gemini-key', ':lang',
 ];
 
 const COMMANDS = {
@@ -2243,7 +2541,7 @@ const COMMANDS = {
     },
 
     ':help': () => {
-        showOutput(':calc :todo :clear :time :ping :pomo :timer :theme :engine :bg :price :myip :weather :log :pin :convert :flip :roll :zen :export :import — or type to search', 'info', 10000);
+        showOutput(':calc :todo :clear :time :ping :pomo :timer :theme :engine :bg :price :myip :weather :log :pin :convert :flip :roll :zen :export :import :ask :search :gemini-key :lang — or type to ask CC', 'info', 10000);
         addLog('cmd', ':help');
     },
 
@@ -2478,6 +2776,41 @@ const COMMANDS = {
     ':export': () => exportData(),
 
     ':import': () => document.getElementById('importFile').click(),
+
+    ':search': (args) => {
+        const q = args.trim();
+        if (!q) { showOutput('Usage: :search <query>', 'info'); return; }
+        ccOpenSearchFallback(q);
+        addLog('result', `search: ${q} via ${currentEngine}`);
+    },
+
+    ':ask': (args) => {
+        const trimmed = args.trim();
+        if (trimmed.toLowerCase() === 'clear') { ccHideCard(); return; }
+        if (trimmed.toLowerCase().startsWith('long ')) {
+            ccAsk(trimmed.slice(5), true);
+            return;
+        }
+        if (!trimmed) { showOutput('Usage: :ask <query> | :ask long <query> | :ask clear', 'info'); return; }
+        ccAsk(trimmed, false);
+    },
+
+    ':gemini-key': (args) => {
+        const key = args.trim();
+        if (!key) { showOutput(getGeminiKey() ? 'Gemini key is set.' : 'No Gemini key set.', 'info'); return; }
+        setGeminiKey(key);
+        showOutput('Gemini key saved.', 'success', 3000);
+        addLog('cmd', ':gemini-key set');
+    },
+
+    ':lang': (args) => {
+        const sub = args.trim().toLowerCase();
+        if (sub !== 'ar' && sub !== 'en') { showOutput('Usage: :lang ar | :lang en', 'info'); return; }
+        if (sub === currentLang) { showOutput(sub === 'ar' ? 'اللغة العربية مفعّلة بالفعل.' : 'English is already active.', 'info', 2000); return; }
+        applyLanguage(sub);
+        showOutput(sub === 'ar' ? 'اللغة ← العربية' : 'Language → English', 'success', 2000);
+        addLog('cmd', `:lang ${sub}`);
+    },
 };
 
 // ─── COMMAND INPUT EVENTS ──────────────────────────────────
@@ -2535,9 +2868,7 @@ commandInput.addEventListener('keydown', (e) => {
         if (COMMANDS[cmd]) {
             COMMANDS[cmd](args);
         } else {
-            const url = ENGINES[currentEngine](encodeURIComponent(query));
-            window.open(url, '_blank');
-            addLog('result', `search: ${query} via ${currentEngine}`);
+            ccAsk(query, false);
         }
         commandInput.value = '';
     }
@@ -2581,6 +2912,10 @@ const CMD_CATALOG = [
     { cmd: ':time',    desc: 'Show current time',     usage: ':time' },
     { cmd: ':help',    desc: 'Show all commands',     usage: ':help' },
     { cmd: ':ping',    desc: 'Connection check',      usage: ':ping' },
+    { cmd: ':ask',     desc: 'Ask CC (Gemini)',       usage: ':ask <query> | :ask long <query> | :ask clear' },
+    { cmd: ':search',  desc: 'Bypass CC, search web', usage: ':search <query>' },
+    { cmd: ':gemini-key', desc: 'Set Gemini API key', usage: ':gemini-key <key>' },
+    { cmd: ':lang',     desc: 'Switch language',      usage: ':lang ar | :lang en' },
 ];
 
 const cmdDropdown = document.getElementById('cmdDropdown');
@@ -2648,7 +2983,7 @@ commandInput.addEventListener('input', () => {
         else hint.textContent = '';
     } else {
         hideDropdown();
-        hint.textContent = val.length > 0 ? `↵ search ${currentEngine}` : '';
+        hint.textContent = val.length > 0 ? t('askHint') : '';
     }
 });
 
@@ -2738,7 +3073,7 @@ function updateNotesWordCount() {
 notesArea.addEventListener('input', () => {
     saveNotesDebounced();
     updateNotesWordCount();
-    notesSaved.textContent = 'SAVED';
+    notesSaved.textContent = t('saved');
     notesSaved.classList.add('show');
     clearTimeout(notesTimer);
     notesTimer = setTimeout(() => notesSaved.classList.remove('show'), 1500);

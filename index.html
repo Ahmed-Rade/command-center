@@ -4,9 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Command Center</title>
+    <script>
+        // Apply stored language before first paint to avoid FOUC/flash.
+        (function() {
+            try {
+                var lang = localStorage.getItem('cc_lang');
+                if (lang === 'ar') {
+                    document.documentElement.setAttribute('lang', 'ar');
+                    document.documentElement.setAttribute('dir', 'rtl');
+                }
+            } catch (e) {}
+        })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="icon" href="favicon.ico">
@@ -31,54 +43,55 @@
     <div class="modal-overlay hidden" id="shortcutModal">
         <div class="modal">
             <div class="modal-header">
-                <span class="modal-title">[ KEYBOARD SHORTCUTS ]</span>
+                <span class="modal-title" data-i18n="modalShortcutsTitle">[ KEYBOARD SHORTCUTS ]</span>
                 <button class="modal-close" id="modalClose" aria-label="Close shortcuts">✕</button>
             </div>
             <div class="modal-body">
                 <div class="shortcut-group">
-                    <div class="shortcut-group-title">GLOBAL</div>
-                    <div class="shortcut-row"><kbd>Ctrl+K</kbd><span>Focus command input</span></div>
-                    <div class="shortcut-row"><kbd>Escape</kbd><span>Clear / close</span></div>
-                    <div class="shortcut-row"><kbd>?</kbd><span>Toggle this overlay</span></div>
-                    <div class="shortcut-row"><kbd>Alt+N</kbd><span>Focus notes</span></div>
-                    <div class="shortcut-row"><kbd>Alt+T</kbd><span>Focus todo input</span></div>
-                    <div class="shortcut-row"><kbd>Alt+P</kbd><span>Start/pause Pomodoro</span></div>
-                    <div class="shortcut-row"><kbd>Alt+R</kbd><span>Refresh weather</span></div>
-                    <div class="shortcut-row"><kbd>Alt+Z</kbd><span>Toggle zen / focus mode</span></div>
+                    <div class="shortcut-group-title" data-i18n="grpGlobal">GLOBAL</div>
+                    <div class="shortcut-row"><kbd>Ctrl+K</kbd><span data-i18n="scFocusInput">Focus command input</span></div>
+                    <div class="shortcut-row"><kbd>Escape</kbd><span data-i18n="scClearClose">Clear / close</span></div>
+                    <div class="shortcut-row"><kbd>?</kbd><span data-i18n="scToggleOverlay">Toggle this overlay</span></div>
+                    <div class="shortcut-row"><kbd>Alt+N</kbd><span data-i18n="scFocusNotes">Focus notes</span></div>
+                    <div class="shortcut-row"><kbd>Alt+T</kbd><span data-i18n="scFocusTodo">Focus todo input</span></div>
+                    <div class="shortcut-row"><kbd>Alt+P</kbd><span data-i18n="scPomo">Start/pause Pomodoro</span></div>
+                    <div class="shortcut-row"><kbd>Alt+R</kbd><span data-i18n="scWeather">Refresh weather</span></div>
+                    <div class="shortcut-row"><kbd>Alt+Z</kbd><span data-i18n="scZen">Toggle zen / focus mode</span></div>
                 </div>
                 <div class="shortcut-group">
-                    <div class="shortcut-group-title">COMMAND INPUT</div>
-                    <div class="shortcut-row"><kbd>↑ / ↓</kbd><span>Navigate history</span></div>
-                    <div class="shortcut-row"><kbd>Tab</kbd><span>Autocomplete</span></div>
-                    <div class="shortcut-row"><kbd>Enter</kbd><span>Execute / search</span></div>
+                    <div class="shortcut-group-title" data-i18n="grpCmdInput">COMMAND INPUT</div>
+                    <div class="shortcut-row"><kbd>↑ / ↓</kbd><span data-i18n="scHistory">Navigate history</span></div>
+                    <div class="shortcut-row"><kbd>Tab</kbd><span data-i18n="scAutocomplete">Autocomplete</span></div>
+                    <div class="shortcut-row"><kbd>Enter</kbd><span data-i18n="scExecute">Execute / search</span></div>
                 </div>
                 <div class="shortcut-group">
-                    <div class="shortcut-group-title">COMMANDS</div>
-                    <div class="shortcut-row"><kbd>:calc &lt;expr&gt;</kbd><span>Calculator</span></div>
-                    <div class="shortcut-row"><kbd>:todo add &lt;task&gt;</kbd><span>Add task</span></div>
-                    <div class="shortcut-row"><kbd>:todo clear</kbd><span>Clear all tasks</span></div>
-                    <div class="shortcut-row"><kbd>:pomo start/stop/status</kbd><span>Pomodoro</span></div>
-                    <div class="shortcut-row"><kbd>:timer &lt;mm:ss&gt;</kbd><span>Countdown timer</span></div>
-                    <div class="shortcut-row"><kbd>:theme &lt;name&gt;</kbd><span>26 themes · or click 🎨 THEME</span></div>
-                    <div class="shortcut-row"><kbd>:engine &lt;name&gt;</kbd><span>google/duckduckgo/bing</span></div>
-                    <div class="shortcut-row"><kbd>:bg &lt;mode&gt;</kbd><span>matrix/stars/clean/grid</span></div>
-                    <div class="shortcut-row"><kbd>:price &lt;ticker&gt;</kbd><span>Crypto/currency price</span></div>
-                    <div class="shortcut-row"><kbd>:myip</kbd><span>Network info</span></div>
-                    <div class="shortcut-row"><kbd>:log clear</kbd><span>Clear command log</span></div>
-                    <div class="shortcut-row"><kbd>:clip &lt;n&gt;</kbd><span>Recall clipboard item</span></div>
-                    <div class="shortcut-row"><kbd>:weather</kbd><span>Refresh weather</span></div>
-                    <div class="shortcut-row"><kbd>:convert &lt;n&gt; &lt;a&gt; &lt;b&gt;</kbd><span>Unit converter</span></div>
-                    <div class="shortcut-row"><kbd>:flip</kbd><span>Coin flip</span></div>
-                    <div class="shortcut-row"><kbd>:roll &lt;n&gt;</kbd><span>Dice roll</span></div>
-                    <div class="shortcut-row"><kbd>:export / :import</kbd><span>Backup & restore data</span></div>
-                    <div class="shortcut-row"><kbd>:note wc</kbd><span>Notes word count</span></div>
-                    <div class="shortcut-row"><kbd>:stats</kbd><span>Dashboard summary</span></div>
-                    <div class="shortcut-row"><kbd>:zen</kbd><span>Zen / focus mode</span></div>
-                    <div class="shortcut-row"><kbd>:clear</kbd><span>Wipe notes</span></div>
-                    <div class="shortcut-row"><kbd>:help</kbd><span>Show all commands</span></div>
+                    <div class="shortcut-group-title" data-i18n="grpCommands">COMMANDS</div>
+                    <div class="shortcut-row"><kbd>:calc &lt;expr&gt;</kbd><span data-i18n="scCalc">Calculator</span></div>
+                    <div class="shortcut-row"><kbd>:todo add &lt;task&gt;</kbd><span data-i18n="scTodoAdd">Add task</span></div>
+                    <div class="shortcut-row"><kbd>:todo clear</kbd><span data-i18n="scTodoClear">Clear all tasks</span></div>
+                    <div class="shortcut-row"><kbd>:pomo start/stop/status</kbd><span data-i18n="scPomoCmd">Pomodoro</span></div>
+                    <div class="shortcut-row"><kbd>:timer &lt;mm:ss&gt;</kbd><span data-i18n="scTimerCmd">Countdown timer</span></div>
+                    <div class="shortcut-row"><kbd>:theme &lt;name&gt;</kbd><span data-i18n="scThemeCmd">26 themes · or click 🎨 THEME</span></div>
+                    <div class="shortcut-row"><kbd>:engine &lt;name&gt;</kbd><span data-i18n="scEngineCmd">google/duckduckgo/bing</span></div>
+                    <div class="shortcut-row"><kbd>:bg &lt;mode&gt;</kbd><span data-i18n="scBgCmd">matrix/stars/clean/grid</span></div>
+                    <div class="shortcut-row"><kbd>:price &lt;ticker&gt;</kbd><span data-i18n="scPriceCmd">Crypto/currency price</span></div>
+                    <div class="shortcut-row"><kbd>:myip</kbd><span data-i18n="scMyip">Network info</span></div>
+                    <div class="shortcut-row"><kbd>:log clear</kbd><span data-i18n="scLogClear">Clear command log</span></div>
+                    <div class="shortcut-row"><kbd>:clip &lt;n&gt;</kbd><span data-i18n="scClip">Recall clipboard item</span></div>
+                    <div class="shortcut-row"><kbd>:weather</kbd><span data-i18n="scWeatherCmd">Refresh weather</span></div>
+                    <div class="shortcut-row"><kbd>:convert &lt;n&gt; &lt;a&gt; &lt;b&gt;</kbd><span data-i18n="scConvert">Unit converter</span></div>
+                    <div class="shortcut-row"><kbd>:flip</kbd><span data-i18n="scFlip">Coin flip</span></div>
+                    <div class="shortcut-row"><kbd>:roll &lt;n&gt;</kbd><span data-i18n="scRoll">Dice roll</span></div>
+                    <div class="shortcut-row"><kbd>:export / :import</kbd><span data-i18n="scBackup">Backup &amp; restore data</span></div>
+                    <div class="shortcut-row"><kbd>:note wc</kbd><span data-i18n="scNoteWc">Notes word count</span></div>
+                    <div class="shortcut-row"><kbd>:stats</kbd><span data-i18n="scStats">Dashboard summary</span></div>
+                    <div class="shortcut-row"><kbd>:zen</kbd><span data-i18n="scZenCmd">Zen / focus mode</span></div>
+                    <div class="shortcut-row"><kbd>:clear</kbd><span data-i18n="scClear">Wipe notes</span></div>
+                    <div class="shortcut-row"><kbd>:lang ar/en</kbd><span data-i18n="scLang">Switch language</span></div>
+                    <div class="shortcut-row"><kbd>:help</kbd><span data-i18n="scHelp">Show all commands</span></div>
                 </div>
                 <div class="shortcut-group">
-                    <div class="shortcut-group-title">QUICK LINKS (Alt+Key)</div>
+                    <div class="shortcut-group-title" data-i18n="grpQuickLinks">QUICK LINKS (Alt+Key)</div>
                     <div class="shortcut-row"><kbd>Alt+G</kbd><span>GitHub</span></div>
                     <div class="shortcut-row"><kbd>Alt+M</kbd><span>Mail</span></div>
                     <div class="shortcut-row"><kbd>Alt+D</kbd><span>Drive</span></div>
@@ -94,15 +107,15 @@
     <div class="modal-overlay hidden" id="editLinksModal">
         <div class="modal modal-wide">
             <div class="modal-header">
-                <span class="modal-title">[ EDIT QUICK ACCESS ]</span>
+                <span class="modal-title" data-i18n="modalEditLinksTitle">[ EDIT QUICK ACCESS ]</span>
                 <button class="modal-close" id="editLinksClose" aria-label="Close edit links">✕</button>
             </div>
             <div class="modal-body edit-links-body">
                 <div id="editLinksList"></div>
-                <button class="edit-links-add-btn" id="editLinksAdd">+ ADD LINK</button>
+                <button class="edit-links-add-btn" id="editLinksAdd" data-i18n="btnAddLink">+ ADD LINK</button>
             </div>
             <div class="modal-footer">
-                <button class="pomo-btn" id="editLinksSave">SAVE CHANGES</button>
+                <button class="pomo-btn" id="editLinksSave" data-i18n="btnSaveChanges">SAVE CHANGES</button>
             </div>
         </div>
     </div>
@@ -111,26 +124,26 @@
     <div class="modal-overlay hidden" id="themeModal">
         <div class="modal modal-wide">
             <div class="modal-header">
-                <span class="modal-title">[ SELECT THEME ]</span>
+                <span class="modal-title" data-i18n="modalThemeTitle">[ SELECT THEME ]</span>
                 <button class="modal-close" id="themeModalClose" aria-label="Close theme picker">✕</button>
             </div>
             <div class="accent-picker-row">
-                <span>Custom Accent</span>
+                <span data-i18n="customAccent">Custom Accent</span>
                 <input type="color" id="accentColorInput" value="#39d353" aria-label="Custom accent color">
-                <button class="backup-btn" id="accentResetBtn">RESET</button>
+                <button class="backup-btn" id="accentResetBtn" data-i18n="btnReset">RESET</button>
             </div>
             <div class="accent-picker-row">
-                <span>UI Font</span>
+                <span data-i18n="uiFont">UI Font</span>
                 <select id="fontSelect" class="font-select">
                     <option value="jetbrains">JetBrains Mono</option>
                     <option value="space">Space Mono</option>
                     <option value="inter">Inter</option>
                     <option value="orbitron">Orbitron</option>
                 </select>
-                <span class="row-spacer-left">Density</span>
+                <span class="row-spacer-left" data-i18n="density">Density</span>
                 <select id="densitySelect" class="font-select">
-                    <option value="comfortable">Comfortable</option>
-                    <option value="compact">Compact</option>
+                    <option value="comfortable" data-i18n="comfortable">Comfortable</option>
+                    <option value="compact" data-i18n="compact">Compact</option>
                 </select>
             </div>
             <div class="modal-body theme-grid" id="themeGrid"></div>
@@ -140,7 +153,7 @@
     <!-- FULLSCREEN OVERLAY -->
     <div class="fullscreen-overlay hidden" id="fullscreenOverlay">
         <div class="fullscreen-inner" id="fullscreenInner">
-            <button class="fullscreen-close" id="fullscreenClose">✕ EXIT FULLSCREEN</button>
+            <button class="fullscreen-close" id="fullscreenClose" data-i18n="btnExitFullscreen">✕ EXIT FULLSCREEN</button>
         </div>
     </div>
 
@@ -148,21 +161,23 @@
         <header class="header">
             <div class="header-left">
                 <div class="greeting" id="greeting"><span id="greetingPrefix">> GOOD EVENING,</span> <span id="greetingName" contenteditable="true" spellcheck="false" autocorrect="off" autocapitalize="characters" title="Click to set your name" role="textbox" aria-label="Your display name">USER</span></div>
-                <div class="sub-greeting">SYSTEM OPERATIONAL · <span id="engineIndicator">GOOGLE</span> <button class="theme-trigger-btn" id="themeTriggerBtn" aria-label="Open theme picker">🎨 THEME</button> <span class="sound-control">
-                    <button class="theme-trigger-btn" id="soundToggleBtn" aria-label="Sound effect settings" aria-haspopup="true">🔊 SOUND</button>
+                <div class="sub-greeting"><span data-i18n="sysOperational">SYSTEM OPERATIONAL</span> · <span id="engineIndicator" title="Fallback search engine — used by :search and the answer card's Search button">GOOGLE</span> <button class="theme-trigger-btn" id="themeTriggerBtn" aria-label="Open theme picker" data-i18n="btnTheme">🎨 THEME</button> <span class="sound-control">
+                    <button class="theme-trigger-btn" id="soundToggleBtn" aria-label="Sound effect settings" aria-haspopup="true" data-i18n="btnSound">🔊 SOUND</button>
                     <div class="sound-popover hidden" id="soundPopover">
-                        <div class="sound-popover-row"><span>Hover</span><button class="sound-toggle-pill" data-kind="hover">ON</button></div>
-                        <div class="sound-popover-row"><span>Click</span><button class="sound-toggle-pill" data-kind="click">ON</button></div>
-                        <div class="sound-popover-row"><span>Type</span><button class="sound-toggle-pill" data-kind="type">ON</button></div>
-                        <div class="sound-popover-row"><span>Alert</span><button class="sound-toggle-pill" data-kind="alert">ON</button></div>
+                        <div class="sound-popover-row"><span data-i18n="soundHover">Hover</span><button class="sound-toggle-pill" data-kind="hover">ON</button></div>
+                        <div class="sound-popover-row"><span data-i18n="soundClick">Click</span><button class="sound-toggle-pill" data-kind="click">ON</button></div>
+                        <div class="sound-popover-row"><span data-i18n="soundType">Type</span><button class="sound-toggle-pill" data-kind="type">ON</button></div>
+                        <div class="sound-popover-row"><span data-i18n="soundAlert">Alert</span><button class="sound-toggle-pill" data-kind="alert">ON</button></div>
                     </div>
+                </span> <span class="lang-toggle" id="langToggle" role="group" aria-label="Language">
+                    <button class="lang-toggle-btn" id="langBtnEn" data-lang="en">EN</button><span class="lang-toggle-sep">|</span><button class="lang-toggle-btn" id="langBtnAr" data-lang="ar">AR</button>
                 </span></div>
             </div>
             <div class="header-center">
                 <div class="weather-header" id="weatherHeader">
                     <span id="weatherIcon">◌</span>
                     <span id="weatherTemp">--°C</span>
-                    <span id="weatherDesc" class="weather-desc">LOADING...</span>
+                    <span id="weatherDesc" class="weather-desc" data-i18n="loading">LOADING...</span>
                 </div>
             </div>
             <div class="header-right">
@@ -178,11 +193,21 @@
                 <span class="prompt-at">@</span>
                 <span class="prompt-host">cmd-center</span>
                 <span class="prompt-bracket">]</span>
-                <span class="prompt-dollar">$</span>
+                <span class="prompt-dollar" id="promptDollar">$</span>
             </div>
-            <input type="text" id="commandInput" placeholder="search, :calc 2+2, :pomo start, :timer 5:00, :theme minimal, :help..." autocomplete="off" spellcheck="false">
+            <input type="text" id="commandInput" placeholder="ask CC anything, :calc 2+2, :pomo start, :timer 5:00, :theme minimal, :help..." autocomplete="off" spellcheck="false" data-i18n-ph="cmdPlaceholder">
             <div class="cmd-hint" id="cmdHint"></div>
             <div class="cmd-dropdown hidden" id="cmdDropdown"></div>
+        </div>
+
+        <div id="askCard" class="ask-card hidden">
+            <button class="ask-card-close" id="askCardClose" aria-label="Close answer">✕</button>
+            <div class="ask-card-header">
+                <span class="ask-card-badge">[CC]</span>
+                <span class="ask-card-query" id="askCardQuery"></span>
+            </div>
+            <div class="ask-card-body" id="askCardBody"></div>
+            <div class="ask-card-actions" id="askCardActions"></div>
         </div>
 
         <div id="outputBar" class="output-bar hidden" role="status" aria-live="polite"></div>
@@ -191,44 +216,44 @@
             <!-- STATUS PANEL -->
             <section class="panel status-panel" id="panel-status">
                 <h2 class="panel-title">
-                    <span class="title-bracket">[</span> STATUS <span class="title-bracket">]</span>
+                    <span class="title-bracket">[</span> <span data-i18n="panelStatus">STATUS</span> <span class="title-bracket">]</span>
                     <button class="panel-fs-btn" onclick="enterFullscreen('status')" title="Fullscreen" aria-label="Fullscreen status panel">⛶</button>
                 </h2>
                 <div class="status-grid">
                     <div class="status-item">
-                        <div class="status-label">SYSTEM</div>
-                        <div class="status-value online"><span class="pulse-dot"></span>ONLINE</div>
+                        <div class="status-label" data-i18n="lblSystem">SYSTEM</div>
+                        <div class="status-value online"><span class="pulse-dot"></span><span data-i18n="online">ONLINE</span></div>
                     </div>
                     <div class="status-item">
-                        <div class="status-label">NETWORK</div>
+                        <div class="status-label" data-i18n="lblNetwork">NETWORK</div>
                         <div class="status-value online" id="networkStatus"><span class="pulse-dot"></span>CONNECTED</div>
                     </div>
                     <div class="status-item">
-                        <div class="status-label">DATE</div>
+                        <div class="status-label" data-i18n="lblDate">DATE</div>
                         <div class="status-value accent" id="date"></div>
                     </div>
                     <div class="status-item">
-                        <div class="status-label">SESSION</div>
+                        <div class="status-label" data-i18n="lblSession">SESSION</div>
                         <div class="status-value" id="uptime">00:00:00</div>
                     </div>
                     <div class="status-item">
-                        <div class="status-label">WEATHER</div>
-                        <div class="status-value" id="weatherVal">LOADING...</div>
+                        <div class="status-label" data-i18n="lblWeather">WEATHER</div>
+                        <div class="status-value" id="weatherVal" data-i18n="loading">LOADING...</div>
                     </div>
                     <div class="status-item">
-                        <div class="status-label">BATTERY</div>
+                        <div class="status-label" data-i18n="lblBattery">BATTERY</div>
                         <div class="status-value" id="batteryVal">--</div>
                     </div>
                     <div class="status-item">
-                        <div class="status-label">HUMIDITY</div>
+                        <div class="status-label" data-i18n="lblHumidity">HUMIDITY</div>
                         <div class="status-value" id="humidityVal">--</div>
                     </div>
                     <div class="status-item">
-                        <div class="status-label">WIND</div>
+                        <div class="status-label" data-i18n="lblWind">WIND</div>
                         <div class="status-value" id="windVal">--</div>
                     </div>
                     <div class="status-item">
-                        <div class="status-label">FOCUS TIME</div>
+                        <div class="status-label" data-i18n="lblFocusTime">FOCUS TIME</div>
                         <div class="status-value focus-time" id="focusTimeVal">--</div>
                     </div>
                 </div>
@@ -237,8 +262,8 @@
             <!-- QUICK ACCESS PANEL -->
             <section class="panel links-panel" id="panel-links">
                 <h2 class="panel-title">
-                    <span class="title-bracket">[</span> QUICK ACCESS <span class="title-bracket">]</span>
-                    <button class="panel-edit-btn" onclick="openEditLinks()" title="Edit links" aria-label="Edit quick links">✎ EDIT</button>
+                    <span class="title-bracket">[</span> <span data-i18n="panelQuickAccess">QUICK ACCESS</span> <span class="title-bracket">]</span>
+                    <button class="panel-edit-btn" onclick="openEditLinks()" title="Edit links" aria-label="Edit quick links" data-i18n="btnEdit">✎ EDIT</button>
                     <button class="panel-fs-btn" onclick="enterFullscreen('links')" title="Fullscreen" aria-label="Fullscreen links panel">⛶</button>
                 </h2>
                 <div class="links-grid" id="linksGrid"></div>
@@ -247,27 +272,27 @@
             <!-- POMODORO PANEL -->
             <section class="panel pomo-panel" id="panel-pomo">
                 <h2 class="panel-title">
-                    <span class="title-bracket">[</span> POMODORO <span class="title-bracket">]</span>
+                    <span class="title-bracket">[</span> <span data-i18n="panelPomodoro">POMODORO</span> <span class="title-bracket">]</span>
                     <span class="pomo-tomatoes" id="pomoTomatoes"></span>
                     <span class="pomo-settings-wrap">
                         <button class="panel-fs-btn" id="pomoSettingsBtn" title="Pomodoro settings" aria-label="Pomodoro settings">⚙</button>
                         <div class="pomo-popover hidden" id="pomoSettingsPopover">
-                            <div class="pomo-popover-header">⚙ POMODORO SETUP</div>
+                            <div class="pomo-popover-header" data-i18n="pomoSetupHeader">⚙ POMODORO SETUP</div>
 
                             <div class="pomo-popover-block">
-                                <label class="pomo-popover-label" for="pomoPresetSelect">Preset</label>
+                                <label class="pomo-popover-label" for="pomoPresetSelect" data-i18n="preset">Preset</label>
                                 <select class="pomo-select" id="pomoPresetSelect">
-                                    <option value="25/5">25 / 5 — Classic</option>
-                                    <option value="50/10">50 / 10 — Deep Work</option>
-                                    <option value="15/3">15 / 3 — Sprint</option>
-                                    <option value="90/20">90 / 20 — Ultradian</option>
-                                    <option value="custom">Custom</option>
+                                    <option value="25/5" data-i18n="presetClassic">25 / 5 — Classic</option>
+                                    <option value="50/10" data-i18n="presetDeepWork">50 / 10 — Deep Work</option>
+                                    <option value="15/3" data-i18n="presetSprint">15 / 3 — Sprint</option>
+                                    <option value="90/20" data-i18n="presetUltradian">90 / 20 — Ultradian</option>
+                                    <option value="custom" data-i18n="presetCustom">Custom</option>
                                 </select>
                             </div>
 
                             <div class="pomo-popover-row pomo-custom-row" id="pomoCustomRow" hidden>
                                 <div class="pomo-stepper-group">
-                                    <span class="pomo-popover-label">Work</span>
+                                    <span class="pomo-popover-label" data-i18n="work">Work</span>
                                     <div class="pomo-stepper">
                                         <button type="button" class="pomo-stepper-btn" data-target="pomoCustomWork" data-dir="-1" aria-label="Decrease work minutes">−</button>
                                         <input class="pomo-num" type="number" id="pomoCustomWork" min="1" max="180" value="25">
@@ -275,7 +300,7 @@
                                     </div>
                                 </div>
                                 <div class="pomo-stepper-group">
-                                    <span class="pomo-popover-label">Break</span>
+                                    <span class="pomo-popover-label" data-i18n="brk">Break</span>
                                     <div class="pomo-stepper">
                                         <button type="button" class="pomo-stepper-btn" data-target="pomoCustomBreak" data-dir="-1" aria-label="Decrease break minutes">−</button>
                                         <input class="pomo-num" type="number" id="pomoCustomBreak" min="1" max="60" value="5">
@@ -288,7 +313,7 @@
 
                             <div class="pomo-popover-row">
                                 <div class="pomo-stepper-group">
-                                    <span class="pomo-popover-label">Long break every</span>
+                                    <span class="pomo-popover-label" data-i18n="longBreakEvery">Long break every</span>
                                     <div class="pomo-stepper">
                                         <button type="button" class="pomo-stepper-btn" data-target="pomoLongEvery" data-dir="-1" aria-label="Decrease session count">−</button>
                                         <input class="pomo-num" type="number" id="pomoLongEvery" min="2" max="10" value="4">
@@ -296,7 +321,7 @@
                                     </div>
                                 </div>
                                 <div class="pomo-stepper-group">
-                                    <span class="pomo-popover-label">Length (min)</span>
+                                    <span class="pomo-popover-label" data-i18n="lengthMin">Length (min)</span>
                                     <div class="pomo-stepper">
                                         <button type="button" class="pomo-stepper-btn" data-target="pomoLongLen" data-dir="-1" aria-label="Decrease long break minutes">−</button>
                                         <input class="pomo-num" type="number" id="pomoLongLen" min="5" max="60" value="15">
@@ -308,7 +333,7 @@
                             <div class="pomo-popover-divider"></div>
 
                             <div class="pomo-popover-row-toggle">
-                                <span class="pomo-popover-label">Auto-start next phase</span>
+                                <span class="pomo-popover-label" data-i18n="autoStartNext">Auto-start next phase</span>
                                 <button type="button" class="sound-toggle-pill" id="pomoAutoStart">OFF</button>
                             </div>
                         </div>
@@ -324,16 +349,16 @@
                         </svg>
                         <div class="pomo-center-text">
                             <div class="pomo-time" id="pomoTime">25:00</div>
-                            <div class="pomo-phase" id="pomoPhase">WORK</div>
+                            <div class="pomo-phase" id="pomoPhase" data-i18n="work">WORK</div>
                         </div>
                     </div>
                     <div class="pomo-controls">
-                        <button class="pomo-btn" id="pomoStartBtn" onclick="pomoControl('toggle')">▶ START</button>
-                        <button class="pomo-btn pomo-btn-secondary" onclick="pomoControl('reset')">↺ RESET</button>
+                        <button class="pomo-btn" id="pomoStartBtn" onclick="pomoControl('toggle')" data-i18n="btnStart">▶ START</button>
+                        <button class="pomo-btn pomo-btn-secondary" onclick="pomoControl('reset')" data-i18n="btnReset2">↺ RESET</button>
                     </div>
                     <div class="pomo-info">
-                        <span class="pomo-label">SESSIONS: <span id="pomoSessions">0</span></span>
-                        <span class="pomo-label">NEXT: <span id="pomoNext">BREAK</span></span>
+                        <span class="pomo-label"><span data-i18n="sessionsLbl">SESSIONS:</span> <span id="pomoSessions">0</span></span>
+                        <span class="pomo-label"><span data-i18n="nextLbl">NEXT:</span> <span id="pomoNext" data-i18n="brk">BREAK</span></span>
                     </div>
                 </div>
             </section>
@@ -341,21 +366,21 @@
             <!-- TIMER PANEL -->
             <section class="panel timer-panel" id="panel-timer">
                 <h2 class="panel-title">
-                    <span class="title-bracket">[</span> TIMER <span class="title-bracket">]</span>
+                    <span class="title-bracket">[</span> <span data-i18n="panelTimer">TIMER</span> <span class="title-bracket">]</span>
                     <button class="panel-fs-btn" onclick="enterFullscreen('timer')" title="Fullscreen" aria-label="Fullscreen timer panel">⛶</button>
                 </h2>
                 <div class="timer-container">
                     <div class="timer-display-wrap">
                         <div class="timer-display" id="timerDisplay">00:00:00</div>
-                        <div class="timer-mode-label" id="timerModeLabel">STOPWATCH</div>
+                        <div class="timer-mode-label" id="timerModeLabel" data-i18n="stopwatch">STOPWATCH</div>
                     </div>
                     <div class="timer-tabs">
-                        <button class="timer-tab active" id="tabStopwatch" onclick="switchTimerMode('stopwatch')">STOPWATCH</button>
-                        <button class="timer-tab" id="tabCountdown" onclick="switchTimerMode('countdown')">COUNTDOWN</button>
+                        <button class="timer-tab active" id="tabStopwatch" onclick="switchTimerMode('stopwatch')" data-i18n="stopwatch">STOPWATCH</button>
+                        <button class="timer-tab" id="tabCountdown" onclick="switchTimerMode('countdown')" data-i18n="countdown">COUNTDOWN</button>
                     </div>
                     <div class="timer-countdown-input hidden" id="timerInputRow">
-                        <input type="text" id="timerInput" placeholder="HH:MM:SS or MM:SS" maxlength="8">
-                        <button class="pomo-btn" onclick="setCountdown()">SET</button>
+                        <input type="text" id="timerInput" placeholder="HH:MM:SS or MM:SS" maxlength="8" data-i18n-ph="timerInputPh">
+                        <button class="pomo-btn" onclick="setCountdown()" data-i18n="btnSet">SET</button>
                     </div>
                     <div class="timer-presets hidden" id="timerPresets">
                         <button class="timer-preset-btn" onclick="setCountdownPreset(5)">5m</button>
@@ -366,14 +391,14 @@
                         <button class="timer-preset-btn" onclick="setCountdownPreset(60)">60m</button>
                     </div>
                     <div class="timer-target-row hidden" id="timerTargetRow">
-                        <span class="timer-target-label">UNTIL</span>
+                        <span class="timer-target-label" data-i18n="until">UNTIL</span>
                         <input type="time" id="timerTargetInput">
-                        <button class="pomo-btn" onclick="setCountdownToTime()">GO</button>
+                        <button class="pomo-btn" onclick="setCountdownToTime()" data-i18n="btnGo">GO</button>
                     </div>
                     <div class="pomo-controls">
-                        <button class="pomo-btn" id="timerStartBtn" onclick="timerControl('toggle')">▶ START</button>
-                        <button class="pomo-btn pomo-btn-secondary" onclick="timerControl('reset')">↺ RESET</button>
-                        <button class="pomo-btn pomo-btn-secondary" id="timerLapBtn" onclick="timerControl('lap')" style="display:none">◎ LAP</button>
+                        <button class="pomo-btn" id="timerStartBtn" onclick="timerControl('toggle')" data-i18n="btnStart">▶ START</button>
+                        <button class="pomo-btn pomo-btn-secondary" onclick="timerControl('reset')" data-i18n="btnReset2">↺ RESET</button>
+                        <button class="pomo-btn pomo-btn-secondary" id="timerLapBtn" onclick="timerControl('lap')" style="display:none" data-i18n="btnLap">◎ LAP</button>
                     </div>
                     <div class="timer-laps" id="timerLaps"></div>
                 </div>
@@ -382,12 +407,12 @@
             <!-- TODO PANEL -->
             <section class="panel todo-panel" id="panel-todo">
                 <h2 class="panel-title">
-                    <span class="title-bracket">[</span> TODO <span class="title-bracket">]</span>
+                    <span class="title-bracket">[</span> <span data-i18n="panelTodo">TODO</span> <span class="title-bracket">]</span>
                     <span class="todo-count" id="todoCount">0</span>
                     <button class="panel-fs-btn" onclick="enterFullscreen('todo')" title="Fullscreen" aria-label="Fullscreen todo panel">⛶</button>
                 </h2>
                 <div class="todo-input-row">
-                    <input type="text" id="todoInput" placeholder="add task... (! = urgent)" spellcheck="false">
+                    <input type="text" id="todoInput" placeholder="add task... (! = urgent)" spellcheck="false" data-i18n-ph="todoInputPh">
                     <button id="todoAdd">+</button>
                 </div>
                 <ul class="todo-list" id="todoList"></ul>
@@ -396,18 +421,18 @@
             <!-- NOTES PANEL -->
             <section class="panel notes-panel" id="panel-notes">
                 <h2 class="panel-title">
-                    <span class="title-bracket">[</span> NOTES <span class="title-bracket">]</span>
+                    <span class="title-bracket">[</span> <span data-i18n="panelNotes">NOTES</span> <span class="title-bracket">]</span>
                     <span class="notes-saved" id="notesSaved"></span>
                     <span class="notes-wc" id="notesWordCount"></span>
                     <button class="panel-fs-btn" onclick="enterFullscreen('notes')" title="Fullscreen" aria-label="Fullscreen notes panel">⛶</button>
                 </h2>
-                <textarea id="notes" placeholder="// scratchpad..."></textarea>
+                <textarea id="notes" placeholder="// scratchpad..." data-i18n-ph="notesPh"></textarea>
             </section>
 
             <!-- CALC PANEL -->
             <section class="panel calc-panel" id="panel-calc">
                 <h2 class="panel-title">
-                    <span class="title-bracket">[</span> CALCULATOR <span class="title-bracket">]</span>
+                    <span class="title-bracket">[</span> <span data-i18n="panelCalc">CALCULATOR</span> <span class="title-bracket">]</span>
                     <button class="panel-fs-btn" onclick="enterFullscreen('calc')" title="Fullscreen" aria-label="Fullscreen calc panel">⛶</button>
                 </h2>
                 <div class="calc-container">
@@ -462,12 +487,12 @@
             <!-- PINS PANEL -->
             <section class="panel pins-panel" id="panel-pins">
                 <h2 class="panel-title">
-                    <span class="title-bracket">[</span> PINS <span class="title-bracket">]</span>
-                    <button class="clip-clear-btn" id="pinsClearBtn">CLEAR</button>
+                    <span class="title-bracket">[</span> <span data-i18n="panelPins">PINS</span> <span class="title-bracket">]</span>
+                    <button class="clip-clear-btn" id="pinsClearBtn" data-i18n="btnClear">CLEAR</button>
                     <button class="panel-fs-btn" onclick="enterFullscreen('pins')" title="Fullscreen" aria-label="Fullscreen pins panel">⛶</button>
                 </h2>
                 <div class="pins-input-row">
-                    <input type="text" id="pinsInput" placeholder="pin a snippet..." spellcheck="false">
+                    <input type="text" id="pinsInput" placeholder="pin a snippet..." spellcheck="false" data-i18n-ph="pinsInputPh">
                     <button id="pinsAdd" aria-label="Add pin">+</button>
                 </div>
                 <div class="pins-list" id="pinsList"></div>
@@ -476,11 +501,11 @@
             <!-- HABITS TRACKER -->
             <section class="panel habits-panel" id="panel-habits">
                 <h2 class="panel-title">
-                    <span class="title-bracket">[</span> HABITS <span class="title-bracket">]</span>
+                    <span class="title-bracket">[</span> <span data-i18n="panelHabits">HABITS</span> <span class="title-bracket">]</span>
                     <button class="panel-fs-btn" onclick="enterFullscreen('habits')" title="Fullscreen" aria-label="Fullscreen habits panel">⛶</button>
                 </h2>
                 <div class="habits-input-row">
-                    <input type="text" id="habitInput" placeholder="add habit..." spellcheck="false">
+                    <input type="text" id="habitInput" placeholder="add habit..." spellcheck="false" data-i18n-ph="habitInputPh">
                     <button id="habitAdd">+</button>
                 </div>
                 <div class="habits-list" id="habitsList"></div>
@@ -489,13 +514,13 @@
             <!-- QUOTE PANEL -->
             <section class="panel quote-panel" id="panel-quote">
                 <h2 class="panel-title">
-                    <span class="title-bracket">[</span> QUOTE <span class="title-bracket">]</span>
+                    <span class="title-bracket">[</span> <span data-i18n="panelQuote">QUOTE</span> <span class="title-bracket">]</span>
                     <button class="panel-fs-btn" onclick="enterFullscreen('quote')" title="Fullscreen" aria-label="Fullscreen quote panel">⛶</button>
                 </h2>
                 <div class="quote-body">
                     <div class="quote-text" id="quoteText"></div>
                     <div class="quote-footer">
-                        <button class="quote-refresh-btn" id="quoteRefresh" aria-label="Get a new quote">↻ NEW</button>
+                        <button class="quote-refresh-btn" id="quoteRefresh" aria-label="Get a new quote" data-i18n="btnNewQuote">↻ NEW</button>
                     </div>
                 </div>
             </section>
@@ -503,8 +528,8 @@
             <!-- LOG PANEL -->
             <section class="panel log-panel" id="panel-log">
                 <h2 class="panel-title">
-                    <span class="title-bracket">[</span> LOG <span class="title-bracket">]</span>
-                    <button class="log-clear-btn" onclick="clearLog()">CLEAR</button>
+                    <span class="title-bracket">[</span> <span data-i18n="panelLog">LOG</span> <span class="title-bracket">]</span>
+                    <button class="log-clear-btn" onclick="clearLog()" data-i18n="btnClear">CLEAR</button>
                     <button class="panel-fs-btn" onclick="enterFullscreen('log')" title="Fullscreen" aria-label="Fullscreen log panel">⛶</button>
                 </h2>
                 <div class="log-entries" id="logEntries"></div>
@@ -512,29 +537,29 @@
         </div>
 
         <footer class="footer">
-            <span><kbd>CTRL+K</kbd> focus</span>
+            <span><kbd>CTRL+K</kbd> <span data-i18n="footFocus">focus</span></span>
             <span>|</span>
-            <span><kbd>↑↓</kbd> history</span>
+            <span><kbd>↑↓</kbd> <span data-i18n="footHistory">history</span></span>
             <span>|</span>
-            <span><kbd>?</kbd> shortcuts</span>
+            <span><kbd>?</kbd> <span data-i18n="footShortcuts">shortcuts</span></span>
             <span>|</span>
-            <span><kbd>:pomo</kbd> timer</span>
+            <span><kbd>:pomo</kbd> <span data-i18n="footTimer">timer</span></span>
             <span>|</span>
-            <span><kbd>:timer</kbd> stopwatch</span>
+            <span><kbd>:timer</kbd> <span data-i18n="footStopwatch">stopwatch</span></span>
             <span>|</span>
-            <span><kbd>:theme</kbd> themes</span>
+            <span><kbd>:theme</kbd> <span data-i18n="footThemes">themes</span></span>
             <span>|</span>
-            <span><kbd>:engine</kbd> search</span>
+            <span><kbd>:engine</kbd> <span data-i18n="footSearch">search</span></span>
             <span>|</span>
-            <span><kbd>Alt+Z</kbd> zen mode</span>
+            <span><kbd>Alt+Z</kbd> <span data-i18n="footZen">zen mode</span></span>
             <span>|</span>
-            <span><kbd>:help</kbd> all cmds</span>
+            <span><kbd>:help</kbd> <span data-i18n="footAllCmds">all cmds</span></span>
             <span>|</span>
-            <span><button class="backup-btn" id="exportBtn">⇩ EXPORT</button></span>
-            <span><button class="backup-btn" id="importBtn">⇧ IMPORT</button></span>
+            <span><button class="backup-btn" id="exportBtn" data-i18n="btnExport">⇩ EXPORT</button></span>
+            <span><button class="backup-btn" id="importBtn" data-i18n="btnImport">⇧ IMPORT</button></span>
             <input type="file" id="importFile" accept="application/json" class="hidden">
             <span>|</span>
-            <span><button class="footer-clear-btn" onclick="clearAllData()">⚠ CLEAR ALL DATA</button></span>
+            <span><button class="footer-clear-btn" onclick="clearAllData()" data-i18n="btnClearAll">⚠ CLEAR ALL DATA</button></span>
         </footer>
     </div>
 
