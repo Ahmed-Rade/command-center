@@ -265,7 +265,6 @@ function swPost(msg) {
     if (sw.controller) {
         sw.controller.postMessage(msg);
     } else {
-        // SW will call clients.claim() on activate; controllerchange fires then.
         sw.addEventListener('controllerchange', () => sw.controller?.postMessage(msg), { once: true });
     }
 }
@@ -947,7 +946,6 @@ function stopAlarm() {
 function startAlarm() {
     if (!soundSettings.alert) return;
     stopAlarm();
-    // AudioContext may be suspended on mobile or after backgrounding — resume first.
     const ctx = ensureAudioCtx();
     const doPlay = () => {
         playAlarmChime();
@@ -958,7 +956,7 @@ function startAlarm() {
         document.addEventListener('touchstart', stopAlarm, true);
     };
     if (ctx && ctx.state === 'suspended') {
-        ctx.resume().then(doPlay).catch(doPlay); // play even if resume fails
+        ctx.resume().then(doPlay).catch(doPlay);
     } else {
         doPlay();
     }
@@ -2024,9 +2022,7 @@ document.addEventListener('visibilitychange', () => {
         }
     } else if (timerState.mode === 'countdown' && timerState.countdownRemaining === 0
                && timerEndEpoch === 0 && !alarmInterval) {
-        // Timer finished while tab was hidden (interval ran, timerTick stopped it,
-        // but startAlarm() may have been blocked by suspended AudioContext or missed).
-        // Ring now that the user has returned and a user-gesture context is available.
+        // Timer finished while tab was hidden — ring now that user returned.
         startAlarm();
     }
 });
@@ -3443,3 +3439,59 @@ applyPomoRingGlow();
 
 // ─── INIT LOG ──────────────────────────────────────────────
 addLog('result', 'Command Center initialized');
+
+// ─── MOBILE UX ENHANCEMENTS ────────────────────────────────────
+(function mobileFixes() {
+    const isTouch = window.matchMedia('(pointer: coarse)').matches;
+    if (!isTouch) return;
+
+    // Scroll active input into view after virtual keyboard opens.
+    // iOS Safari shifts the viewport but doesn't always scroll the
+    // focused element above the keyboard — this nudge fixes it.
+    document.addEventListener('focusin', (e) => {
+        const el = e.target;
+        if (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA') return;
+        // Short delay lets the keyboard fully open before we scroll.
+        setTimeout(() => {
+            try {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } catch (_) { el.scrollIntoView(false); }
+        }, 320);
+    }, { passive: true });
+
+    // Dismiss virtual keyboard when tapping outside an input/textarea.
+    // Prevents the "keyboard stays up after pressing a panel button" issue.
+    document.addEventListener('touchstart', (e) => {
+        const active = document.activeElement;
+        if (!active) return;
+        if (active.tagName !== 'INPUT' && active.tagName !== 'TEXTAREA') return;
+        if (!e.target.closest('input, textarea')) {
+            active.blur();
+        }
+    }, { passive: true });
+
+    // Prevent double-tap zoom on interactive elements without disabling
+    // pinch-to-zoom on the page (touch-action: manipulation on individual
+    // elements is better than user-scalable=no which is an accessibility crime).
+    document.querySelectorAll(
+        'button, .link-item, .theme-card, .habit-day, .todo-check, .timer-tab, .timer-preset-btn'
+    ).forEach(el => { el.style.touchAction = 'manipulation'; });
+
+    // Re-apply on dynamically rendered lists (todos, habits, links)
+    const touchObserver = new MutationObserver((mutations) => {
+        mutations.forEach(m => {
+            m.addedNodes.forEach(node => {
+                if (node.nodeType !== 1) return;
+                node.querySelectorAll?.('button, .habit-day, .todo-check').forEach(el => {
+                    el.style.touchAction = 'manipulation';
+                });
+            });
+        });
+    });
+    const todoList = document.getElementById('todoList');
+    const habitsList = document.getElementById('habitsList');
+    const linksGrid = document.getElementById('linksGrid');
+    if (todoList)   touchObserver.observe(todoList,   { childList: true });
+    if (habitsList) touchObserver.observe(habitsList, { childList: true });
+    if (linksGrid)  touchObserver.observe(linksGrid,  { childList: true });
+})();

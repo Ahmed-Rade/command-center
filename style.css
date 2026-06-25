@@ -537,10 +537,16 @@ body {
     min-height: 100vh;
     min-height: 100dvh;
     padding: 24px;
+    padding-top: max(24px, env(safe-area-inset-top));
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+    padding-left: max(24px, env(safe-area-inset-left));
+    padding-right: max(24px, env(safe-area-inset-right));
     line-height: 1.6;
     position: relative;
     overflow-x: hidden;
     transition: background 0.3s, color 0.3s;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
 }
 
 html.theme-minimal body {
@@ -3561,4 +3567,198 @@ body.zen-mode .notes-panel textarea { min-height: 60vh; }
 [dir="rtl"] #commandInput::placeholder {
     direction: rtl;
     text-align: right;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE UI OVERHAUL — replaces all previous mobile media queries
+   ═══════════════════════════════════════════════════════════════ */
+
+/* --- Override the old 768px block with enhanced rules --- */
+@media (max-width: 768px) {
+    body {
+        padding: 12px !important;
+        padding-top: max(12px, env(safe-area-inset-top)) !important;
+        padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
+        padding-left: max(12px, env(safe-area-inset-left)) !important;
+        padding-right: max(12px, env(safe-area-inset-right)) !important;
+    }
+
+    .main-grid {
+        grid-template-columns: 1fr !important;
+        grid-template-areas:
+            "status"
+            "links"
+            "pomo"
+            "timer"
+            "todo"
+            "notes"
+            "habits"
+            "calc"
+            "clipboard"
+            "quote"
+            "log" !important;
+        gap: 12px !important;
+    }
+
+    /* Compact header */
+    .header { flex-direction: column; gap: 8px; margin-bottom: 12px; padding-bottom: 12px; }
+    .header-left { width: 100%; }
+    .header-center { display: none; }
+    .header-right { width: 100%; text-align: left; display: flex; align-items: center; gap: 12px; }
+    .clock { font-size: 1.5rem; letter-spacing: 2px; }
+    .clock-sub { text-align: left; margin-top: 0; }
+
+    /* Sub-greeting row */
+    .sub-greeting { flex-wrap: wrap; row-gap: 8px; column-gap: 8px; }
+    .theme-trigger-btn { min-height: 36px; padding: 6px 10px; font-size: 0.72rem; }
+
+    /* Command bar */
+    .command-section { padding: 10px 12px; }
+    .prompt-wrapper { display: none; }
+    .cmd-hint { display: none; }
+    #commandInput { font-size: 16px; }
+
+    /* Status */
+    .status-grid { grid-template-columns: repeat(2, 1fr); }
+
+    /* Links */
+    .links-grid { grid-template-columns: repeat(2, 1fr); }
+
+    /* Panels */
+    .panel { padding: 14px 12px; }
+    .panel-title { font-size: 0.72rem; }
+
+    /* Modals */
+    .modal { max-height: 90vh; max-width: calc(100vw - 24px); border-radius: 6px; }
+    .modal-body { max-height: 65vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .modal-overlay { align-items: flex-end; }
+
+    /* Footer: horizontal scroll strip */
+    .footer {
+        font-size: 0.6rem;
+        gap: 6px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        flex-wrap: nowrap !important;
+        white-space: nowrap;
+        padding-bottom: max(8px, env(safe-area-inset-bottom));
+    }
+    .footer::-webkit-scrollbar { display: none; }
+
+    /* Edit links */
+    .edit-link-row { grid-template-columns: 40px 1fr 40px 36px; }
+    .edit-link-header { grid-template-columns: 40px 1fr 40px 36px; }
+
+    /* Fullscreen */
+    .fullscreen-overlay {
+        padding: 12px;
+        padding-top: max(12px, env(safe-area-inset-top));
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+    .fullscreen-inner .links-grid { grid-template-columns: repeat(2, 1fr); }
+    .fullscreen-close { min-height: 44px; }
+
+    /* Timer */
+    .timer-display { font-size: 2rem; }
+    .timer-preset-btn { min-height: 40px; padding: 8px 12px; font-size: 0.78rem; }
+
+    /* Pomo */
+    .pomo-ring-wrapper { width: 160px !important; height: 160px !important; }
+    .pomo-time { font-size: 1.8rem !important; }
+
+    /* Inputs — prevent iOS Safari zoom */
+    .todo-input-row input, .habits-input-row input, #pinsInput, #habitInput,
+    #timerInput, #timerTargetInput, .edit-link-row input { font-size: 16px; }
+
+    /* Add/submit buttons: big tap targets */
+    .todo-input-row button, .habits-input-row button,
+    #pinsAdd, #habitAdd, #todoAdd { min-height: 44px; min-width: 44px; }
+
+    /* Notes */
+    #notes { font-size: 16px; min-height: 140px; }
+
+    /* Calc */
+    .calc-expr { font-size: 1.4rem; }
+    .calc-btn { min-height: 48px; font-size: 1rem; }
+
+    /* Dropdown items easier to tap */
+    .cmd-dropdown-item { padding: 13px 14px; }
+
+    /* Pomodoro settings popover */
+    .pomo-popover {
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+        width: calc(100vw - 32px);
+        max-width: 300px;
+    }
+
+    /* Theme grid: more columns per row on mobile */
+    .theme-grid { grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); }
+
+    /* Habit items: wrap day cells */
+    .habit-item { flex-wrap: wrap; row-gap: 6px; }
+    .habit-days { order: 3; flex-basis: 100%; justify-content: flex-start; }
+}
+
+@media (max-width: 480px) {
+    .greeting { font-size: 1rem; letter-spacing: 1px; }
+    .links-grid { grid-template-columns: 1fr 1fr; }
+    .calc-btn { min-height: 52px; }
+
+    /* Pomo & timer controls: stack vertically for fat fingers */
+    .pomo-controls { flex-direction: column; gap: 8px; }
+    .pomo-controls .pomo-btn { width: 100%; min-height: 48px; }
+    .timer-container .pomo-controls { flex-direction: row; flex-wrap: wrap; }
+    .timer-container .pomo-controls .pomo-btn { flex: 1 1 calc(50% - 4px); min-height: 44px; }
+
+    /* Fullscreen inner tweaks */
+    .fullscreen-inner .status-grid { grid-template-columns: repeat(2, 1fr); }
+    .fullscreen-inner .pomo-ring-wrapper { width: 160px !important; height: 160px !important; }
+    .fullscreen-inner .pomo-time { font-size: 1.7rem !important; }
+
+    /* Accent picker in theme modal */
+    .accent-picker-row { flex-direction: column; align-items: stretch; gap: 8px; }
+    .row-spacer-left { margin-left: 0; }
+    .font-select { width: 100%; }
+}
+
+@media (max-width: 380px) {
+    .clock { font-size: 1.3rem; }
+    .theme-trigger-btn { font-size: 0.6rem; padding: 4px 7px; }
+    .links-grid { grid-template-columns: 1fr; }
+    .calc-btn { min-height: 48px; font-size: 0.9rem; }
+}
+
+/* Touch-only: bigger targets, always-visible controls */
+@media (hover: none), (pointer: coarse) {
+    /* Always-visible delete & action buttons */
+    .todo-del, .habit-del { opacity: 0.6; }
+    .todo-item:active .todo-del,
+    .habit-item:active .habit-del { opacity: 1; }
+
+    /* Minimum 44×44px tap targets (Apple HIG) */
+    .todo-del, .habit-del, .modal-close, .panel-fs-btn, .panel-edit-btn,
+    .quote-refresh-btn, .backup-btn, .theme-trigger-btn, .sound-toggle-pill,
+    .log-clear-btn, .clip-clear-btn, .footer-clear-btn, .habit-today-btn,
+    .pomo-stepper-btn, #accentResetBtn, .lang-toggle-btn {
+        min-height: 44px;
+        min-width: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .habit-day { width: 28px; height: 28px; font-size: 10px; }
+    .todo-check { width: 24px; height: 24px; }
+    .link-item { min-height: 68px; }
+
+    /* No 300ms click delay, no accidental zoom */
+    button, a.link-item, .theme-card, .cmd-dropdown-item,
+    .habit-day, .todo-check, .timer-tab, .timer-preset-btn {
+        touch-action: manipulation;
+    }
+
+    /* Always show fullscreen button on touch */
+    .panel-fs-btn { opacity: 0.7; }
 }
