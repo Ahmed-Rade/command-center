@@ -29,7 +29,6 @@ const SK = {
     DENSITY:     'cc_density',
     PINS:        'cc_pins',
     FOCUS_TIME:  'cc_focus_time',
-    GEMINI_KEY:  'cc_gemini_key',
     LANG:        'cc_lang',
 };
 
@@ -55,14 +54,14 @@ function lsRemove(key) {
 // STRINGS holds every visible UI label keyed by data-i18n / data-i18n-ph
 // in index.html, plus a few strings only referenced from JS (output
 // messages, dynamic labels). Command syntax, clock/date values, weather
-// numbers, Gemini answers, and log values are NEVER in here — those are
-// excluded per spec and stay as-is regardless of language.
+// numbers, and log values are NEVER in here — those are excluded per
+// spec and stay as-is regardless of language.
 const STRINGS = {
     en: {
         btnTheme: '🎨 THEME', btnSound: '🔊 SOUND',
         soundHover: 'Hover', soundClick: 'Click', soundType: 'Type', soundAlert: 'Alert',
         sysOperational: 'SYSTEM OPERATIONAL', loading: 'LOADING...',
-        cmdPlaceholder: 'ask CC anything, :calc 2+2, :pomo start, :timer 5:00, :theme minimal, :help...',
+        cmdPlaceholder: 'type to search the web, :calc 2+2, :pomo start, :timer 5:00, :theme minimal, :help...',
         modalShortcutsTitle: '[ KEYBOARD SHORTCUTS ]',
         grpGlobal: 'GLOBAL', grpCmdInput: 'COMMAND INPUT', grpCommands: 'COMMANDS', grpQuickLinks: 'QUICK LINKS (Alt+Key)',
         scFocusInput: 'Focus command input', scClearClose: 'Clear / close', scToggleOverlay: 'Toggle this overlay',
@@ -102,13 +101,13 @@ const STRINGS = {
         footFocus: 'focus', footHistory: 'history', footShortcuts: 'shortcuts', footTimer: 'timer',
         footStopwatch: 'stopwatch', footThemes: 'themes', footSearch: 'search', footZen: 'zen mode',
         footAllCmds: 'all cmds', btnExport: '⇩ EXPORT', btnImport: '⇧ IMPORT', btnClearAll: '⚠ CLEAR ALL DATA',
-        askHint: '↵ ask CC',
+        askHint: '↵ search',
     },
     ar: {
         btnTheme: '🎨 السمات', btnSound: '🔊 الصوت',
         soundHover: 'تمرير', soundClick: 'ضغط', soundType: 'كتابة', soundAlert: 'تنبيه',
         sysOperational: 'النظام يعمل', loading: 'جارٍ التحميل...',
-        cmdPlaceholder: 'اسأل CC أي شيء، أو :calc 2+2، أو :pomo start، أو :help...',
+        cmdPlaceholder: 'اكتب للبحث في الويب، أو :calc 2+2، أو :pomo start، أو :help...',
         modalShortcutsTitle: '[ اختصارات لوحة المفاتيح ]',
         grpGlobal: 'عام', grpCmdInput: 'إدخال الأوامر', grpCommands: 'الأوامر', grpQuickLinks: 'روابط سريعة (Alt+مفتاح)',
         scFocusInput: 'تركيز على إدخال الأوامر', scClearClose: 'مسح / إغلاق', scToggleOverlay: 'تبديل هذه النافذة',
@@ -148,7 +147,7 @@ const STRINGS = {
         footFocus: 'تركيز', footHistory: 'السجل', footShortcuts: 'الاختصارات', footTimer: 'مؤقت',
         footStopwatch: 'ساعة توقيت', footThemes: 'السمات', footSearch: 'بحث', footZen: 'وضع التركيز',
         footAllCmds: 'كل الأوامر', btnExport: '⇩ تصدير', btnImport: '⇧ استيراد', btnClearAll: '⚠ مسح كل البيانات',
-        askHint: '↵ اسأل CC',
+        askHint: '↵ بحث',
     },
 };
 
@@ -190,7 +189,7 @@ function applyLanguage(lang) {
     _greetingBucket = null;
     if (typeof updateTime === 'function') updateTime();
 
-    // cmdHint's idle "↵ ask CC" text only applies when the input is empty
+    // cmdHint's idle "↵ search" text only applies when the input is empty
     // and not a slash-command — re-sync it now if that's the current state.
     const hintEl = document.getElementById('cmdHint');
     const inputEl = document.getElementById('commandInput');
@@ -198,7 +197,7 @@ function applyLanguage(lang) {
         hintEl.textContent = inputEl.value.length > 0 ? t('askHint') : '';
     }
 
-    if (typeof renderQuote === 'function') renderQuote(_lastQuoteWasRandom);
+    try { renderQuote(_lastQuoteWasRandom); } catch (_) { /* quotes not loaded yet (boot call) */ }
 }
 
 // ─── ELEMENTS ───────────────────────────────────────────────
@@ -1043,137 +1042,11 @@ document.addEventListener('keydown', (e) => {
 
 
 
-// ─── CC (Gemini-powered search bar) ────────────────────────
-// No hardcoded key. User sets their own via :gemini-key <key>, stored
-// locally (localStorage) only — never shipped in source.
-function getGeminiKey() { return lsRaw(SK.GEMINI_KEY, ''); }
-function setGeminiKey(key) { lsSet(SK.GEMINI_KEY, key); }
-function clearGeminiKey() { lsSet(SK.GEMINI_KEY, ''); }
-
-const GEMINI_ENDPOINT = (key) =>
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(key)}`;
-
-const CC_SYSTEM_SHORT = `You are CC — the built-in brain of a personal command center dashboard. You live in a browser tab. You are not a corporate assistant. You are the smart, slightly sarcastic friend who actually knows things. Rules:
-- Answer correctly and concisely. Accuracy is non-negotiable.
-- Keep it to 1-3 sentences max unless the user explicitly asks for more.
-- Add a dry, witty remark, observation, or punchline — but only if it fits naturally. Never force it.
-- Write like a human texting a friend, not like a manual. No markdown, no bullet points, no bold, no headers.
-- Never say: Great question, Certainly, Of course, As an AI, I should note, or any corporate filler.
-- If the answer is obvious, acknowledge that it's obvious while still answering.
-- If something is genuinely uncertain, say so briefly and move on.
-- If the question is dumb, you can gently roast it once, then answer it anyway.
-- No emojis unless the question was itself emoji-heavy.
-- You live in a dashboard. The user's name is Ahmed. You can reference that occasionally, sparingly, naturally.`;
-
-const CC_SYSTEM_LONG = `You are CC — a sharp, knowledgeable assistant who lives inside a personal dashboard. Answer thoroughly and correctly. Be direct, skip corporate filler. No markdown, no bullet points, plain text only. A bit of personality is fine but don't let it get in the way of a complete answer.`;
-
-const askCard        = document.getElementById('askCard');
-const askCardClose    = document.getElementById('askCardClose');
-const askCardQuery    = document.getElementById('askCardQuery');
-const askCardBody     = document.getElementById('askCardBody');
-const askCardActions  = document.getElementById('askCardActions');
-
-let _ccLastQuery = '';
-let _ccAbort = null;
-
+// ─── SEARCH FALLBACK (used by :search) ──────────────────────
 function ccOpenSearchFallback(query) {
     const url = ENGINES[currentEngine](encodeURIComponent(query));
     window.open(url, '_blank');
 }
-
-function ccShowCard() { askCard.classList.remove('hidden'); }
-function ccHideCard() {
-    askCard.classList.add('hidden');
-    if (_ccAbort) { _ccAbort.abort(); _ccAbort = null; }
-}
-
-function ccRenderLoading(query) {
-    askCardQuery.textContent = query;
-    askCardBody.className = 'ask-card-body ask-loading';
-    askCardBody.innerHTML = '<span class="ask-loading-dot"></span><span class="ask-loading-dot"></span><span class="ask-loading-dot"></span>';
-    askCardActions.innerHTML = '';
-    ccShowCard();
-}
-
-function ccRenderError(query) {
-    askCardBody.className = 'ask-card-body ask-error';
-    askCardBody.textContent = 'CC couldn\'t reach the network. Try again, or search instead.';
-    askCardActions.innerHTML = '';
-    const fallbackBtn = document.createElement('button');
-    fallbackBtn.className = 'ask-action-btn';
-    fallbackBtn.textContent = '↗ Search instead';
-    fallbackBtn.addEventListener('click', () => ccOpenSearchFallback(query));
-    askCardActions.appendChild(fallbackBtn);
-}
-
-function ccRenderAnswer(query, answer) {
-    askCardQuery.textContent = query;
-    askCardBody.className = 'ask-card-body';
-    askCardBody.textContent = answer;
-    askCardActions.innerHTML = '';
-
-    const searchBtn = document.createElement('button');
-    searchBtn.className = 'ask-action-btn';
-    searchBtn.textContent = `↗ Search ${currentEngine === 'google' ? 'Google' : currentEngine}`;
-    searchBtn.title = 'Opens this query in your fallback search engine';
-    searchBtn.addEventListener('click', () => ccOpenSearchFallback(query));
-    askCardActions.appendChild(searchBtn);
-
-    const copyBtn = document.createElement('button');
-    copyBtn.className = 'ask-action-btn';
-    copyBtn.textContent = '📋 Copy';
-    copyBtn.addEventListener('click', () => {
-        navigator.clipboard.writeText(answer).then(() => {
-            copyBtn.textContent = '✓ Copied';
-            setTimeout(() => { copyBtn.textContent = '📋 Copy'; }, 1500);
-        }).catch(() => {});
-    });
-    askCardActions.appendChild(copyBtn);
-
-    const longerBtn = document.createElement('button');
-    longerBtn.className = 'ask-action-btn';
-    longerBtn.textContent = '+ Longer';
-    longerBtn.addEventListener('click', () => ccAsk(query, true));
-    askCardActions.appendChild(longerBtn);
-}
-
-async function ccAsk(query, long = false) {
-    const trimmed = query.trim();
-    if (!trimmed) return;
-    const key = getGeminiKey();
-    if (!key) {
-        showOutput(currentLang === 'ar' ? 'لا يوجد مفتاح Gemini. استخدم :gemini-key <key>' : 'No Gemini key set. Use :gemini-key <key>', 'info', 4000);
-        return;
-    }
-    _ccLastQuery = trimmed;
-    ccRenderLoading(trimmed);
-    if (_ccAbort) _ccAbort.abort();
-    _ccAbort = new AbortController();
-
-    try {
-        const res = await fetch(GEMINI_ENDPOINT(key), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            signal: _ccAbort.signal,
-            body: JSON.stringify({
-                contents: [{ role: 'user', parts: [{ text: trimmed }] }],
-                systemInstruction: { parts: [{ text: long ? CC_SYSTEM_LONG : CC_SYSTEM_SHORT }] },
-            }),
-        });
-        if (!res.ok) throw new Error('bad status');
-        const data = await res.json();
-        const answer = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('').trim();
-        if (!answer) throw new Error('empty');
-        ccRenderAnswer(trimmed, answer);
-        addLog('result', `:ask ${trimmed}`);
-    } catch (err) {
-        if (err.name === 'AbortError') return;
-        ccRenderError(trimmed);
-        addLog('result', `:ask failed — ${trimmed}`);
-    }
-}
-
-askCardClose.addEventListener('click', () => ccHideCard());
 
 // ─── SEARCH ENGINE ─────────────────────────────────────────
 const ENGINES = {
@@ -2642,7 +2515,7 @@ const AUTOCOMPLETE_LIST = [
     ':theme', ':engine', ':bg', ':pomo', ':myip', ':price',
     ':weather', ':log', ':timer', ':links', ':pin',
     ':convert', ':flip', ':roll', ':zen', ':sound', ':export', ':import',
-    ':note', ':stats', ':search', ':ask', ':gemini-key', ':lang',
+    ':note', ':stats', ':search', ':lang',
 ];
 
 const COMMANDS = {
@@ -2689,7 +2562,7 @@ const COMMANDS = {
     },
 
     ':help': () => {
-        showOutput(':calc :todo :clear :time :ping :pomo :timer :theme :engine :bg :price :myip :weather :log :pin :convert :flip :roll :zen :export :import :ask :search :gemini-key :lang — or type to ask CC', 'info', 10000);
+        showOutput(':calc :todo :clear :time :ping :pomo :timer :theme :engine :bg :price :myip :weather :log :pin :convert :flip :roll :zen :export :import :search :lang — or type to search the web', 'info', 10000);
         addLog('cmd', ':help');
     },
 
@@ -2932,25 +2805,6 @@ const COMMANDS = {
         addLog('result', `search: ${q} via ${currentEngine}`);
     },
 
-    ':ask': (args) => {
-        const trimmed = args.trim();
-        if (trimmed.toLowerCase() === 'clear') { ccHideCard(); return; }
-        if (trimmed.toLowerCase().startsWith('long ')) {
-            ccAsk(trimmed.slice(5), true);
-            return;
-        }
-        if (!trimmed) { showOutput('Usage: :ask <query> | :ask long <query> | :ask clear', 'info'); return; }
-        ccAsk(trimmed, false);
-    },
-
-    ':gemini-key': (args) => {
-        const key = args.trim();
-        if (!key) { showOutput(getGeminiKey() ? 'Gemini key is set.' : 'No Gemini key set. Usage: :gemini-key <key>', 'info'); return; }
-        if (key.toLowerCase() === 'clear') { clearGeminiKey(); showOutput('Gemini key cleared.', 'success', 2000); addLog('cmd', ':gemini-key clear'); return; }
-        setGeminiKey(key);
-        showOutput('Gemini key saved locally.', 'success', 3000);
-        addLog('cmd', ':gemini-key set');
-    },
 
     ':lang': (args) => {
         const sub = args.trim().toLowerCase();
@@ -3017,7 +2871,8 @@ commandInput.addEventListener('keydown', (e) => {
         if (COMMANDS[cmd]) {
             COMMANDS[cmd](args);
         } else {
-            ccAsk(query, false);
+            ccOpenSearchFallback(query);
+            addLog('result', `search: ${query} via ${currentEngine}`);
         }
         commandInput.value = '';
     }
@@ -3061,9 +2916,7 @@ const CMD_CATALOG = [
     { cmd: ':time',    desc: 'Show current time',     usage: ':time' },
     { cmd: ':help',    desc: 'Show all commands',     usage: ':help' },
     { cmd: ':ping',    desc: 'Connection check',      usage: ':ping' },
-    { cmd: ':ask',     desc: 'Ask CC (Gemini)',       usage: ':ask <query> | :ask long <query> | :ask clear' },
-    { cmd: ':search',  desc: 'Bypass CC, search web', usage: ':search <query>' },
-    { cmd: ':gemini-key', desc: 'Set/clear local Gemini API key', usage: ':gemini-key <key> | clear' },
+    { cmd: ':search',  desc: 'Search the web',        usage: ':search <query>' },
     { cmd: ':lang',     desc: 'Switch language',      usage: ':lang ar | :lang en' },
 ];
 
