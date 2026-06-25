@@ -579,8 +579,8 @@ body.bg-grid::before {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
     background-image:
-        linear-gradient(rgba(57, 211, 83, 0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(57, 211, 83, 0.04) 1px, transparent 1px);
+        linear-gradient(color-mix(in srgb, var(--text-accent) 6%, transparent) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in srgb, var(--text-accent) 6%, transparent) 1px, transparent 1px);
     background-size: 40px 40px;
     z-index: 0;
     pointer-events: none;
@@ -976,13 +976,7 @@ html.theme-minimal .panel { border-radius: 12px; border-width: 1.5px; }
 }
 
 .panel:hover {
-    border-color: rgba(57, 211, 83, 0.2);
-    box-shadow: 0 0 30px rgba(57, 211, 83, 0.04);
-}
-
-html.theme-cyber .panel:hover {
-    border-color: rgba(255, 45, 120, 0.4);
-    box-shadow: 0 0 30px rgba(255, 45, 120, 0.08);
+    /* Override below in aesthetic enhancements with theme-aware color-mix version */
 }
 
 .panel-title {
@@ -1306,6 +1300,7 @@ html.theme-minimal .status-item { border-radius: 8px; }
 .status-value.offline { color: var(--text-red); }
 .status-value.offline .pulse-dot { background: var(--text-red); box-shadow: 0 0 6px var(--text-red); }
 .status-value.accent { color: var(--text-blue); }
+.status-value.focus-time { color: var(--text-accent); text-shadow: 0 0 6px color-mix(in srgb, transparent 70%, var(--text-accent) 30%); }
 
 /* ─── PULSE DOT ─── */
 .pulse-dot {
@@ -1337,6 +1332,7 @@ html.theme-minimal .status-item { border-radius: 8px; }
     padding: 10px 12px;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
+    border-left: 2px solid transparent;
     border-radius: 2px;
     text-decoration: none;
     color: var(--text-primary);
@@ -1357,7 +1353,7 @@ html.theme-minimal .link-item { border-radius: 8px; }
 }
 
 .link-item:hover::before { width: 100%; }
-.link-item:hover { border-color: var(--text-accent); color: var(--text-accent); transform: translateX(3px); }
+.link-item:hover { border-color: var(--text-accent); color: var(--text-accent); border-left-color: var(--text-accent); transform: translateX(2px); }
 
 .link-icon { font-size: 1rem; flex-shrink: 0; }
 .link-text { font-size: 0.82rem; flex: 1; }
@@ -1518,6 +1514,7 @@ html.theme-minimal .link-item { border-radius: 8px; }
     stroke-linecap: round;
     transition: stroke-dashoffset 1s linear, stroke 0.5s;
     filter: drop-shadow(0 0 6px var(--online-color));
+    will-change: stroke-dashoffset;
 }
 
 .pomo-ring-progress.break-mode {
@@ -1802,9 +1799,10 @@ html.theme-minimal .todo-input-row button { border-radius: 8px; }
     padding: 8px 10px;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
+    border-left: 2px solid transparent;
     border-radius: 2px;
     animation: slideInTodo 0.2s ease;
-    transition: opacity 0.2s;
+    transition: opacity 0.2s, border-color 0.15s, background 0.15s;
 }
 
 html.theme-minimal .todo-item { border-radius: 8px; }
@@ -2886,6 +2884,8 @@ kbd {
     background: linear-gradient(90deg, transparent, var(--text-accent), transparent);
     opacity: 0;
     transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 1;
 }
 
 .panel:hover::after {
@@ -2902,9 +2902,9 @@ html.theme-minimal .panel::after { display: none; }
 
 /* Better panel glow on hover — theme-aware */
 .panel:hover {
-    border-color: color-mix(in srgb, var(--border-color) 50%, var(--text-accent) 50%);
-    box-shadow: 0 0 24px color-mix(in srgb, transparent 85%, var(--text-accent) 15%),
-                inset 0 0 0 0 transparent;
+    border-color: color-mix(in srgb, var(--border-color) 45%, var(--text-accent) 55%);
+    box-shadow: 0 0 28px color-mix(in srgb, transparent 88%, var(--text-accent) 12%),
+                0 2px 8px rgba(0,0,0,0.2);
 }
 
 /* Panel title accent underline */
@@ -2962,13 +2962,22 @@ html.theme-minimal .status-item::before { display: none; }
 .log-entry:hover { background: var(--bg-hover); }
 
 /* Todo item improvements */
-.todo-item {
-    border-left: 2px solid transparent;
-    transition: border-color 0.15s, background 0.15s;
-}
-
 .todo-item:hover:not(.done) { border-left-color: var(--text-accent); }
 .todo-item.done { border-left-color: var(--border-color); }
+.todo-item.priority-high { border-left-color: var(--text-red, #ff5555); }
+.todo-item.priority-high:hover { border-left-color: var(--text-red, #ff5555); }
+.todo-item.priority-low { border-left-color: #4fc3f7; opacity: 0.82; }
+.todo-item.priority-low:hover { border-left-color: #4fc3f7; opacity: 1; }
+
+.todo-priority-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1;
+    flex-shrink: 0;
+    letter-spacing: 0;
+}
+.todo-priority-badge.high { color: var(--text-red, #ff5555); }
+.todo-priority-badge.low  { color: #4fc3f7; font-weight: 400; font-size: 0.72rem; }
 
 /* Habit day grid labels */
 .habit-days::before {
@@ -2976,11 +2985,7 @@ html.theme-minimal .status-item::before { display: none; }
     display: none;
 }
 
-/* Quick link hover shimmer */
-.link-item {
-    border-left: 2px solid transparent;
-}
-
+/* Quick link hover shimmer — border-left already on .link-item base styles */
 .link-item:hover {
     border-left-color: var(--text-accent);
     transform: translateX(2px);
@@ -2989,11 +2994,12 @@ html.theme-minimal .status-item::before { display: none; }
 /* Pomodoro ring glow pulse when running */
 @keyframes ringGlow {
     0%, 100% { filter: drop-shadow(0 0 4px var(--online-color)); }
-    50%       { filter: drop-shadow(0 0 10px var(--online-color)); }
+    50%       { filter: drop-shadow(0 0 12px var(--online-color)) drop-shadow(0 0 4px var(--online-color)); }
 }
 
 .pomo-ring-progress.running-glow {
     animation: ringGlow 2s ease-in-out infinite;
+    /* transition is overridden by animation — re-enable stroke transition via animation-fill-mode */
 }
 
 /* Quote panel decorative lines */
@@ -3057,6 +3063,21 @@ html.theme-minimal .status-item::before { display: none; }
     .status-grid { grid-template-columns: 1fr; }
     .greeting { font-size: 1rem; }
     .prompt-wrapper { display: none; }
+    .footer-kb { flex-wrap: wrap; gap: 4px; overflow-x: auto; scroll-behavior: smooth; }
+}
+
+/* ─── NOTES WORD COUNT ─── */
+.notes-wc {
+    font-size: 0.6rem;
+    color: var(--text-secondary);
+    letter-spacing: 1px;
+    opacity: 0.6;
+    margin-left: 4px;
+}
+
+/* ─── TOUCH: always show fullscreen button ─── */
+@media (hover: none), (pointer: coarse) {
+    .panel-fs-btn { opacity: 0.65; }
 }
 
 /* ─── REDUCED MOTION ─── */

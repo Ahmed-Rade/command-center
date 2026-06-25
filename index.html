@@ -15,6 +15,7 @@
     <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
     <link rel="manifest" href="site.webmanifest">
     <meta name="theme-color" content="#060a0f">
+    <meta name="color-scheme" content="dark light">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -70,6 +71,8 @@
                     <div class="shortcut-row"><kbd>:flip</kbd><span>Coin flip</span></div>
                     <div class="shortcut-row"><kbd>:roll &lt;n&gt;</kbd><span>Dice roll</span></div>
                     <div class="shortcut-row"><kbd>:export / :import</kbd><span>Backup & restore data</span></div>
+                    <div class="shortcut-row"><kbd>:note wc</kbd><span>Notes word count</span></div>
+                    <div class="shortcut-row"><kbd>:stats</kbd><span>Dashboard summary</span></div>
                     <div class="shortcut-row"><kbd>:zen</kbd><span>Zen / focus mode</span></div>
                     <div class="shortcut-row"><kbd>:clear</kbd><span>Wipe notes</span></div>
                     <div class="shortcut-row"><kbd>:help</kbd><span>Show all commands</span></div>
@@ -223,6 +226,10 @@
                     <div class="status-item">
                         <div class="status-label">WIND</div>
                         <div class="status-value" id="windVal">--</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">FOCUS TIME</div>
+                        <div class="status-value focus-time" id="focusTimeVal">--</div>
                     </div>
                 </div>
             </section>
@@ -380,7 +387,7 @@
                     <button class="panel-fs-btn" onclick="enterFullscreen('todo')" title="Fullscreen" aria-label="Fullscreen todo panel">⛶</button>
                 </h2>
                 <div class="todo-input-row">
-                    <input type="text" id="todoInput" placeholder="add task..." spellcheck="false">
+                    <input type="text" id="todoInput" placeholder="add task... (! = urgent)" spellcheck="false">
                     <button id="todoAdd">+</button>
                 </div>
                 <ul class="todo-list" id="todoList"></ul>
@@ -391,6 +398,7 @@
                 <h2 class="panel-title">
                     <span class="title-bracket">[</span> NOTES <span class="title-bracket">]</span>
                     <span class="notes-saved" id="notesSaved"></span>
+                    <span class="notes-wc" id="notesWordCount"></span>
                     <button class="panel-fs-btn" onclick="enterFullscreen('notes')" title="Fullscreen" aria-label="Fullscreen notes panel">⛶</button>
                 </h2>
                 <textarea id="notes" placeholder="// scratchpad..."></textarea>

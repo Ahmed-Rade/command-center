@@ -28,6 +28,7 @@ const SK = {
     FONT:        'cc_font',
     DENSITY:     'cc_density',
     PINS:        'cc_pins',
+    FOCUS_TIME:  'cc_focus_time',
 };
 
 // ─── SAFE STORAGE (corrupted/old JSON must never crash boot) ───
@@ -250,6 +251,18 @@ async function updateBattery() {
 }
 updateBattery();
 
+// ─── FOCUS TIME (cumulative pomo) ──────────────────────────
+function updateFocusTimeDisplay() {
+    const el = document.getElementById('focusTimeVal');
+    if (!el) return;
+    const mins = lsGet(SK.FOCUS_TIME, 0);
+    if (!mins) { el.textContent = '--'; return; }
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    el.textContent = h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
+updateFocusTimeDisplay();
+
 // ─── NETWORK STATUS (live) ──────────────────────────────────
 const networkStatusEl = document.getElementById('networkStatus');
 function updateNetworkStatus() {
@@ -375,10 +388,17 @@ let matrixEnabled = true;
 
     const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノ';
 
+    let matrixAccentColor = getComputedStyle(document.documentElement).getPropertyValue('--text-accent').trim() || '#39d353';
+    // Refresh accent cache on theme changes (observer on html element class)
+    const matrixThemeObserver = new MutationObserver(() => {
+        matrixAccentColor = getComputedStyle(document.documentElement).getPropertyValue('--text-accent').trim() || '#39d353';
+    });
+    matrixThemeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
     function draw() {
         ctx.fillStyle = 'rgba(6, 10, 15, 0.05)';
         ctx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
-        ctx.fillStyle = '#39d353';
+        ctx.fillStyle = matrixAccentColor;
         drops.forEach((y, i) => {
             const char = chars[Math.floor(Math.random() * chars.length)];
             ctx.fillText(char, i * 18, y * 18);
@@ -1285,6 +1305,10 @@ function pomoTick() {
         if (pomoState.phase === 'work') {
             pomoState.sessions++;
             lsSet(SK.POMO_SESS, pomoState.sessions);
+            // Accumulate focus time
+            const focusMins = (lsGet(SK.FOCUS_TIME, 0)) + pomoSettings.work;
+            lsSet(SK.FOCUS_TIME, JSON.stringify(focusMins));
+            updateFocusTimeDisplay();
             const isLong = pomoState.sessions % pomoSettings.longEvery === 0;
             const brkMin = isLong ? pomoSettings.longLen : pomoSettings.brk;
             pomoState.phase = 'break';
@@ -2160,6 +2184,7 @@ const AUTOCOMPLETE_LIST = [
     ':theme', ':engine', ':bg', ':pomo', ':myip', ':price',
     ':weather', ':log', ':timer', ':links', ':pin',
     ':convert', ':flip', ':roll', ':zen', ':sound', ':export', ':import',
+    ':note', ':stats',
 ];
 
 const COMMANDS = {
@@ -2211,8 +2236,18 @@ const COMMANDS = {
     },
 
     ':ping': () => {
-        showOutput('PONG — command center online ✓', 'success');
-        addLog('result', 'PONG');
+        const t0 = performance.now();
+        showOutput('Pinging…', 'info', 1500);
+        fetch('https://open-meteo.com/favicon.ico', { method: 'HEAD', cache: 'no-store' })
+            .then(() => {
+                const ms = Math.round(performance.now() - t0);
+                showOutput(`PONG — ${ms}ms ✓`, 'success');
+                addLog('result', `PONG ${ms}ms`);
+            })
+            .catch(() => {
+                showOutput('PONG — offline (no response)', navigator.onLine ? 'info' : 'error');
+                addLog('result', 'PONG offline');
+            });
     },
 
     ':theme': (args) => {
@@ -2307,6 +2342,34 @@ const COMMANDS = {
         showOutput(`Fetching ${ticker.toUpperCase()}...`, 'info', 2000);
         fetchPrice(ticker);
         addLog('cmd', `:price ${ticker}`);
+    },
+
+    ':note': (args) => {
+        const sub = args.trim();
+        if (!sub) { showOutput('Usage: :note clear | :note word-count', 'info'); return; }
+        if (sub === 'clear') { COMMANDS[':clear'](''); return; }
+        if (sub === 'word-count' || sub === 'wc') {
+            const text = notesArea.value.trim();
+            const words = text ? text.split(/\s+/).length : 0;
+            const chars = text.length;
+            const lines = text ? text.split('\n').length : 0;
+            showOutput(`Notes: ${words} words · ${chars} chars · ${lines} lines`, 'info', 5000);
+        }
+    },
+
+    ':stats': () => {
+        const sessions  = lsGet(SK.POMO_SESS, 0);
+        const focusMins = lsGet(SK.FOCUS_TIME, 0);
+        const todosAll  = lsGet(SK.TODOS, []);
+        const habits    = lsGet(SK.HABITS, []);
+        const done      = todosAll.filter(t => t.done).length;
+        const fh = Math.floor(focusMins / 60), fm = focusMins % 60;
+        const focusStr  = focusMins ? (fh > 0 ? `${fh}h ${fm}m` : `${fm}m`) : '0m';
+        showOutput(
+            `Todos: ${done}/${todosAll.length} done · Pomo: ${sessions} sessions · Focus: ${focusStr} · Habits: ${habits.length} tracked`,
+            'info', 7000
+        );
+        addLog('result', ':stats');
     },
 
     ':weather': () => {
@@ -2501,6 +2564,8 @@ const CMD_CATALOG = [
     { cmd: ':export',  desc: 'Backup all data',       usage: ':export' },
     { cmd: ':import',  desc: 'Restore from backup',   usage: ':import' },
     { cmd: ':clear',   desc: 'Wipe notes',            usage: ':clear' },
+    { cmd: ':note',    desc: 'Notes utilities',       usage: ':note wc | :note clear' },
+    { cmd: ':stats',   desc: 'Dashboard summary',     usage: ':stats' },
     { cmd: ':time',    desc: 'Show current time',     usage: ':time' },
     { cmd: ':help',    desc: 'Show all commands',     usage: ':help' },
     { cmd: ':ping',    desc: 'Connection check',      usage: ':ping' },
@@ -2567,6 +2632,7 @@ commandInput.addEventListener('input', () => {
         else if (trimmed.startsWith(':timer '))  hint.textContent = 'HH:MM:SS or MM:SS (countdown) | lap | reset | stopwatch';
         else if (trimmed.startsWith(':price '))  hint.textContent = 'BTC / ETH / AED / EUR...';
         else if (trimmed.startsWith(':links '))  hint.textContent = 'edit | reset';
+        else if (trimmed.startsWith(':note '))   hint.textContent = 'wc (word count) | clear';
         else hint.textContent = '';
     } else {
         hideDropdown();
@@ -2649,8 +2715,17 @@ notesArea.value = lsRaw(SK.NOTES, '');
 
 let notesTimer = null;
 const saveNotesDebounced = debounce(() => lsSet(SK.NOTES, notesArea.value), 400);
+
+function updateNotesWordCount() {
+    const text = notesArea.value.trim();
+    const words = text ? text.split(/\s+/).length : 0;
+    const wc = document.getElementById('notesWordCount');
+    if (wc) wc.textContent = words > 0 ? `${words}w` : '';
+}
+
 notesArea.addEventListener('input', () => {
     saveNotesDebounced();
+    updateNotesWordCount();
     notesSaved.textContent = 'SAVED';
     notesSaved.classList.add('show');
     clearTimeout(notesTimer);
@@ -2658,6 +2733,7 @@ notesArea.addEventListener('input', () => {
 });
 // Flush immediately when leaving the field so nothing is lost mid-debounce
 notesArea.addEventListener('blur', () => lsSet(SK.NOTES, notesArea.value));
+updateNotesWordCount();
 
 // ─── TODO ──────────────────────────────────────────────────
 let todos = lsGet(SK.TODOS, []);
@@ -2665,7 +2741,9 @@ let todos = lsGet(SK.TODOS, []);
 function saveTodos() { lsSet(SK.TODOS, JSON.stringify(todos)); }
 
 function addTodo(text) {
-    todos.unshift({ id: Date.now(), text, done: false });
+    const priority = text.startsWith('!') ? 'high' : (text.startsWith('~') ? 'low' : 'normal');
+    const cleanText = text.replace(/^[!~]\s*/, '');
+    todos.unshift({ id: Date.now(), text: cleanText, done: false, priority });
     saveTodos();
     renderTodos();
 }
@@ -2689,11 +2767,15 @@ function renderTodos() {
 
     [...active, ...done].forEach(t => {
         const li = document.createElement('li');
-        li.className = `todo-item${t.done ? ' done' : ''}`;
+        const pClass = t.priority === 'high' ? ' priority-high' : t.priority === 'low' ? ' priority-low' : '';
+        li.className = `todo-item${t.done ? ' done' : ''}${pClass}`;
         li.dataset.id = t.id;
+        const priorityBadge = t.priority === 'high' ? '<span class="todo-priority-badge high">!</span>'
+                            : t.priority === 'low'  ? '<span class="todo-priority-badge low">↓</span>'
+                            : '';
         li.innerHTML = `
             <div class="todo-check" onclick="toggleTodo(${t.id})">${t.done ? '✓' : ''}</div>
-            <span class="todo-text">${escapeHtml(t.text)}</span>
+            ${priorityBadge}<span class="todo-text">${escapeHtml(t.text)}</span>
             <button class="todo-edit-btn" onclick="startEditTodo(${t.id})" title="Edit task">✎</button>
             <button class="todo-del" onclick="deleteTodo(${t.id})">✕</button>
         `;
@@ -3008,10 +3090,14 @@ window.calcAction = function(type, val) {
     }
 };
 
-// Keyboard support for calc when panel is in fullscreen
+// Keyboard support for calc — works in fullscreen AND when calc panel is focused
 document.addEventListener('keydown', (e) => {
-    if (document.getElementById('fullscreenOverlay').classList.contains('hidden')) return;
-    if (!document.getElementById('panel-calc')?.closest('#fullscreenInner')) return;
+    const overlay = document.getElementById('fullscreenOverlay');
+    const inFullscreen = !overlay.classList.contains('hidden') && document.getElementById('panel-calc')?.closest('#fullscreenInner');
+    const calcPanel = document.getElementById('panel-calc');
+    const panelVisible = calcPanel && !overlay.classList.contains('hidden') === false;
+    if (!inFullscreen && !panelVisible) return;
+    if (!inFullscreen) return; // only intercept keys in fullscreen to avoid stealing from other inputs
     const tag = e.target.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA') return;
     if ('0123456789'.includes(e.key)) calcAction('num', e.key);
