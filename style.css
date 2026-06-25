@@ -1122,9 +1122,9 @@ html.theme-minimal .title-bracket { display: none; }
 .fullscreen-inner .log-entries { max-height: calc(100vh - 200px); max-height: calc(100dvh - 200px); }
 .fullscreen-inner .pomo-ring-wrapper { width: 240px; height: 240px; }
 .fullscreen-inner .pomo-time { font-size: 2.4rem; }
-.fullscreen-inner .timer-display { font-size: 5rem; }
+.fullscreen-inner .timer-display { font-size: clamp(2.2rem, 13vw, 5rem); }
 .fullscreen-inner .links-grid { grid-template-columns: repeat(3, 1fr); }
-.fullscreen-inner .status-grid { grid-template-columns: repeat(4, 1fr); }
+.fullscreen-inner .status-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
 .fullscreen-inner .habits-list { max-height: calc(100vh - 250px); max-height: calc(100dvh - 250px); }
 .fullscreen-inner .calc-container { flex: 1; }
 .fullscreen-inner .calc-advanced .calc-btn { padding: 16px 8px; font-size: 1.05rem; }
@@ -3057,6 +3057,8 @@ html.theme-minimal .status-item::before { display: none; }
     .weather-header { display: none; }
     .edit-link-row { grid-template-columns: 40px 1fr 40px 36px; }
     .edit-link-header { grid-template-columns: 40px 1fr 40px 36px; }
+    .fullscreen-overlay { padding: 16px 12px; }
+    .fullscreen-inner .links-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 480px) {
@@ -3064,6 +3066,9 @@ html.theme-minimal .status-item::before { display: none; }
     .greeting { font-size: 1rem; }
     .prompt-wrapper { display: none; }
     .footer-kb { flex-wrap: wrap; gap: 4px; overflow-x: auto; scroll-behavior: smooth; }
+    .fullscreen-inner .status-grid { grid-template-columns: repeat(2, 1fr); }
+    .fullscreen-inner .pomo-ring-wrapper { width: 180px; height: 180px; }
+    .fullscreen-inner .pomo-time { font-size: 1.8rem; }
 }
 
 /* ─── NOTES WORD COUNT ─── */
