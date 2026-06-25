@@ -3541,7 +3541,6 @@ body.zen-mode .notes-panel textarea { min-height: 60vh; }
 [dir="rtl"] .clock,
 [dir="rtl"] .timer-display,
 [dir="rtl"] .pomo-time,
-[dir="rtl"] #commandInput,
 [dir="rtl"] .calc-expr,
 [dir="rtl"] .calc-result,
 [dir="rtl"] .calc-history,
@@ -3550,4 +3549,16 @@ body.zen-mode .notes-panel textarea { min-height: 60vh; }
 [dir="rtl"] #date,
 [dir="rtl"] #uptime {
     direction: ltr;
+}
+
+/* The command input itself stays RTL so Arabic placeholder/typed text
+   reads and aligns correctly; embedded ASCII (commands, numbers) is
+   handled fine by the browser's normal bidi resolution. */
+[dir="rtl"] #commandInput {
+    direction: rtl;
+    text-align: right;
+}
+[dir="rtl"] #commandInput::placeholder {
+    direction: rtl;
+    text-align: right;
 }
