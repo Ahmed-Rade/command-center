@@ -869,7 +869,9 @@ function ensureAudioCtx() {
         try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
         catch { return null; }
     }
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+    // Don't fire-and-forget resume here — callers that need to play immediately
+    // (startAlarm) await the promise themselves. Other callers (hover/click sounds)
+    // are best-effort and silence is acceptable if context is suspended.
     return audioCtx;
 }
 
@@ -914,8 +916,9 @@ function saveSoundSettings() {
 // ─── ALARM / RINGTONE (for finished pomodoro & timer) ───────
 // Repeats a two-tone chime until the user clicks/presses anything,
 // or after 60s of no interaction — whichever comes first.
-let alarmInterval = null;
-let alarmTimeout  = null;
+let alarmInterval    = null;
+let alarmTimeout     = null;
+let alarmVibInterval = null;
 
 function playAlarmChime() {
     const ctx = ensureAudioCtx();
@@ -936,24 +939,37 @@ function playAlarmChime() {
 }
 
 function stopAlarm() {
-    if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; }
-    if (alarmTimeout)  { clearTimeout(alarmTimeout); alarmTimeout = null; }
-    document.removeEventListener('click', stopAlarm, true);
-    document.removeEventListener('keydown', stopAlarm, true);
+    if (alarmInterval)    { clearInterval(alarmInterval);    alarmInterval = null; }
+    if (alarmTimeout)     { clearTimeout(alarmTimeout);      alarmTimeout  = null; }
+    if (alarmVibInterval) { clearInterval(alarmVibInterval); alarmVibInterval = null; }
+    if (navigator.vibrate) navigator.vibrate(0); // cancel any in-progress vibration
+    document.removeEventListener('click',      stopAlarm, true);
+    document.removeEventListener('keydown',    stopAlarm, true);
     document.removeEventListener('touchstart', stopAlarm, true);
 }
 
 function startAlarm() {
     if (!soundSettings.alert) return;
     stopAlarm();
+
+    // Vibration fallback — essential on mobile where AudioContext may be
+    // blocked until after a user gesture. Pattern: buzz-pause x3 then repeat.
+    if (navigator.vibrate) {
+        navigator.vibrate([400, 200, 400, 200, 400, 600]);
+        alarmVibInterval = setInterval(() => {
+            navigator.vibrate([400, 200, 400, 200, 400, 600]);
+        }, 2200);
+    }
+
     const ctx = ensureAudioCtx();
     const doPlay = () => {
+        if (!ensureAudioCtx()) return; // AudioContext unavailable — vibration already running
         playAlarmChime();
         alarmInterval = setInterval(playAlarmChime, 1100);
         alarmTimeout  = setTimeout(stopAlarm, 60000);
-        document.addEventListener('click', stopAlarm, true);
-        document.addEventListener('keydown', stopAlarm, true);
-        document.addEventListener('touchstart', stopAlarm, true);
+        document.addEventListener('click',       stopAlarm, true);
+        document.addEventListener('keydown',     stopAlarm, true);
+        document.addEventListener('touchstart',  stopAlarm, true);
     };
     if (ctx && ctx.state === 'suspended') {
         ctx.resume().then(doPlay).catch(doPlay);
@@ -1554,6 +1570,7 @@ window.pomoControl = function(action) {
             savePomoState();
             pomoStartBtn.textContent = t('btnResume');
             addLog('cmd', ':pomo pause');
+            stopAlarm(); // stop ringing if pause pressed while alarm is active
         } else {
             requestNotifyPermission();
             pomoEndEpoch = Date.now() + pomoState.remaining * 1000;
@@ -1792,6 +1809,7 @@ window.timerControl = function(action) {
             saveTimerState();
             addLog('cmd', 'timer pause');
             swPost({ type: 'CANCEL_TIMER' }); // cancel background alarm on pause
+            stopAlarm(); // stop ringing if pause pressed while alarm is active
         } else {
             if (timerState.mode === 'countdown' && timerState.countdownRemaining <= 0) {
                 showOutput('Set a countdown time first.', 'info');
@@ -1826,6 +1844,7 @@ window.timerControl = function(action) {
         updateTimerDisplay();
         addLog('cmd', 'timer reset');
         swPost({ type: 'CANCEL_TIMER' }); // cancel background alarm on reset
+        stopAlarm(); // stop ringing if reset pressed while alarm is active
     } else if (action === 'lap') {
         if (timerState.mode !== 'stopwatch' || !timerState.running) return;
         const lapTime = timerState.elapsed - timerState.lastLap;
