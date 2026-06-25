@@ -105,6 +105,12 @@ function notify(title, opts) {
     if (hasNotifications && Notification.permission === 'granted') new Notification(title, opts);
 }
 
+// ─── SERVICE WORKER MESSAGING ────────────────────────────────────
+// Posts a message to the active SW (no-op if SW not available yet).
+function swPost(msg) {
+    navigator.serviceWorker?.controller?.postMessage(msg);
+}
+
 // ─── GREETING PHRASES ───────────────────────────────────────
 // Picked randomly per time-bucket, re-rolled only when the bucket changes
 // (not every second) so the header doesn't flicker.
@@ -1571,6 +1577,8 @@ function timerTick() {
             updateTimerDisplay();
             showOutput('⏰ Timer finished!', 'success', 6000);
             addLog('result', 'Timer: countdown done');
+            // Cancel the SW background alarm (page is foreground — handle it here).
+            swPost({ type: 'CANCEL_TIMER' });
             notify('Timer', { body: 'Countdown complete!' });
             startAlarm();
             return;
@@ -1590,6 +1598,7 @@ window.timerControl = function(action) {
             timerStartBtn.textContent = '▶ RESUME';
             saveTimerState();
             addLog('cmd', 'timer pause');
+            swPost({ type: 'CANCEL_TIMER' }); // cancel background alarm on pause
         } else {
             if (timerState.mode === 'countdown' && timerState.countdownRemaining <= 0) {
                 showOutput('Set a countdown time first.', 'info');
@@ -1598,6 +1607,8 @@ window.timerControl = function(action) {
             requestNotifyPermission();
             if (timerState.mode === 'countdown') {
                 timerEndEpoch = Date.now() + timerState.countdownRemaining;
+                // Schedule SW notification in case page goes to background.
+                swPost({ type: 'SCHEDULE_TIMER', endEpoch: timerEndEpoch, label: 'Countdown complete!' });
             } else {
                 timerStartEpoch = Date.now() - timerState.elapsed;
             }
@@ -1621,6 +1632,7 @@ window.timerControl = function(action) {
         saveTimerState();
         updateTimerDisplay();
         addLog('cmd', 'timer reset');
+        swPost({ type: 'CANCEL_TIMER' }); // cancel background alarm on reset
     } else if (action === 'lap') {
         if (timerState.mode !== 'stopwatch' || !timerState.running) return;
         const lapTime = timerState.elapsed - timerState.lastLap;

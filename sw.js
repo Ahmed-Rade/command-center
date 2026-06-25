@@ -2,7 +2,7 @@
 // Cache-first for static assets so repeat visits load instantly and the
 // dashboard keeps working offline. Bump CACHE_VERSION whenever any cached
 // file changes so clients pick up the new version instead of stale assets.
-const CACHE_VERSION = 'cc-v3';
+const CACHE_VERSION = 'cc-v4';
 const PRECACHE_URLS = [
     './',
     './index.html',
@@ -43,6 +43,11 @@ self.addEventListener('fetch', (e) => {
     // Google Fonts, etc.) go straight to the network as normal.
     if (url.origin !== self.location.origin) return;
 
+    // On any page request, check if a stored alarm is overdue (handles SW restarts).
+    if (url.pathname.endsWith('.html') || url.pathname === '/' || url.pathname.endsWith('/')) {
+        e.waitUntil(checkStoredAlarm());
+    }
+
     e.respondWith(
         caches.match(req).then((cached) => {
             // Cache-first for instant loads; refresh the cache in the
@@ -56,6 +61,96 @@ self.addEventListener('fetch', (e) => {
             }).catch(() => cached); // offline fallback to whatever's cached
 
             return cached || networkFetch;
+        })
+    );
+});
+
+// ─── BACKGROUND ALARM ────────────────────────────────────────────────────────
+// Stores the pending alarm in the cache so it survives SW restarts.
+const ALARM_KEY = '/_cc_alarm_';
+let _alarmTimeout = null;
+let _pendingAlarm = null;
+
+async function storeAlarm(alarm) {
+    const c = await caches.open(CACHE_VERSION);
+    await c.put(ALARM_KEY, new Response(JSON.stringify(alarm), {
+        headers: { 'Content-Type': 'application/json' }
+    }));
+}
+
+async function clearAlarm() {
+    _pendingAlarm = null;
+    if (_alarmTimeout) { clearTimeout(_alarmTimeout); _alarmTimeout = null; }
+    const c = await caches.open(CACHE_VERSION);
+    await c.delete(ALARM_KEY);
+}
+
+async function loadAlarm() {
+    try {
+        const c = await caches.open(CACHE_VERSION);
+        const r = await c.match(ALARM_KEY);
+        if (r) return await r.json();
+    } catch { /* ignore */ }
+    return null;
+}
+
+async function fireAlarm(label) {
+    await clearAlarm();
+    await self.registration.showNotification('⏰ ' + (label || 'Timer Done!'), {
+        body: 'Your countdown has finished. Tap to open.',
+        icon: './android-chrome-192x192.png',
+        badge: './favicon-32x32.png',
+        vibrate: [300, 100, 300, 100, 300],
+        requireInteraction: true,  // stays visible until user acts
+        tag: 'cc-timer',           // replaces itself if fired twice
+        renotify: true,
+    });
+}
+
+async function scheduleAlarm(alarm) {
+    _pendingAlarm = alarm;
+    await storeAlarm(alarm);
+    const delay = alarm.endEpoch - Date.now();
+    if (delay <= 0) { await fireAlarm(alarm.label); return; }
+    if (_alarmTimeout) clearTimeout(_alarmTimeout);
+    _alarmTimeout = setTimeout(() => fireAlarm(alarm.label), delay);
+}
+
+async function checkStoredAlarm() {
+    if (_pendingAlarm) return; // already live in memory
+    const stored = await loadAlarm();
+    if (!stored?.endEpoch) return;
+    if (Date.now() >= stored.endEpoch) {
+        await fireAlarm(stored.label); // overdue — fire immediately
+    } else {
+        // SW was restarted mid-countdown — reschedule
+        _pendingAlarm = stored;
+        const delay = stored.endEpoch - Date.now();
+        if (_alarmTimeout) clearTimeout(_alarmTimeout);
+        _alarmTimeout = setTimeout(() => fireAlarm(stored.label), delay);
+    }
+}
+
+// Page sends SCHEDULE_TIMER when countdown starts, CANCEL_TIMER on pause/reset.
+// event.waitUntil() keeps the SW alive until the alarm fires.
+self.addEventListener('message', (e) => {
+    if (e.data?.type === 'SCHEDULE_TIMER') {
+        const alarm = { endEpoch: e.data.endEpoch, label: e.data.label || 'Timer Done!' };
+        e.waitUntil(scheduleAlarm(alarm));
+    } else if (e.data?.type === 'CANCEL_TIMER') {
+        e.waitUntil(clearAlarm());
+    }
+});
+
+// Tap notification → focus existing tab or open app.
+self.addEventListener('notificationclick', (e) => {
+    e.notification.close();
+    e.waitUntil(
+        self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((cs) => {
+            const visible = cs.find(c => c.visibilityState === 'visible');
+            if (visible) return visible.focus();
+            if (cs.length) return cs[0].focus();
+            return self.clients.openWindow('./');
         })
     );
 });
