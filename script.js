@@ -257,9 +257,17 @@ function notify(title, opts) {
 }
 
 // ─── SERVICE WORKER MESSAGING ────────────────────────────────────
-// Posts a message to the active SW (no-op if SW not available yet).
+// Posts to the active SW. If controller isn't ready yet (fresh page load before
+// SW claims the client), waits for it — otherwise SCHEDULE_TIMER is silently lost.
 function swPost(msg) {
-    navigator.serviceWorker?.controller?.postMessage(msg);
+    if (!('serviceWorker' in navigator)) return;
+    const sw = navigator.serviceWorker;
+    if (sw.controller) {
+        sw.controller.postMessage(msg);
+    } else {
+        // SW will call clients.claim() on activate; controllerchange fires then.
+        sw.addEventListener('controllerchange', () => sw.controller?.postMessage(msg), { once: true });
+    }
 }
 
 // ─── GREETING PHRASES ───────────────────────────────────────
@@ -939,12 +947,21 @@ function stopAlarm() {
 function startAlarm() {
     if (!soundSettings.alert) return;
     stopAlarm();
-    playAlarmChime();
-    alarmInterval = setInterval(playAlarmChime, 1100);
-    alarmTimeout  = setTimeout(stopAlarm, 60000); // auto-stop after 1 min
-    document.addEventListener('click', stopAlarm, true);
-    document.addEventListener('keydown', stopAlarm, true);
-    document.addEventListener('touchstart', stopAlarm, true);
+    // AudioContext may be suspended on mobile or after backgrounding — resume first.
+    const ctx = ensureAudioCtx();
+    const doPlay = () => {
+        playAlarmChime();
+        alarmInterval = setInterval(playAlarmChime, 1100);
+        alarmTimeout  = setTimeout(stopAlarm, 60000);
+        document.addEventListener('click', stopAlarm, true);
+        document.addEventListener('keydown', stopAlarm, true);
+        document.addEventListener('touchstart', stopAlarm, true);
+    };
+    if (ctx && ctx.state === 'suspended') {
+        ctx.resume().then(doPlay).catch(doPlay); // play even if resume fails
+    } else {
+        doPlay();
+    }
 }
 window.stopAlarm = stopAlarm;
 
@@ -2005,6 +2022,12 @@ document.addEventListener('visibilitychange', () => {
             timerState.elapsed = Date.now() - timerStartEpoch;
             updateTimerDisplay();
         }
+    } else if (timerState.mode === 'countdown' && timerState.countdownRemaining === 0
+               && timerEndEpoch === 0 && !alarmInterval) {
+        // Timer finished while tab was hidden (interval ran, timerTick stopped it,
+        // but startAlarm() may have been blocked by suspended AudioContext or missed).
+        // Ring now that the user has returned and a user-gesture context is available.
+        startAlarm();
     }
 });
 
