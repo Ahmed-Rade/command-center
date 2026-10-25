@@ -42,6 +42,30 @@
     };
     paintDark();
 
+
+    // ── Clear completed tasks ──
+    const list = $('#todoList');
+    if (list) {
+        const cd = document.createElement('button');
+        cd.id = 'clearDone'; cd.type = 'button'; cd.hidden = true;
+        list.parentNode.appendChild(cd);
+        const paint = () => {
+            const done = list.querySelectorAll('.todo-item.done').length;
+            cd.hidden = !done;
+            cd.textContent = ar() ? 'مسح المنجزة (' + done + ')' : 'Clear completed (' + done + ')';
+        };
+        cd.onclick = () => { list.querySelectorAll('.todo-item.done').forEach((li) => { try { deleteTodo(Number(li.dataset.id)); } catch {} }); paint(); };
+        new MutationObserver(paint).observe(list, { childList: true });
+        new MutationObserver(paint).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+        paint();
+    }
+
+    // ── First visit: follow the device's light/dark setting ──
+    if (!get('cc_dark_seen', '') && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) {
+        darkBtn.click();
+    }
+    set('cc_dark_seen', '1');
+
     // ── Voice search ──
     const input = $('#commandInput');
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;

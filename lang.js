@@ -27,7 +27,7 @@
         'blood': 'دموي', 'gold': 'ذهبي', 'ice': 'جليدي', 'autumn': 'خريف', 'midnight': 'منتصف الليل', 'void': 'فراغ',
         'coral': 'مرجاني', 'lavender': 'لافندر', 'lime': 'ليموني', 'copper': 'نحاسي',
         // simple.js
-        'today': 'اليوم', '🌙 dark': '🌙 داكن', '☀ light': '☀ فاتح', 'hide': 'إخفاء', 'smaller text': 'تصغير الخط',
+        'today': 'اليوم', 'clear completed': 'مسح المنجزة', 'no tasks yet. add your first one above.': 'لا توجد مهام بعد.', '🌙 dark': '🌙 داكن', '☀ light': '☀ فاتح', 'hide': 'إخفاء', 'smaller text': 'تصغير الخط',
         'larger text': 'تكبير الخط', 'speak to search': 'تحدث للبحث', 'hide prayer times': 'إخفاء أوقات الصلاة',
         'could not load times': 'تعذر تحميل الأوقات', "today's prayers are done": 'انتهت صلوات اليوم',
         'a−': 'أ−', 'a+': 'أ+',
@@ -212,6 +212,15 @@
         if (u) { u.textContent = ar ? 'أ+' : 'A+'; u.setAttribute('aria-label', ar ? 'تكبير الخط' : 'Larger text'); }
         const td = document.getElementById('todayDate');
         if (td) td.textContent = new Date().toLocaleDateString(ar ? 'ar-AE-u-nu-latn' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+
+        // Friendly placeholders + sentence-case buttons (English mode shows no shouting)
+        const ph = (id, en, a) => { const e = document.getElementById(id); if (e) e.placeholder = ar ? a : en; };
+        ph('todoInput', 'Add a task…', 'أضف مهمة…'); ph('notes', 'Write your notes here…', 'اكتب ملاحظاتك هنا…');
+        ph('pinsInput', 'Pin a note…', 'ثبّت ملاحظة…'); ph('habitInput', 'Add a habit…', 'أضف عادة…');
+        if (!ar) document.querySelectorAll('button[data-i18n], .timer-tab[data-i18n]').forEach((b) => {
+            const v = b.textContent.trim();
+            if (v.length < 28 && /[A-Z]{3}/.test(v) && !/[a-z]/.test(v)) b.textContent = v.toLowerCase().replace(/[a-z]/, (c) => c.toUpperCase());
+        });
         const tz = document.getElementById('timezone');
         if (tz) tz.textContent = ar ? 'توقيت الإمارات \u200E+04:00' : 'UTC+04:00 · UAE';
     }

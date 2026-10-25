@@ -82,7 +82,7 @@ html.theme-cleandark {
 
 /* Simple view hides the technical panels */
 body:not(.show-all) :is(.status-panel, .pomo-panel, .timer-panel, .calc-panel, .pins-panel, .habits-panel, .quote-panel, .log-panel) { display: none; }
-body.show-all .main-grid { grid-template-areas: none; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+body.show-all .main-grid { grid-template-areas: none !important; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)) !important; }
 body.show-all .main-grid > .panel { grid-area: auto !important; }
 
 /* Today / prayer card */
@@ -107,7 +107,7 @@ body.show-all .main-grid > .panel { grid-area: auto !important; }
 :is(.theme-clean, .theme-cleandark) .modal-title { font-size: 1.3rem; text-transform: none; letter-spacing: 0; }
 
 @media (max-width: 720px) {
-    :is(.theme-clean, .theme-cleandark) .main-grid { grid-template-columns: 1fr; grid-template-areas: "links" "today" "todo" "notes"; }
+    :is(.theme-clean, .theme-cleandark) .main-grid { grid-template-columns: 1fr !important; grid-template-areas: "links" "today" "todo" "notes" !important; gap: 14px !important; }
     :is(.theme-clean, .theme-cleandark) .greeting { font-size: 1.6rem; }
     :is(.theme-clean, .theme-cleandark) .clock { font-size: 2rem; text-align: start; }
     :is(.theme-clean, .theme-cleandark) .clock-sub { text-align: start; }
@@ -124,3 +124,80 @@ html[lang="ar"] .clock-sub { direction: rtl; }
 html[dir="rtl"] .cc-toolbar, html[dir="rtl"] .links-grid { direction: rtl; }
 #todayHide { margin-inline-start: auto; background: none; border: 0; color: var(--text-secondary); font-size: 1.1rem; }
 :is(.theme-clean, .theme-cleandark) #commandInput { border-left-width: 2px; border-inline-start-color: var(--border-color); }
+
+/* ═══ POLISH PASS ═══ */
+:is(.theme-clean, .theme-cleandark) * { text-shadow: none !important; }
+:is(.theme-clean, .theme-cleandark) input[type="file"], input.hidden { display: none !important; }
+:is(.theme-clean, .theme-cleandark) ::selection { background: color-mix(in srgb, var(--text-accent) 28%, transparent); }
+:is(.theme-clean, .theme-cleandark) .panel-fs-btn { display: none; }
+:is(.theme-clean, .theme-cleandark) .panel-edit-btn { margin-inline-start: auto; background: var(--bg-tertiary); border: 0; color: var(--text-primary); padding: 0 18px; }
+
+/* Search: one clean pill, no stray edge */
+:is(.theme-clean, .theme-cleandark) .command-section, :is(.theme-clean, .theme-cleandark) .command-section::before, :is(.theme-clean, .theme-cleandark) .command-section::after { border: 0 !important; box-shadow: none !important; background: none !important; }
+:is(.theme-clean, .theme-cleandark) .command-section:focus-within { box-shadow: none !important; }
+:is(.theme-clean, .theme-cleandark) #commandInput { border: 2px solid var(--border-color); }
+:is(.theme-clean, .theme-cleandark) #commandInput:focus { border-color: var(--border-active); }
+
+/* Header alignment */
+:is(.theme-clean, .theme-cleandark) .sub-greeting { align-items: center; flex-wrap: wrap; }
+:is(.theme-clean, .theme-cleandark) .lang-toggle { display: inline-flex; gap: 6px; }
+:is(.theme-clean, .theme-cleandark) .lang-toggle-btn.active { background: var(--text-accent); color: #fff; border-color: var(--text-accent); }
+:is(.theme-clean, .theme-cleandark) .weather-header { box-shadow: none; }
+:is(.theme-clean, .theme-cleandark) .weather-desc { font-size: 1rem; letter-spacing: 0; }
+
+/* Sentence case instead of SHOUTING */
+:is(.theme-clean, .theme-cleandark) :is(.status-label, .status-value, .pomo-phase, .pomo-label, .timer-mode-label) { text-transform: lowercase; letter-spacing: 0; display: block; }
+:is(.theme-clean, .theme-cleandark) :is(.status-label, .status-value, .pomo-phase, .timer-mode-label)::first-letter { text-transform: uppercase; }
+:is(.theme-clean, .theme-cleandark) .link-text { font-size: 1.1rem; }
+:is(.theme-clean, .theme-cleandark) .output-bar { text-transform: none; }
+:is(.theme-clean, .theme-cleandark) .status-label { font-size: .95rem; color: var(--text-secondary); }
+:is(.theme-clean, .theme-cleandark) .status-value { font-size: 1.15rem; font-weight: 700; }
+:is(.theme-clean, .theme-cleandark) .status-item { background: var(--bg-tertiary); border: 0; border-radius: 14px; padding: 14px 16px; }
+:is(.theme-clean, .theme-cleandark) .status-grid { gap: 12px; }
+
+/* Todo: roomy rows, big checkbox */
+:is(.theme-clean, .theme-cleandark) .todo-item { display: flex; align-items: center; gap: 14px; padding: 14px 12px; margin-bottom: 8px; border: 0; border-radius: 14px; background: var(--bg-tertiary); }
+:is(.theme-clean, .theme-cleandark) .todo-text { font-size: 1.15rem; flex: 1; }
+:is(.theme-clean, .theme-cleandark) .todo-check { width: 30px; height: 30px; border-radius: 9px; border: 2px solid var(--text-secondary); display: grid; place-items: center; font-size: 1.1rem; flex: none; cursor: pointer; }
+:is(.theme-clean, .theme-cleandark) .todo-item.done { opacity: .6; }
+:is(.theme-clean, .theme-cleandark) .todo-item.done .todo-check { background: var(--online-color); border-color: var(--online-color); color: #fff; }
+:is(.theme-clean, .theme-cleandark) :is(.todo-edit-btn, .todo-del) { background: none; border: 0; font-size: 1.1rem; color: var(--text-secondary); min-width: 44px; min-height: 44px; }
+:is(.theme-clean, .theme-cleandark) .todo-del:hover { color: var(--text-red); }
+:is(.theme-clean, .theme-cleandark) .todo-count { background: var(--text-accent); color: #fff; border-radius: 999px; padding: 2px 12px; font-size: 1rem; }
+.todo-list:empty::before { content: 'No tasks yet. Add your first one above.'; display: block; padding: 18px 4px; color: var(--text-secondary); font-size: 1.1rem; }
+html[lang="ar"] .todo-list:empty::before { content: 'لا توجد مهام بعد. أضف مهمتك الأولى أعلاه.'; }
+#clearDone { margin-top: 10px; min-height: 44px; padding: 0 18px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); font: inherit; font-size: 1rem; cursor: pointer; }
+
+/* Tiles, notes, modals */
+:is(.theme-clean, .theme-cleandark) .link-item:hover { transform: translateY(-2px); }
+:is(.theme-clean, .theme-cleandark) .link-item:active { transform: none; }
+:is(.theme-clean, .theme-cleandark) .notes-wc, :is(.theme-clean, .theme-cleandark) .notes-saved { font-size: .95rem; color: var(--text-secondary); margin-inline-start: auto; text-transform: none; }
+:is(.theme-clean, .theme-cleandark) .modal-overlay { background: rgba(10, 25, 40, .55); }
+:is(.theme-clean, .theme-cleandark) .theme-card { border-radius: 14px; border: 2px solid var(--border-color); background: var(--bg-tertiary); padding: 12px; cursor: pointer; text-transform: capitalize; font-size: 1.05rem; }
+:is(.theme-clean, .theme-cleandark) .theme-card.active { border-color: var(--border-active); }
+:is(.theme-clean, .theme-cleandark) .modal-close { background: var(--bg-tertiary); border: 0; color: var(--text-primary); }
+:is(.theme-clean, .theme-cleandark) .footer { padding-top: 24px; margin-top: 8px; border-top: 1px solid var(--border-color); }
+:is(.theme-clean, .theme-cleandark) .footer-clear-btn { color: var(--text-red); }
+
+/* Phones */
+@media (max-width: 720px) {
+    :is(.theme-clean, .theme-cleandark) .container { padding: 16px 14px 32px; }
+    :is(.theme-clean, .theme-cleandark) #commandInput { min-height: 60px; font-size: 1.2rem; }
+    :is(.theme-clean, .theme-cleandark) .weather-header { order: 3; width: 100%; justify-content: center; }
+    #micBtn { top: 6px; }
+}
+/* Respect system dark mode on first visit handled in JS */
+
+:is(.theme-clean, .theme-cleandark) #notes { font-size: 1.1rem !important; font-family: var(--font-ui) !important; }
+:is(.theme-clean, .theme-cleandark) .weather-desc { text-transform: lowercase; display: inline-block; }
+:is(.theme-clean, .theme-cleandark) .weather-desc::first-letter { text-transform: uppercase; }
+:is(.theme-clean, .theme-cleandark) .output-bar.hidden { display: none; }
+:is(.theme-clean, .theme-cleandark) .todo-input-row input { min-width: 0; }
+:is(.theme-clean, .theme-cleandark) .todo-input-row button { flex: none; width: 52px; padding: 0; }
+:is(.theme-clean, .theme-cleandark) .todo-text { min-width: 0; overflow-wrap: anywhere; }
+:is(.theme-clean, .theme-cleandark) :is(.todo-edit-btn, .todo-del) { flex: none; width: 40px; min-width: 40px; padding: 0; }
+:is(.theme-clean, .theme-cleandark) .footer { flex-wrap: wrap; }
+:is(.theme-clean, .theme-cleandark) .footer > span { flex: none; }
+:is(.theme-clean, .theme-cleandark) .footer { display: flex !important; flex-wrap: wrap !important; justify-content: center !important; max-width: 100%; }
+:is(.theme-clean, .theme-cleandark) :is(.todo-edit-btn, .todo-del) { opacity: 1 !important; visibility: visible !important; display: inline-flex !important; align-items: center; justify-content: center; }
+:is(.theme-clean, .theme-cleandark) .link-item { text-align: center; }

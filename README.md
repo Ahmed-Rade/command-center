@@ -19,6 +19,7 @@ Live: https://ahmed-rade.github.io/command-center/
 - **Big tiles** — Quick Access links are large, easy to tap.
 - **Plain greeting & clock** — "Good morning," and a calm clock, no hacker styling.
 - **Full Arabic (العربية)** — every label, message, date, weather, theme name and notification translated, with right-to-left layout and the Cairo font. English mode contains no Arabic. Switch with `English | العربية` or `:lang ar` / `:lang en`. Your own text (todos, notes, pins) is never altered.
+- **Polish pass** — sentence case instead of ALL CAPS, bigger to-do rows with always-visible edit/delete, "Clear completed" button, friendly empty states, first visit follows your device's light/dark setting, fixed phone layout.
 - Old themes (26) still available under 🎨 THEME.
 
 On first load after the update, your theme switches to Clean once. Your data (todos, notes, links) is untouched.
