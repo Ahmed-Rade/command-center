@@ -87,7 +87,7 @@
         $('#prayerList').innerHTML = keys.map((k) => '<div class="prayer-row' + (k === next ? ' next' : '') + '"><span>' + NAMES[k][L] + '</span><span>' + fmt(times[k]) + '</span></div>').join('');
         if (next) {
             const d = toMin(times[next]) - cur;
-            $('#todayNext').innerHTML = (L ? 'التالية: ' : 'Next: ') + '<b>' + NAMES[next][L] + '</b> ' + (L ? 'بعد ' : 'in ') + Math.floor(d / 60) + 'h ' + (d % 60) + 'm';
+            $('#todayNext').innerHTML = (L ? 'التالية: ' : 'Next: ') + '<b>' + NAMES[next][L] + '</b> ' + (L ? 'بعد ' : 'in ') + Math.floor(d / 60) + (L ? ' س ' : 'h ') + (d % 60) + (L ? ' د' : 'm');
         } else $('#todayNext').textContent = L ? 'انتهت صلوات اليوم' : "Today's prayers are done";
     }
     function load(lat, lon) {

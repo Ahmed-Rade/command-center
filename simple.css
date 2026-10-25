@@ -52,7 +52,7 @@ html.theme-cleandark {
 
 /* Search bar = the hero */
 :is(.theme-clean, .theme-cleandark) .command-section { position: relative; display: block; border: 0; background: none; padding: 0; margin-bottom: 24px; }
-:is(.theme-clean, .theme-cleandark) #commandInput { width: 100%; font-family: var(--font-ui); font-size: 1.35rem; min-height: 68px; padding: 0 72px 0 28px; border-radius: 999px; box-shadow: 0 2px 10px rgba(10, 40, 80, .08); }
+:is(.theme-clean, .theme-cleandark) #commandInput { width: 100%; font-family: var(--font-ui); font-size: 1.35rem; min-height: 68px; padding-block: 0; padding-inline: 28px 72px; border-radius: 999px; box-shadow: 0 2px 10px rgba(10, 40, 80, .08); }
 :is(.theme-clean, .theme-cleandark) .cmd-dropdown { font-family: var(--font-ui); font-size: 1.05rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 16px; }
 :is(.theme-clean, .theme-cleandark) .output-bar { font-family: var(--font-ui); font-size: 1.1rem; border-radius: 12px; }
 #micBtn { position: absolute; top: 10px; inset-inline-end: 12px; width: 48px; height: 48px; border-radius: 50%; border: 0; background: var(--bg-tertiary); font-size: 1.3rem; }
@@ -114,3 +114,13 @@ body.show-all .main-grid > .panel { grid-area: auto !important; }
     :is(.theme-clean, .theme-cleandark) .links-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* Arabic: Cairo for all text, RTL-safe */
+html[lang="ar"].theme-clean, html[lang="ar"].theme-cleandark { --font-mono: 'Cairo', 'Atkinson Hyperlegible', system-ui, sans-serif; --font-ui: var(--font-mono); --font-display: var(--font-mono); }
+html[lang="ar"] .greeting { line-height: 1.4; }
+html[lang="ar"] .panel-title > span[data-i18n] { text-transform: none; }
+html[lang="ar"] :is(.clock, .timer-display, .pomo-time, .calc-expr, .calc-result, .clock-sub) { direction: ltr; unicode-bidi: plaintext; }
+html[lang="ar"] .clock-sub { direction: rtl; }
+html[dir="rtl"] .cc-toolbar, html[dir="rtl"] .links-grid { direction: rtl; }
+#todayHide { margin-inline-start: auto; background: none; border: 0; color: var(--text-secondary); font-size: 1.1rem; }
+:is(.theme-clean, .theme-cleandark) #commandInput { border-left-width: 2px; border-inline-start-color: var(--border-color); }

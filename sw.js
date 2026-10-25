@@ -2,7 +2,7 @@
 // Cache-first for static assets so repeat visits load instantly and the
 // dashboard keeps working offline. Bump CACHE_VERSION whenever any cached
 // file changes so clients pick up the new version instead of stale assets.
-const CACHE_VERSION = 'cc-v10';
+const CACHE_VERSION = 'cc-v11';
 const PRECACHE_URLS = [
     './',
     './index.html',
@@ -10,6 +10,7 @@ const PRECACHE_URLS = [
     './script.js',
     './simple.css',
     './simple.js',
+    './lang.js',
     './site.webmanifest',
     './favicon.ico',
     './favicon-16x16.png',
@@ -96,10 +97,10 @@ async function loadAlarm() {
     return null;
 }
 
-async function fireAlarm(label) {
+async function fireAlarm(label, body) {
     await clearAlarm();
     await self.registration.showNotification('⏰ ' + (label || 'Timer Done!'), {
-        body: 'Your countdown has finished. Tap to open.',
+        body: body || 'Your countdown has finished. Tap to open.',
         icon: './android-chrome-192x192.png',
         badge: './favicon-32x32.png',
         vibrate: [300, 100, 300, 100, 300],
@@ -113,9 +114,9 @@ async function scheduleAlarm(alarm) {
     _pendingAlarm = alarm;
     await storeAlarm(alarm);
     const delay = alarm.endEpoch - Date.now();
-    if (delay <= 0) { await fireAlarm(alarm.label); return; }
+    if (delay <= 0) { await fireAlarm(alarm.label, alarm.body); return; }
     if (_alarmTimeout) clearTimeout(_alarmTimeout);
-    _alarmTimeout = setTimeout(() => fireAlarm(alarm.label), delay);
+    _alarmTimeout = setTimeout(() => fireAlarm(alarm.label, alarm.body), delay);
 }
 
 async function checkStoredAlarm() {
@@ -123,13 +124,13 @@ async function checkStoredAlarm() {
     const stored = await loadAlarm();
     if (!stored?.endEpoch) return;
     if (Date.now() >= stored.endEpoch) {
-        await fireAlarm(stored.label); // overdue — fire immediately
+        await fireAlarm(stored.label, stored.body); // overdue — fire immediately
     } else {
         // SW was restarted mid-countdown — reschedule
         _pendingAlarm = stored;
         const delay = stored.endEpoch - Date.now();
         if (_alarmTimeout) clearTimeout(_alarmTimeout);
-        _alarmTimeout = setTimeout(() => fireAlarm(stored.label), delay);
+        _alarmTimeout = setTimeout(() => fireAlarm(stored.label, stored.body), delay);
     }
 }
 
@@ -137,7 +138,7 @@ async function checkStoredAlarm() {
 // event.waitUntil() keeps the SW alive until the alarm fires.
 self.addEventListener('message', (e) => {
     if (e.data?.type === 'SCHEDULE_TIMER') {
-        const alarm = { endEpoch: e.data.endEpoch, label: e.data.label || 'Timer Done!' };
+        const alarm = { endEpoch: e.data.endEpoch, label: e.data.label || 'Timer Done!', body: e.data.body };
         e.waitUntil(scheduleAlarm(alarm));
     } else if (e.data?.type === 'CANCEL_TIMER') {
         e.waitUntil(clearAlarm());

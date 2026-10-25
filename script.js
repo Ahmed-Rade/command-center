@@ -147,7 +147,7 @@ const STRINGS = {
         footFocus: 'تركيز', footHistory: 'السجل', footShortcuts: 'الاختصارات', footTimer: 'مؤقت',
         footStopwatch: 'ساعة توقيت', footThemes: 'السمات', footSearch: 'بحث', footZen: 'وضع التركيز',
         footAllCmds: 'كل الأوامر', btnExport: '⇩ تصدير', btnImport: '⇧ استيراد', btnClearAll: '⚠ مسح كل البيانات',
-        askHint: '↵ بحث',
+        askHint: '↵ search',
     },
 };
 
@@ -253,13 +253,14 @@ function requestNotifyPermission() {
     if (hasNotifications && Notification.permission === 'default') Notification.requestPermission();
 }
 function notify(title, opts) {
-    if (hasNotifications && Notification.permission === 'granted') new Notification(title, opts);
+    if (hasNotifications && Notification.permission === 'granted') { const tr = window.ccTr || ((x) => x); new Notification(tr(title), opts && opts.body ? { ...opts, body: tr(opts.body) } : opts); }
 }
 
 // ─── SERVICE WORKER MESSAGING ────────────────────────────────────
 // Posts to the active SW. If controller isn't ready yet (fresh page load before
 // SW claims the client), waits for it — otherwise SCHEDULE_TIMER is silently lost.
 function swPost(msg) {
+    if (msg && msg.type === 'SCHEDULE_TIMER' && window.ccTr) { msg.body = window.ccTr('Your countdown has finished. Tap to open.'); msg.label = window.ccTr(msg.label || 'Timer Done!'); }
     if (!('serviceWorker' in navigator)) return;
     const sw = navigator.serviceWorker;
     if (sw.controller) {
@@ -379,12 +380,12 @@ function updateTime() {
     const s = String(now.getSeconds()).padStart(2, '0');
     const h12 = h % 12 || 12;
     const ampm = h < 12 ? 'AM' : 'PM';
-    clockEl.textContent = `${h12}:${m} ${ampm}`;
+    clockEl.textContent = `${h12}:${m} ${currentLang === 'ar' ? (h < 12 ? 'ص' : 'م') : ampm}`;
 
     greetingPrefixEl.textContent = currentLang === 'ar' ? getGreetingPrefix(h) : (h < 12 ? 'Good morning,' : h < 17 ? 'Good afternoon,' : 'Good evening,');
 
     const opts = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
-    dateEl.textContent = now.toLocaleDateString('en-US', opts);
+    dateEl.textContent = now.toLocaleDateString(currentLang === 'ar' ? 'ar-AE-u-nu-latn' : 'en-US', opts);
 
     const elapsed = Math.floor((Date.now() - startTime) / 1000);
     const hrs  = String(Math.floor(elapsed / 3600)).padStart(2, '0');
@@ -2140,7 +2141,7 @@ function renderHabits() {
         const d = new Date();
         d.setDate(d.getDate() - i);
         dayKeys.push(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
-        dayLabels.push(['S','M','T','W','T','F','S'][d.getDay()]);
+        dayLabels.push((currentLang === 'ar' ? ['ح','ن','ث','ر','خ','ج','س'] : ['S','M','T','W','T','F','S'])[d.getDay()]);
     }
 
     habits.forEach(h => {
@@ -2535,7 +2536,7 @@ const COMMANDS = {
 
     ':time': () => {
         const now = new Date();
-        const t = now.toLocaleString('en-US', { timeZone: 'Asia/Dubai', dateStyle: 'full', timeStyle: 'long' });
+        const t = now.toLocaleString(currentLang === 'ar' ? 'ar-AE-u-nu-latn' : 'en-US', { timeZone: 'Asia/Dubai', dateStyle: 'full', timeStyle: 'long' });
         showOutput(t, 'info', 8000);
         addLog('result', t);
     },

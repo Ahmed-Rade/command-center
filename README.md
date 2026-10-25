@@ -18,6 +18,7 @@ Live: https://ahmed-rade.github.io/command-center/
 - **Today card** — full date plus the five prayer times and a countdown to the next one. Uses your location (falls back to Sharjah). Hide it with ✕.
 - **Big tiles** — Quick Access links are large, easy to tap.
 - **Plain greeting & clock** — "Good morning," and a calm clock, no hacker styling.
+- **Full Arabic (العربية)** — every label, message, date, weather, theme name and notification translated, with right-to-left layout and the Cairo font. English mode contains no Arabic. Switch with `English | العربية` or `:lang ar` / `:lang en`. Your own text (todos, notes, pins) is never altered.
 - Old themes (26) still available under 🎨 THEME.
 
 On first load after the update, your theme switches to Clean once. Your data (todos, notes, links) is untouched.
@@ -33,6 +34,7 @@ command-center/
 ├── simple.css         # Clean theme + simple view (loads last)
 ├── script.js          # Core logic, commands, widgets
 ├── simple.js          # Text size, view toggle, voice, Today card
+├── lang.js            # Arabic completion layer (strings, RTL fixes)
 ├── sw.js              # Offline cache + timer notifications
 ├── site.webmanifest   # Install as app
 └── README.md
