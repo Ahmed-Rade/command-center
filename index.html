@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Command Center</title>
     <script>
+        try { if (!localStorage.getItem('cc_v2')) { localStorage.setItem('cc_v2','1'); localStorage.setItem('cc_theme','clean'); localStorage.setItem('cc_bg','clean'); } } catch (e) {}
+    </script>
+    <script>
         // Apply stored language before first paint to avoid FOUC/flash.
         (function() {
             try {
@@ -18,7 +21,7 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&family=Atkinson+Hyperlegible:wght@400;700&family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="icon" href="favicon.ico">
@@ -26,14 +29,15 @@
     <link rel="icon" type="image/png" sizes="192x192" href="android-chrome-192x192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
     <link rel="manifest" href="site.webmanifest">
-    <meta name="theme-color" content="#060a0f" media="(prefers-color-scheme: dark)">
-    <meta name="theme-color" content="#f6f8fa" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0c1722" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#f3f6f9" media="(prefers-color-scheme: light)">
     <meta name="color-scheme" content="dark light">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Cmd Center">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="simple.css">
 </head>
 <body>
     <div class="scanline"></div>
@@ -555,5 +559,6 @@
     </div>
 
     <script src="script.js" defer></script>
+    <script src="simple.js" defer></script>
 </body>
 </html>

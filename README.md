@@ -1,10 +1,26 @@
 # ⚡ Command Center
 
-A personal hacker-style browser dashboard. Minimal. Fast. No dependencies.
+A simple personal start page. Search, links, tasks, notes. Large text, clear buttons, no setup.
 
-![Theme](https://img.shields.io/badge/theme-hacker--terminal-39d353?style=flat-square)
-![Stack](https://img.shields.io/badge/stack-HTML%20%2F%20CSS%20%2F%20JS-blue?style=flat-square)
+![Stack](https://img.shields.io/badge/stack-HTML%20%2F%20CSS%20%2F%20JS-0a5cc2?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square)
+
+Live: https://ahmed-rade.github.io/command-center/
+
+---
+
+## ✨ What's new (v2 · Clean theme)
+
+- **Clean theme by default** — light, high contrast, Atkinson Hyperlegible font (made for easy reading). Dark version one tap away (🌙 Dark).
+- **Simple view** — only Search, Quick Access, Today, Todo and Notes. Press **More tools** for Pomodoro, Timer, Calculator, Habits, Pins, Quote, Log and Status.
+- **Text size A− / A+** — four steps, remembered.
+- **🎤 Voice search** — tap the mic and speak (Chrome / Edge / Safari).
+- **Today card** — full date plus the five prayer times and a countdown to the next one. Uses your location (falls back to Sharjah). Hide it with ✕.
+- **Big tiles** — Quick Access links are large, easy to tap.
+- **Plain greeting & clock** — "Good morning," and a calm clock, no hacker styling.
+- Old themes (26) still available under 🎨 THEME.
+
+On first load after the update, your theme switches to Clean once. Your data (todos, notes, links) is untouched.
 
 ---
 
@@ -12,15 +28,19 @@ A personal hacker-style browser dashboard. Minimal. Fast. No dependencies.
 
 ```
 command-center/
-├── index.html       # Main layout & markup
-├── style.css        # All styling, themes, animations
-├── script.js        # All logic, commands, widgets
-└── README.md        # This file
+├── index.html         # Layout & markup
+├── style.css          # Base styles + 26 legacy themes
+├── simple.css         # Clean theme + simple view (loads last)
+├── script.js          # Core logic, commands, widgets
+├── simple.js          # Text size, view toggle, voice, Today card
+├── sw.js              # Offline cache + timer notifications
+├── site.webmanifest   # Install as app
+└── README.md
 ```
 
 ---
 
-## ✨ Features
+## ✨ All Features
 
 | Widget | Description |
 |---|---|

@@ -2,12 +2,14 @@
 // Cache-first for static assets so repeat visits load instantly and the
 // dashboard keeps working offline. Bump CACHE_VERSION whenever any cached
 // file changes so clients pick up the new version instead of stale assets.
-const CACHE_VERSION = 'cc-v9';
+const CACHE_VERSION = 'cc-v10';
 const PRECACHE_URLS = [
     './',
     './index.html',
     './style.css',
     './script.js',
+    './simple.css',
+    './simple.js',
     './site.webmanifest',
     './favicon.ico',
     './favicon-16x16.png',

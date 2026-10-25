@@ -1,0 +1,116 @@
+/* ═══ CLEAN THEME — simple, large, readable. Loads after style.css ═══ */
+html.theme-clean, html.theme-cleandark {
+    --bg-primary: #f3f6f9; --bg-secondary: #ffffff; --bg-tertiary: #eaf0f6; --bg-hover: #dfe8f1;
+    --text-primary: #14202b; --text-secondary: #4d5f70; --text-accent: #0a5cc2;
+    --text-blue: #0a5cc2; --text-yellow: #9a5b00; --text-red: #c0262d;
+    --border-color: #d3dde7; --border-active: #0a5cc2;
+    --glow-green: transparent; --glow-blue: transparent; --online-color: #1a7f45;
+    --font-mono: 'Atkinson Hyperlegible', 'Inter', system-ui, sans-serif;
+    --font-display: var(--font-mono); --font-ui: var(--font-mono);
+    --scanline-opacity: 0; --noise-opacity: 0; --scale: 1;
+}
+html.theme-cleandark {
+    --bg-primary: #0c1722; --bg-secondary: #132434; --bg-tertiary: #1a3045; --bg-hover: #224058;
+    --text-primary: #eef4fa; --text-secondary: #a9bccd; --text-accent: #5cb8ff;
+    --text-blue: #5cb8ff; --text-yellow: #ffc857; --text-red: #ff8a8f;
+    --border-color: #2a4560; --border-active: #5cb8ff; --online-color: #4fd18b;
+}
+:is(html.theme-clean, html.theme-cleandark) {
+    font-family: var(--font-ui); line-height: 1.5;
+}
+:is(.theme-clean, .theme-cleandark) body { font-family: var(--font-ui); font-size: 18px; background: var(--bg-primary); color: var(--text-primary); }
+:is(.theme-clean, .theme-cleandark) :is(.scanline, .noise, #matrixCanvas, .title-bracket, .prompt-wrapper, .cmd-hint, #engineIndicator, .sound-control, .link-shortcut, .sub-greeting > span:first-child) { display: none !important; }
+:is(.theme-clean, .theme-cleandark) .container { zoom: var(--scale); max-width: 1100px; padding: 24px 20px 40px; }
+:is(.theme-clean, .theme-cleandark) body.bg-grid::before, :is(.theme-clean, .theme-cleandark) body.bg-aurora::before { opacity: .25; }
+
+/* Header */
+:is(.theme-clean, .theme-cleandark) .header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; border: 0; padding: 0 0 20px; background: none; }
+:is(.theme-clean, .theme-cleandark) .header::after { display: none; }
+:is(.theme-clean, .theme-cleandark) .greeting { font-size: 2rem; font-weight: 700; text-transform: none; letter-spacing: 0; color: var(--text-primary); }
+:is(.theme-clean, .theme-cleandark) #greetingName { text-transform: none; border-bottom: 2px dashed var(--border-color); padding: 0 4px; }
+:is(.theme-clean, .theme-cleandark) .sub-greeting { font-size: 0; display: flex; gap: 10px; margin-top: 8px; }
+:is(.theme-clean, .theme-cleandark) .clock { font-size: 2.6rem; font-weight: 700; letter-spacing: 0; color: var(--text-primary); text-align: end; }
+:is(.theme-clean, .theme-cleandark) .clock-sub { font-size: 1rem; color: var(--text-secondary); text-align: end; letter-spacing: 0; }
+:is(.theme-clean, .theme-cleandark) .weather-header { font-size: 1.15rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 999px; padding: 10px 20px; }
+:is(.theme-clean, .theme-cleandark) .weather-desc { text-transform: capitalize; }
+
+/* Buttons & inputs — big targets */
+:is(.theme-clean, .theme-cleandark) :is(button, .pomo-btn, .theme-trigger-btn, .backup-btn, .timer-tab, .timer-preset-btn, .lang-toggle-btn, .panel-edit-btn, .panel-fs-btn, .quote-refresh-btn, .clip-clear-btn, .log-clear-btn) {
+    font-family: var(--font-ui); font-size: 1rem; letter-spacing: 0; min-height: 48px; min-width: 48px; border-radius: 12px; cursor: pointer;
+}
+:is(.theme-clean, .theme-cleandark) .pomo-btn { background: var(--text-accent); color: #fff; border: 0; padding: 0 22px; font-weight: 700; }
+:is(.theme-clean, .theme-cleandark) .pomo-btn-secondary { background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color); }
+:is(.theme-clean, .theme-cleandark) .theme-trigger-btn, :is(.theme-clean, .theme-cleandark) .lang-toggle-btn { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); padding: 0 16px; }
+:is(.theme-clean, .theme-cleandark) .lang-toggle-sep { display: none; }
+:is(.theme-clean, .theme-cleandark) input, :is(.theme-clean, .theme-cleandark) textarea, :is(.theme-clean, .theme-cleandark) select {
+    font-family: var(--font-ui); font-size: 1.1rem; min-height: 52px; padding: 0 16px; border-radius: 12px;
+    background: var(--bg-secondary); color: var(--text-primary); border: 2px solid var(--border-color);
+}
+:is(.theme-clean, .theme-cleandark) textarea { padding: 14px 16px; line-height: 1.6; min-height: 220px; }
+:is(.theme-clean, .theme-cleandark) :is(input, textarea, select):focus { border-color: var(--border-active); outline: 3px solid color-mix(in srgb, var(--border-active) 25%, transparent); }
+:is(.theme-clean, .theme-cleandark) *:focus-visible { outline: 3px solid var(--border-active); outline-offset: 2px; }
+
+/* Search bar = the hero */
+:is(.theme-clean, .theme-cleandark) .command-section { position: relative; display: block; border: 0; background: none; padding: 0; margin-bottom: 24px; }
+:is(.theme-clean, .theme-cleandark) #commandInput { width: 100%; font-family: var(--font-ui); font-size: 1.35rem; min-height: 68px; padding: 0 72px 0 28px; border-radius: 999px; box-shadow: 0 2px 10px rgba(10, 40, 80, .08); }
+:is(.theme-clean, .theme-cleandark) .cmd-dropdown { font-family: var(--font-ui); font-size: 1.05rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 16px; }
+:is(.theme-clean, .theme-cleandark) .output-bar { font-family: var(--font-ui); font-size: 1.1rem; border-radius: 12px; }
+#micBtn { position: absolute; top: 10px; inset-inline-end: 12px; width: 48px; height: 48px; border-radius: 50%; border: 0; background: var(--bg-tertiary); font-size: 1.3rem; }
+#micBtn.on { background: var(--text-red); color: #fff; }
+
+/* Panels */
+:is(.theme-clean, .theme-cleandark) .main-grid { grid-template-columns: repeat(2, 1fr); grid-template-areas: "links links" "today todo" "notes notes"; gap: 20px; }
+:is(.theme-clean, .theme-cleandark) .today-panel { grid-area: today; }
+:is(.theme-clean, .theme-cleandark) .panel { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 20px; padding: 22px; box-shadow: none; animation: none; }
+:is(.theme-clean, .theme-cleandark) .panel-title { display: flex; align-items: center; gap: 10px; font-size: 1.3rem; font-weight: 700; letter-spacing: 0; color: var(--text-primary); margin-bottom: 16px; border: 0; }
+:is(.theme-clean, .theme-cleandark) .panel-title > span[data-i18n] { display: inline-block; text-transform: lowercase; }
+:is(.theme-clean, .theme-cleandark) .panel-title > span[data-i18n]::first-letter { text-transform: uppercase; }
+:is(.theme-clean, .theme-cleandark) .panel-title > :is(button, .pomo-settings-wrap) { margin-inline-start: auto; }
+:is(.theme-clean, .theme-cleandark) .panel-title > button ~ button, :is(.theme-clean, .theme-cleandark) .panel-fs-btn { margin-inline-start: 4px; background: none; border: 0; color: var(--text-secondary); }
+
+/* Quick links = big tiles */
+:is(.theme-clean, .theme-cleandark) .links-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+:is(.theme-clean, .theme-cleandark) .link-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 112px; padding: 16px; border-radius: 16px; background: var(--bg-tertiary); border: 2px solid transparent; color: var(--text-primary); text-decoration: none; font-size: 1.1rem; font-weight: 700; transition: border-color .15s, background .15s; }
+:is(.theme-clean, .theme-cleandark) .link-item:hover { border-color: var(--border-active); background: var(--bg-hover); }
+:is(.theme-clean, .theme-cleandark) .link-icon { font-size: 2.2rem; }
+
+/* Todo */
+:is(.theme-clean, .theme-cleandark) .todo-input-row { display: flex; gap: 10px; margin-bottom: 12px; }
+:is(.theme-clean, .theme-cleandark) .todo-input-row input { flex: 1; }
+:is(.theme-clean, .theme-cleandark) .todo-input-row button { background: var(--text-accent); color: #fff; border: 0; font-size: 1.6rem; }
+:is(.theme-clean, .theme-cleandark) .todo-list li { font-size: 1.15rem; padding: 12px 6px; border-bottom: 1px solid var(--border-color); }
+
+/* Simple view hides the technical panels */
+body:not(.show-all) :is(.status-panel, .pomo-panel, .timer-panel, .calc-panel, .pins-panel, .habits-panel, .quote-panel, .log-panel) { display: none; }
+body.show-all .main-grid { grid-template-areas: none; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+body.show-all .main-grid > .panel { grid-area: auto !important; }
+
+/* Today / prayer card */
+.today-big { font-size: 1.5rem; font-weight: 700; }
+.today-next { margin: 4px 0 14px; color: var(--text-secondary); font-size: 1.1rem; }
+.today-next b { color: var(--text-accent); }
+.prayer-row { display: flex; justify-content: space-between; padding: 8px 10px; border-radius: 10px; font-size: 1.1rem; }
+.prayer-row.next { background: var(--bg-tertiary); font-weight: 700; color: var(--text-accent); }
+
+/* Toolbar */
+.cc-toolbar { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 8px 0 20px; }
+.cc-toolbar button { font: inherit; font-size: 1rem; min-height: 48px; padding: 0 20px; border-radius: 999px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); cursor: pointer; }
+.cc-toolbar button:hover { border-color: var(--border-active); }
+
+/* Footer — keep only data buttons */
+:is(.theme-clean, .theme-cleandark) .footer { justify-content: center; gap: 10px; border: 0; font-size: 1rem; }
+:is(.theme-clean, .theme-cleandark) .footer > span:not(:has(button)) { display: none; }
+:is(.theme-clean, .theme-cleandark) .backup-btn, :is(.theme-clean, .theme-cleandark) .footer-clear-btn { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); padding: 0 16px; }
+
+/* Modals */
+:is(.theme-clean, .theme-cleandark) .modal { font-family: var(--font-ui); background: var(--bg-secondary); border-radius: 20px; border: 1px solid var(--border-color); }
+:is(.theme-clean, .theme-cleandark) .modal-title { font-size: 1.3rem; text-transform: none; letter-spacing: 0; }
+
+@media (max-width: 720px) {
+    :is(.theme-clean, .theme-cleandark) .main-grid { grid-template-columns: 1fr; grid-template-areas: "links" "today" "todo" "notes"; }
+    :is(.theme-clean, .theme-cleandark) .greeting { font-size: 1.6rem; }
+    :is(.theme-clean, .theme-cleandark) .clock { font-size: 2rem; text-align: start; }
+    :is(.theme-clean, .theme-cleandark) .clock-sub { text-align: start; }
+    :is(.theme-clean, .theme-cleandark) .links-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }

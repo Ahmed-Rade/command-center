@@ -379,9 +379,9 @@ function updateTime() {
     const s = String(now.getSeconds()).padStart(2, '0');
     const h12 = h % 12 || 12;
     const ampm = h < 12 ? 'AM' : 'PM';
-    clockEl.textContent = `${String(h12).padStart(2, '0')}:${m}:${s} ${ampm}`;
+    clockEl.textContent = `${h12}:${m} ${ampm}`;
 
-    greetingPrefixEl.textContent = getGreetingPrefix(h);
+    greetingPrefixEl.textContent = currentLang === 'ar' ? getGreetingPrefix(h) : (h < 12 ? 'Good morning,' : h < 17 ? 'Good afternoon,' : 'Good evening,');
 
     const opts = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
     dateEl.textContent = now.toLocaleDateString('en-US', opts);
@@ -679,13 +679,15 @@ function applyBg(mode) {
     }
 }
 
-const savedBg = lsRaw(SK.BG, 'matrix');
+const savedBg = lsRaw(SK.BG, 'clean');
 applyBg(savedBg);
 
 // ─── THEME ─────────────────────────────────────────────────
-const THEMES = ['dark', 'light', 'solarized', 'dracula', 'minimal', 'cyber', 'nord', 'mocha', 'amber', 'synthwave', 'ocean', 'forest', 'sakura', 'monokai', 'paper', 'terminal', 'blood', 'gold', 'ice', 'autumn', 'midnight', 'void', 'coral', 'lavender', 'lime', 'copper'];
+const THEMES = ['clean', 'cleandark', 'dark', 'light', 'solarized', 'dracula', 'minimal', 'cyber', 'nord', 'mocha', 'amber', 'synthwave', 'ocean', 'forest', 'sakura', 'monokai', 'paper', 'terminal', 'blood', 'gold', 'ice', 'autumn', 'midnight', 'void', 'coral', 'lavender', 'lime', 'copper'];
 
 const THEME_META = {
+    clean:     { swatch: ['#f3f6f9', '#0a5cc2', '#14202b', '#9a5b00'] },
+    cleandark: { swatch: ['#0c1722', '#5cb8ff', '#eef4fa', '#ffc857'] },
     dark:      { swatch: ['#060a0f', '#39d353', '#58a6ff', '#e3b341'] },
     light:     { swatch: ['#f6f8fa', '#1a7f37', '#0969da', '#9a6700'] },
     solarized: { swatch: ['#002b36', '#859900', '#268bd2', '#b58900'] },
@@ -721,14 +723,14 @@ function applyTheme(name) {
     lsSet(SK.THEME, name);
 }
 
-applyTheme(lsRaw(SK.THEME, 'dark'));
+applyTheme(lsRaw(SK.THEME, 'clean'));
 
 // ─── THEME PICKER MODAL ────────────────────────────────────
 const themeModal = document.getElementById('themeModal');
 const themeGrid  = document.getElementById('themeGrid');
 
 function renderThemeGrid() {
-    const current = lsRaw(SK.THEME, 'dark');
+    const current = lsRaw(SK.THEME, 'clean');
     themeGrid.innerHTML = '';
     THEMES.forEach(name => {
         const meta = THEME_META[name] || { swatch: [] };
