@@ -380,3 +380,26 @@ html[data-font]:not([data-font=""]) .fullscreen-inner #panel-today * { font-fami
 #themeModal .theme-swatch span { flex: 1; }
 #themeModal .theme-name { text-transform: capitalize; letter-spacing: 0; font-size: 1rem; display: flex; justify-content: space-between; }
 @media (max-width: 520px) { .ap-two { grid-template-columns: 1fr; } }
+
+/* ═══ Structure for EVERY theme (colors stay per-theme) ═══ */
+.container { zoom: calc(var(--scale, 1) * var(--auto, 1.1)); max-width: 2600px !important; margin: 0 auto; padding: 24px clamp(14px, 3vw, 56px) 40px; overflow-x: clip; }
+body { overflow-x: clip; }
+.main-grid { display: block !important; column-width: 380px; column-gap: 20px; grid-template-areas: none !important; }
+.main-grid > .panel { display: block; width: 100%; break-inside: avoid; margin: 0 0 20px !important; overflow: visible; grid-area: auto !important; }
+@media (max-width: 800px) { .main-grid { column-width: auto !important; column-count: 1 !important; } }
+.panel-title { flex-wrap: wrap; row-gap: 6px; }
+.links-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+.link-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 100px; padding: 14px; text-align: center; }
+.link-shortcut { display: none; }
+.link-icon { font-size: 2rem; }
+.todo-input-row { display: flex; gap: 10px; }
+.todo-input-row input { flex: 1; min-width: 0; }
+.todo-item { display: flex; align-items: center; gap: 12px; }
+.todo-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.cc-toolbar button { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); }
+.cc-toolbar button:hover { border-color: var(--border-active); }
+.today-panel .td-count { color: var(--text-accent); }
+.prayer-row { background: transparent; }
+.prayer-row.next { background: var(--bg-tertiary); color: var(--text-accent); font-weight: 700; }
+#micBtn { color: var(--text-primary); cursor: pointer; }
+.command-section { position: relative; }
