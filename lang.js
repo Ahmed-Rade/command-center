@@ -27,6 +27,7 @@
         'blood': 'دموي', 'gold': 'ذهبي', 'ice': 'جليدي', 'autumn': 'خريف', 'midnight': 'منتصف الليل', 'void': 'فراغ',
         'coral': 'مرجاني', 'lavender': 'لافندر', 'lime': 'ليموني', 'copper': 'نحاسي',
         // simple.js
+        'theme default': 'خط السمة',
         'today': 'اليوم', 'clear completed': 'مسح المنجزة', 'no tasks yet. add your first one above.': 'لا توجد مهام بعد.', '🌙 dark': '🌙 داكن', '☀ light': '☀ فاتح', 'hide': 'إخفاء', 'smaller text': 'تصغير الخط',
         'larger text': 'تكبير الخط', 'speak to search': 'تحدث للبحث', 'hide prayer times': 'إخفاء أوقات الصلاة',
         'could not load times': 'تعذر تحميل الأوقات', "today's prayers are done": 'انتهت صلوات اليوم',
@@ -204,14 +205,6 @@
         document.title = ar ? 'مركز التحكم' : 'Command Center';
         const pi = document.getElementById('commandInput');
         if (pi) pi.placeholder = ar ? 'ابحث في الإنترنت…' : 'Search the web…';
-        const bn = document.querySelector('#darkBtn'); if (bn) bn.textContent = root.classList.contains('theme-cleandark') ? (ar ? '☀ فاتح' : '☀ Light') : (ar ? '🌙 داكن' : '🌙 Dark');
-        const vb = document.getElementById('viewBtn');
-        if (vb) { const all = document.body.classList.contains('show-all'); vb.textContent = all ? (ar ? 'عرض مبسط' : 'Show less') : (ar ? 'المزيد من الأدوات' : 'More tools'); }
-        const d = document.getElementById('szDown'), u = document.getElementById('szUp');
-        if (d) { d.textContent = ar ? 'أ−' : 'A−'; d.setAttribute('aria-label', ar ? 'تصغير الخط' : 'Smaller text'); }
-        if (u) { u.textContent = ar ? 'أ+' : 'A+'; u.setAttribute('aria-label', ar ? 'تكبير الخط' : 'Larger text'); }
-        const td = document.getElementById('todayDate');
-        if (td) td.textContent = new Date().toLocaleDateString(ar ? 'ar-AE-u-nu-latn' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 
         // Friendly placeholders + sentence-case buttons (English mode shows no shouting)
         const ph = (id, en, a) => { const e = document.getElementById(id); if (e) e.placeholder = ar ? a : en; };

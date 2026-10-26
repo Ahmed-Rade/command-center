@@ -20,6 +20,13 @@ Live: https://ahmed-rade.github.io/command-center/
 - **Plain greeting & clock** — "Good morning," and a calm clock, no hacker styling.
 - **Full Arabic (العربية)** — every label, message, date, weather, theme name and notification translated, with right-to-left layout and the Cairo font. English mode contains no Arabic. Switch with `English | العربية` or `:lang ar` / `:lang en`. Your own text (todos, notes, pins) is never altered.
 - **Polish pass** — sentence case instead of ALL CAPS, bigger to-do rows with always-visible edit/delete, "Clear completed" button, friendly empty states, first visit follows your device's light/dark setting, fixed phone layout.
+- **v3 layout** — full-width, free-flowing tiles (no gaps, no side bars) tuned for phones, laptops and large screens.
+- **Sections menu (☰)** — show or hide any panel with a switch; each panel also has a − button. Nothing is ever lost.
+- **Fullscreen (⛶) everywhere** — Todo, Notes, Quick access and Today included.
+- **Today fullscreen** — Islamic geometric design, Hijri date, big next-prayer countdown.
+- **Quick access editor** — real site icons automatically, one-tap popular sites (Gemini, DeepSeek, ChatGPT, Claude…), emoji picker, or upload your own image. Reorder with ↑ ↓.
+- **Clear all data** now wipes local data, cookies, caches, service worker and IndexedDB. Browser permissions can only be reset by you (lock icon → Site settings).
+- **UI font** works in every theme (Theme default / JetBrains / Space Mono / Inter / Orbitron).
 - Old themes (26) still available under 🎨 THEME.
 
 On first load after the update, your theme switches to Clean once. Your data (todos, notes, links) is untouched.

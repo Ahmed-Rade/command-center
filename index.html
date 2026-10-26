@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Command Center</title>
     <script>
-        try { if (!localStorage.getItem('cc_v2')) { localStorage.setItem('cc_v2','1'); localStorage.setItem('cc_theme','clean'); localStorage.setItem('cc_bg','clean'); } } catch (e) {}
+        try { if (!localStorage.getItem('cc_v2')) { localStorage.setItem('cc_v2','1'); localStorage.setItem('cc_theme','clean'); localStorage.setItem('cc_bg','clean'); }
+            if (!localStorage.getItem('cc_v3')) { localStorage.setItem('cc_v3','1'); localStorage.setItem('cc_font','default'); } } catch (e) {}
     </script>
     <script>
         // Apply stored language before first paint to avoid FOUC/flash.
@@ -21,7 +22,7 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&family=Atkinson+Hyperlegible:wght@400;700&family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&family=Atkinson+Hyperlegible:wght@400;700&family=Amiri:wght@400;700&family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="icon" href="favicon.ico">
@@ -140,6 +141,7 @@
             <div class="accent-picker-row">
                 <span data-i18n="uiFont">UI Font</span>
                 <select id="fontSelect" class="font-select">
+                    <option value="default">Theme default</option>
                     <option value="jetbrains">JetBrains Mono</option>
                     <option value="space">Space Mono</option>
                     <option value="inter">Inter</option>

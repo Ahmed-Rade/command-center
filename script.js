@@ -807,11 +807,12 @@ const fontSelect = document.getElementById('fontSelect');
 
 function applyFont(name) {
     document.documentElement.classList.remove(...FONT_CLASSES);
-    if (name && name !== 'jetbrains') document.documentElement.classList.add(`font-${name}`);
-    lsSet(SK.FONT, name || 'jetbrains');
+    if (name && name !== 'jetbrains' && name !== 'default') document.documentElement.classList.add(`font-${name}`);
+    document.documentElement.dataset.font = (!name || name === 'default') ? '' : name;
+    lsSet(SK.FONT, name || 'default');
 }
 
-const storedFont = lsRaw(SK.FONT, 'jetbrains');
+const storedFont = lsRaw(SK.FONT, 'default');
 applyFont(storedFont);
 fontSelect.value = storedFont;
 fontSelect.addEventListener('change', () => applyFont(fontSelect.value));
@@ -1240,13 +1241,13 @@ renderPins();
 
 // ─── QUICK LINKS ───────────────────────────────────────────
 const DEFAULT_LINKS = [
-    { icon: '⚡', text: 'GitHub',     url: 'https://github.com',       key: 'G' },
-    { icon: '✉',  text: 'Mail',       url: 'https://mail.google.com',  key: 'M' },
-    { icon: '📁', text: 'Drive',      url: 'https://drive.google.com', key: 'D' },
-    { icon: '▶',  text: 'YouTube',    url: 'https://youtube.com',      key: 'Y' },
-    { icon: '◈',  text: 'ChatGPT',    url: 'https://chatgpt.com',      key: 'A' },
-    { icon: '💬', text: 'Reddit',     url: 'https://reddit.com',       key: 'R' },
-    { icon: '◉',  text: 'Claude',     url: 'https://claude.ai',        key: 'C' },
+    { icon: 'https://www.google.com/s2/favicons?domain=github.com&sz=128', text: 'GitHub',     url: 'https://github.com',       key: 'G' },
+    { icon: 'https://www.google.com/s2/favicons?domain=mail.google.com&sz=128',  text: 'Mail',       url: 'https://mail.google.com',  key: 'M' },
+    { icon: 'https://www.google.com/s2/favicons?domain=drive.google.com&sz=128', text: 'Drive',      url: 'https://drive.google.com', key: 'D' },
+    { icon: 'https://www.google.com/s2/favicons?domain=youtube.com&sz=128',  text: 'YouTube',    url: 'https://youtube.com',      key: 'Y' },
+    { icon: 'https://www.google.com/s2/favicons?domain=chatgpt.com&sz=128',  text: 'ChatGPT',    url: 'https://chatgpt.com',      key: 'A' },
+    { icon: 'https://www.google.com/s2/favicons?domain=reddit.com&sz=128', text: 'Reddit',     url: 'https://reddit.com',       key: 'R' },
+    { icon: 'https://www.google.com/s2/favicons?domain=claude.ai&sz=128',  text: 'Claude',     url: 'https://claude.ai',        key: 'C' },
     { icon: '🐧', text: 'Linux Docs', url: 'https://linux.die.net',    key: 'L' },
 ];
 
@@ -1262,13 +1263,13 @@ function renderLinks() {
         a.rel = 'noopener';
         if (link.key) a.dataset.key = link.key.toUpperCase();
         a.innerHTML = `
-            <span class="link-icon">${escapeHtml(link.icon || '🔗')}</span>
+            <span class="link-icon">${/^(https?:|data:image)/.test(link.icon || '') ? `<img class="link-img" alt="" src="${escapeHtml(link.icon)}" onerror="this.replaceWith('🔗')">` : escapeHtml(link.icon || '🔗')}</span>
             <span class="link-text">${escapeHtml(link.text)}</span>
             ${link.key ? `<span class="link-shortcut">${escapeHtml(link.key.toUpperCase())}</span>` : ''}
         `;
         a.addEventListener('mouseenter', () => {
             const icon = a.querySelector('.link-icon');
-            if (!icon) return;
+            if (!icon || icon.querySelector('img')) return;
             const orig = icon.textContent;
             const glyphs = '⚡◈◉▸▹▻✦✧';
             let i = 0;
