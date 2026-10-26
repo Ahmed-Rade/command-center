@@ -27,6 +27,7 @@ Live: https://ahmed-rade.github.io/command-center/
 - **Quick access editor** — real site icons automatically, one-tap popular sites (Gemini, DeepSeek, ChatGPT, Claude…), emoji picker, or upload your own image. Reorder with ↑ ↓.
 - **Clear all data** now wipes local data, cookies, caches, service worker and IndexedDB. Browser permissions can only be reset by you (lock icon → Site settings).
 - **UI font** works in every theme (Theme default / JetBrains / Space Mono / Inter / Orbitron).
+- **Appearance picker** — one clean dialog: Light / Dark / Auto (follows your device), 8 accent colors + custom, font, density. The other 26 themes sit under "More themes".
 - Old themes (26) still available under 🎨 THEME.
 
 On first load after the update, your theme switches to Clean once. Your data (todos, notes, links) is untouched.

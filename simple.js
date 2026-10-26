@@ -240,7 +240,49 @@
         };
     }
 
-    // ── First visit follows the device's light/dark ──
-    if (!get('cc_dark_seen', '') && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) darkBtn.click();
-    set('cc_dark_seen', '1');
+    // ── Appearance picker (minimal) ──
+    const tmodal = $('#themeModal'), tbox = tmodal.querySelector('.modal');
+    const sysDark = () => !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+    const isAuto = () => get('cc_auto', '1') === '1';
+    const curTheme = () => get('cc_theme', 'clean');
+    const DOTS_L = ['#0a5cc2', '#0f8a5f', '#c2410c', '#7c3aed', '#be185d', '#0e7490', '#b45309', '#475569'];
+    const DOTS_D = ['#5cb8ff', '#4fd18b', '#ff9f5a', '#b69cff', '#ff8fc1', '#4fd8e8', '#ffc857', '#a3b1c2'];
+    const body = mk('div', 'ap-body', '<div><div class="ap-h" id="apH1"></div><div class="ap-seg" id="apMode"><button type="button" data-m="light"></button><button type="button" data-m="dark"></button><button type="button" data-m="auto"></button></div></div>' +
+        '<div><div class="ap-h" id="apH2"></div><div class="ap-dots" id="apDots"></div></div>' +
+        '<div class="ap-two"><div><div class="ap-h" id="apH3"></div><div id="apFont"></div></div><div><div class="ap-h" id="apH4"></div><div id="apDen"></div></div></div>' +
+        '<details class="ap-more"><summary id="apH5"></summary><div id="apGrid"></div></details>');
+    tbox.insertBefore(body, tbox.querySelector('.theme-grid'));
+    $('#apFont').appendChild($('#fontSelect')); $('#apDen').appendChild($('#densitySelect')); $('#apGrid').appendChild($('#themeGrid'));
+    const accIn = $('#accentColorInput'), accReset = $('#accentResetBtn'), dots = $('#apDots');
+    function applyMode(m, keepAccent) {
+        if (m === 'auto') { set('cc_auto', '1'); m = sysDark() ? 'dark' : 'light'; } else set('cc_auto', '0');
+        applyTheme(m === 'dark' ? 'cleandark' : 'clean');
+        if (!keepAccent) { clearCustomAccent(); try { localStorage.removeItem('cc_accent'); } catch {} }
+        accIn.value = THEME_META[m === 'dark' ? 'cleandark' : 'clean'].swatch[1];
+        paintAp(); paintBar(); renderThemeGrid();
+    }
+    function paintAp() {
+        const t = curTheme(), clean = t === 'clean' || t === 'cleandark';
+        const cur = !clean ? '' : isAuto() ? 'auto' : t === 'cleandark' ? 'dark' : 'light';
+        $$('#apMode button').forEach((b) => { b.classList.toggle('on', b.dataset.m === cur); b.textContent = { light: L('☀ Light', '☀ فاتح'), dark: L('🌙 Dark', '🌙 داكن'), auto: L('◐ Auto', '◐ تلقائي') }[b.dataset.m]; });
+        $('#apH1').textContent = L('Mode', 'الوضع'); $('#apH2').textContent = L('Accent color', 'لون التمييز');
+        $('#apH3').textContent = L('Font', 'الخط'); $('#apH4').textContent = L('Density', 'الكثافة'); $('#apH5').textContent = L('More themes', 'المزيد من المظاهر');
+        const t0 = tmodal.querySelector('[data-i18n="modalThemeTitle"]'); if (t0) t0.textContent = L('Appearance', 'المظهر');
+        const tb = $('#themeTriggerBtn'); if (tb) tb.textContent = L('🎨 Appearance', '🎨 المظهر');
+        accReset.textContent = L('Default', 'الافتراضي');
+        const list = t === 'cleandark' ? DOTS_D : DOTS_L, now = (accIn.value || '').toLowerCase();
+        dots.querySelectorAll('.ap-dot').forEach((d) => d.remove());
+        list.forEach((c) => { const d = mk('button', 'ap-dot' + (c === now ? ' on' : ''), ''); d.type = 'button'; d.style.background = c; d.setAttribute('aria-label', c); d.onclick = () => { accIn.value = c; accIn.dispatchEvent(new Event('input')); paintAp(); }; dots.insertBefore(d, accIn); });
+    }
+    dots.appendChild(accIn); dots.appendChild(accReset);
+    accIn.addEventListener('change', paintAp); accReset.addEventListener('click', () => setTimeout(paintAp, 50));
+    $$('#apMode button').forEach((b) => b.onclick = () => applyMode(b.dataset.m));
+    const origGrid = renderThemeGrid;
+    renderThemeGrid = function () { origGrid(); $$('#themeGrid .theme-card').forEach((c) => { const n = c.querySelector('.theme-name').firstChild.textContent.trim(); if (n === 'clean' || n === 'cleandark') c.hidden = true; else c.addEventListener('click', () => { set('cc_auto', '0'); paintAp(); paintBar(); }); }); };
+    $('#themeTriggerBtn').addEventListener('click', paintAp);
+    darkBtn.addEventListener('click', () => { set('cc_auto', '0'); paintAp(); });
+    if (window.matchMedia) matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { const t = curTheme(); if (isAuto() && (t === 'clean' || t === 'cleandark')) applyMode('auto', true); });
+    // First visit / auto: follow the device
+    if (isAuto() && (curTheme() === 'clean' || curTheme() === 'cleandark')) applyTheme(sysDark() ? 'cleandark' : 'clean');
+    onLang(() => { paintAp(); paintBar(); });
 })();
