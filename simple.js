@@ -240,6 +240,61 @@
         };
     }
 
+
+    // ── Smart command menu: pick a command, then pick its option ──
+    const ENG_NAMES = { google: ['Google', 'جوجل'], duckduckgo: ['DuckDuckGo', 'دك دك جو'], bing: ['Bing', 'بينج'], brave: ['Brave', 'بريف'], ecosia: ['Ecosia', 'إيكوسيا'], startpage: ['Startpage', 'ستارت بيج'], yahoo: ['Yahoo', 'ياهو'], perplexity: ['Perplexity', 'بيربليكسيتي'] };
+    const o = (v, en, a, x) => Object.assign({ v, en, a }, x || {});
+    const OPT = {
+        ':engine': () => Object.keys(ENGINES).map((k) => o(k, (ENG_NAMES[k] || [k])[0], (ENG_NAMES[k] || [k, k])[1])),
+        ':theme': () => THEMES.map((k) => o(k, k, k)),
+        ':bg': () => [o('matrix', 'Falling code', 'شفرة متساقطة'), o('stars', 'Stars', 'نجوم'), o('clean', 'Plain', 'بسيط'), o('grid', 'Grid', 'شبكة'), o('aurora', 'Aurora', 'شفق')],
+        ':pomo': () => [o('start', 'Start / pause', 'بدء / إيقاف مؤقت'), o('stop', 'Stop', 'إيقاف'), o('reset', 'Reset', 'إعادة ضبط'), o('status', 'Show status', 'عرض الحالة')],
+        ':timer': () => [o('stopwatch', 'Stopwatch mode', 'وضع ساعة الإيقاف'), o('start', 'Start / pause', 'بدء / إيقاف مؤقت'), o('lap', 'Lap', 'لفة'), o('reset', 'Reset', 'إعادة ضبط'), o('5:00', '5 minute countdown', 'عد تنازلي 5 دقائق'), o('10:00', '10 minute countdown', 'عد تنازلي 10 دقائق'), o('25:00', '25 minute countdown', 'عد تنازلي 25 دقيقة'), o('', 'Custom time…', 'وقت مخصص…', { fill: true })],
+        ':price': () => ['BTC', 'ETH', 'AED', 'EUR'].map((k) => o(k, k + ' price', 'سعر ' + k)),
+        ':links': () => [o('edit', 'Edit quick access', 'تعديل الوصول السريع'), o('reset', 'Reset to defaults', 'استعادة الافتراضي', { fill: true })],
+        ':note': () => [o('wc', 'Word count', 'عدد الكلمات'), o('clear', 'Clear notes', 'مسح الملاحظات', { fill: true })],
+        ':todo': () => [o('add', 'Add a task…', 'أضف مهمة…', { fill: true }), o('clear', 'Clear all tasks', 'مسح كل المهام', { fill: true })],
+        ':log': () => [o('clear', 'Clear the log', 'مسح السجل', { fill: true })],
+        ':sound': () => [o('on', 'All sounds on', 'تشغيل كل الأصوات'), o('off', 'All sounds off', 'إيقاف كل الأصوات'), o('hover', 'Toggle hover sound', 'تبديل صوت التمرير'), o('click', 'Toggle click sound', 'تبديل صوت النقر'), o('type', 'Toggle typing sound', 'تبديل صوت الكتابة')],
+        ':lang': () => [o('en', 'English', 'English'), o('ar', 'العربية', 'العربية')],
+        ':roll': () => [4, 6, 8, 10, 12, 20, 100].map((n) => o(String(n), 'Roll a d' + n, 'رمي نرد ' + n)),
+        ':convert': () => [['10 km mi', '10 km → miles', '10 كم ← ميل'], ['5 kg lb', '5 kg → pounds', '5 كجم ← رطل'], ['30 c f', '30 °C → °F', '30 °م ← °ف'], ['100 m ft', '100 m → feet', '100 م ← قدم'], ['5 l gal', '5 L → gallons', '5 لتر ← جالون'], ['20 cm in', '20 cm → inches', '20 سم ← بوصة']].map(([v, e, a]) => o(v, e, a)),
+    };
+    const NOARG = new Set([':flip', ':zen', ':weather', ':myip', ':stats', ':time', ':help', ':ping', ':export', ':import']);
+    const run = (full) => { hideDropdown(); commandInput.value = full; commandInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true })); };
+    function showOptions(cmd, prefix) {
+        const items = OPT[cmd]().filter((x) => x.v.toLowerCase().startsWith((prefix || '').toLowerCase()) || (prefix && x.v === ''))
+            .map((x) => ({ cmd: x.v || '…', desc: L(x.en, x.a), usage: '', _full: x.v ? cmd + ' ' + x.v : cmd + ' ', _fill: !!x.fill, _hint: x.fill }));
+        if (items.length) showDropdown(items); else hideDropdown();
+    }
+    function pickOption(it) {
+        if (it._fill) { hideDropdown(); commandInput.value = it._full + (/ $/.test(it._full) ? '' : ' '); if (it._full.trim() === ':todo add') commandInput.value = ':todo add '; commandInput.focus(); return; }
+        run(it._full);
+    }
+    function pickCommand(cmd) {
+        if (OPT[cmd]) { commandInput.value = cmd + ' '; commandInput.focus(); showOptions(cmd, ''); }
+        else if (NOARG.has(cmd)) run(cmd);
+        else { hideDropdown(); commandInput.value = cmd + ' '; commandInput.focus(); }
+    }
+    cmdDropdown.addEventListener('mousedown', (e) => {
+        const el = e.target.closest('.cmd-dropdown-item'); if (!el) return;
+        e.preventDefault(); e.stopPropagation();
+        const it = dropdownItems[[...cmdDropdown.children].indexOf(el)]; if (!it) return;
+        if (it._full !== undefined) pickOption(it); else pickCommand(it.cmd);
+    }, true);
+    commandInput.addEventListener('keydown', (e) => {
+        if ((e.key === 'Enter' || e.key === 'Tab') && !cmdDropdown.classList.contains('hidden') && dropdownIdx >= 0 && dropdownItems[dropdownIdx]) {
+            const it = dropdownItems[dropdownIdx];
+            e.preventDefault(); e.stopImmediatePropagation();
+            if (it._full !== undefined) pickOption(it); else pickCommand(it.cmd);
+        }
+    }, true);
+    commandInput.addEventListener('input', () => {
+        const m = commandInput.value.match(/^(:\w+) ([^ ]*)$/);
+        if (m && OPT[m[1]]) showOptions(m[1], m[2]);
+    });
+    commandInput.addEventListener('focus', () => { const m = commandInput.value.match(/^(:\w+) $/); if (m && OPT[m[1]]) showOptions(m[1], ''); });
+
     // ── Appearance picker (minimal) ──
     const tmodal = $('#themeModal'), tbox = tmodal.querySelector('.modal');
     const sysDark = () => !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);

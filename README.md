@@ -28,6 +28,7 @@ Live: https://ahmed-rade.github.io/command-center/
 - **Clear all data** now wipes local data, cookies, caches, service worker and IndexedDB. Browser permissions can only be reset by you (lock icon → Site settings).
 - **UI font** works in every theme (Theme default / JetBrains / Space Mono / Inter / Orbitron).
 - **Appearance picker** — one clean dialog: Light / Dark / Auto (follows your device), 8 accent colors + custom, font, density. The other 26 themes sit under "More themes".
+- **Click-through commands** — type `:` and pick a command; options appear next (`:engine` → Google, DuckDuckGo…; `:theme`, `:bg`, `:pomo`, `:timer`, `:price`, `:sound`, `:lang`, `:roll`, `:convert`…). One click runs it. Keyboard works too (↑ ↓ Enter / Tab). Destructive options (clear) fill the line so you confirm with Enter.
 - Old themes (26) still available under 🎨 THEME.
 
 On first load after the update, your theme switches to Clean once. Your data (todos, notes, links) is untouched.
