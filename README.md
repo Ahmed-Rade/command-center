@@ -47,6 +47,7 @@ command-center/
 ├── lang.js            # Arabic completion layer (strings, RTL fixes)
 ├── sw.js              # Offline cache + timer notifications
 ├── site.webmanifest   # Install as app
+├── maskable-512x512.png  # Maskable app icon
 └── README.md
 ```
 

@@ -8,7 +8,7 @@
     const D = {
         // header / misc
         'command center': 'مركز التحكم', 'connected': 'متصل', 'offline': 'غير متصل', 'online': 'متصل',
-        'user': 'ضيف', 'on': 'تشغيل', 'off': 'إيقاف', 'ac': 'مسح', 'del': 'حذف', 'deg': 'درجات', 'rad': 'راديان',
+        'user': 'ضيف', '🔊 sound': '🔊 الصوت', '🔇 muted': '🔇 صامت', 'close': 'إغلاق', 'close shortcuts': 'إغلاق الاختصارات', 'custom accent color': 'لون مخصص', 'your display name': 'اسمك المعروض', 'click to set your name': 'انقر لتعيين اسمك', 'on': 'تشغيل', 'off': 'إيقاف', 'ac': 'مسح', 'del': 'حذف', 'deg': 'درجات', 'rad': 'راديان',
         'sin': 'جا', 'cos': 'جتا', 'tan': 'ظا', 'log': 'لو', 'ln': 'لو‌ه', 'clear hist': 'مسح السجل',
         '— history empty —': '— لا يوجد سجل —', 'n/supp': 'غير مدعوم', 'unavailable': 'غير متاح',
         'refreshing...': 'جارٍ التحديث...', 'uae (--°c)': 'الإمارات (--°م)',

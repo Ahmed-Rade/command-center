@@ -2594,7 +2594,7 @@ const COMMANDS = {
     ':pomo': (args) => {
         const sub = args.trim().toLowerCase();
         if (sub === 'start' || sub === '') {
-            pomoControl('toggle');
+            if (sub === '' || !pomoState.running) pomoControl('toggle');
         } else if (sub === 'stop' || sub === 'pause') {
             if (pomoState.running) pomoControl('toggle');
         } else if (sub === 'reset') {

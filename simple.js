@@ -140,6 +140,11 @@
     const closeLe = () => le.classList.add('hidden'), closeIp = () => ip.classList.add('hidden');
     le.querySelector('.modal-close').onclick = closeLe; ip.querySelector('.modal-close').onclick = closeIp;
     le.onclick = (e) => { if (e.target === le) closeLe(); }; ip.onclick = (e) => { if (e.target === ip) closeIp(); };
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        const m = !ip.classList.contains('hidden') ? closeIp : !le.classList.contains('hidden') ? closeLe : null;
+        if (m) { m(); e.stopImmediatePropagation(); }
+    }, true);
     function paintLe() {
         $('#leT').textContent = L('Edit quick access', 'تعديل الوصول السريع');
         $('#leAddT').textContent = L('Add a popular site — one tap', 'أضف موقعاً شائعاً بنقرة واحدة');

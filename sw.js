@@ -2,7 +2,7 @@
 // Cache-first for static assets so repeat visits load instantly and the
 // dashboard keeps working offline. Bump CACHE_VERSION whenever any cached
 // file changes so clients pick up the new version instead of stale assets.
-const CACHE_VERSION = 'cc-v17';
+const CACHE_VERSION = 'cc-v18';
 const PRECACHE_URLS = [
     './',
     './index.html',
@@ -18,6 +18,7 @@ const PRECACHE_URLS = [
     './apple-touch-icon.png',
     './android-chrome-192x192.png',
     './android-chrome-512x512.png',
+    './maskable-512x512.png',
 ];
 
 self.addEventListener('install', (e) => {
@@ -61,7 +62,7 @@ self.addEventListener('fetch', (e) => {
                     caches.open(CACHE_VERSION).then((cache) => cache.put(req, copy));
                 }
                 return res;
-            }).catch(() => cached); // offline fallback to whatever's cached
+            }).catch(() => cached || caches.match('./index.html')); // offline: cached asset, else app shell
 
             return cached || networkFetch;
         })
