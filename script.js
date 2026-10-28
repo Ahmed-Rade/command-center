@@ -774,11 +774,15 @@ function applyCustomAccent(hex) {
     root.setProperty('--border-active', hex);
     root.setProperty('--online-color', hex);
     root.setProperty('--glow-green', hexToRgba(hex, 0.18));
+    // Readable label colour on top of the accent (WCAG relative luminance).
+    const lin = (i) => { const v = parseInt(hex.slice(i, i + 2), 16) / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+    const lum = 0.2126 * lin(1) + 0.7152 * lin(3) + 0.0722 * lin(5);
+    root.setProperty('--on-accent', lum > 0.4 ? '#06121c' : '#ffffff');
 }
 
 function clearCustomAccent() {
     const root = document.documentElement.style;
-    ['--text-accent', '--border-active', '--online-color', '--glow-green'].forEach(p => root.removeProperty(p));
+    ['--text-accent', '--border-active', '--online-color', '--glow-green', '--on-accent'].forEach(p => root.removeProperty(p));
 }
 
 const storedAccent = lsRaw(SK.ACCENT);
@@ -1157,6 +1161,18 @@ function clearLog() {
 // ─── OUTPUT BAR ────────────────────────────────────────────
 let outputTimer = null;
 
+// Clipboard with fallback for insecure contexts / older browsers.
+function ccCopy(text) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    return new Promise((resolve, reject) => {
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+        document.body.appendChild(ta); ta.select();
+        let ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+        ta.remove(); ok ? resolve() : reject(new Error('copy failed'));
+    });
+}
+
 function showOutput(msg, type = 'success', duration = 4000) {
     outputBar.textContent = msg;
     outputBar.className = `output-bar ${type}`;
@@ -1206,7 +1222,7 @@ function renderPins() {
         `;
         div.querySelector('.pin-copy-btn').addEventListener('click', (e) => {
             e.stopPropagation();
-            navigator.clipboard.writeText(p.text).then(() => {
+            ccCopy(p.text).then(() => {
                 showOutput('Copied!', 'success', 1500);
             }).catch(() => {
                 showOutput(p.text.substring(0, 60), 'info', 5000);
@@ -2003,6 +2019,8 @@ if (_savedTimer?.mode === 'countdown') {
     document.getElementById('timerTargetRow').classList.remove('hidden');
     timerLapBtn.style.display = 'none';
     timerModeLabel.textContent = t('countdown');
+} else {
+    timerLapBtn.style.display = 'block'; // stopwatch is the default mode — Lap must be available on first load
 }
 if (_savedTimer?.laps?.length) renderLaps();
 updateTimerDisplay();
@@ -2707,7 +2725,7 @@ const COMMANDS = {
             const list = pins.map((p, i) => `[${i}] ${p.text.substring(0, 35)}`).join(' · ');
             showOutput(list, 'info', 10000);
         } else if (!isNaN(n) && pins[n]) {
-            navigator.clipboard.writeText(pins[n].text).then(() => {
+            ccCopy(pins[n].text).then(() => {
                 showOutput(`Copied pin [${n}].`, 'success');
             }).catch(() => {
                 showOutput(`[${n}] ${pins[n].text.substring(0, 80)}`, 'info', 8000);

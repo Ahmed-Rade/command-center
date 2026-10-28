@@ -7,13 +7,13 @@ html.theme-clean, html.theme-cleandark {
     --glow-green: transparent; --glow-blue: transparent; --online-color: #1a7f45;
     --font-mono: 'Atkinson Hyperlegible', 'Inter', system-ui, sans-serif;
     --font-display: var(--font-mono); --font-ui: var(--font-mono);
-    --scanline-opacity: 0; --noise-opacity: 0; --scale: 1;
+    --scanline-opacity: 0; --noise-opacity: 0; --scale: 1; --on-accent: #fff;
 }
 html.theme-cleandark {
     --bg-primary: #0c1722; --bg-secondary: #132434; --bg-tertiary: #1a3045; --bg-hover: #224058;
     --text-primary: #eef4fa; --text-secondary: #a9bccd; --text-accent: #5cb8ff;
     --text-blue: #5cb8ff; --text-yellow: #ffc857; --text-red: #ff8a8f;
-    --border-color: #2a4560; --border-active: #5cb8ff; --online-color: #4fd18b;
+    --border-color: #2a4560; --border-active: #5cb8ff; --online-color: #4fd18b; --on-accent: #06121c;
 }
 :is(html.theme-clean, html.theme-cleandark) {
     font-family: var(--font-ui); line-height: 1.5;
@@ -38,7 +38,7 @@ html.theme-cleandark {
 :is(.theme-clean, .theme-cleandark) :is(button, .pomo-btn, .theme-trigger-btn, .backup-btn, .timer-tab, .timer-preset-btn, .lang-toggle-btn, .panel-edit-btn, .panel-fs-btn, .quote-refresh-btn, .clip-clear-btn, .log-clear-btn) {
     font-family: var(--font-ui); font-size: 1rem; letter-spacing: 0; min-height: 48px; min-width: 48px; border-radius: 12px; cursor: pointer;
 }
-:is(.theme-clean, .theme-cleandark) .pomo-btn { background: var(--text-accent); color: #fff; border: 0; padding: 0 22px; font-weight: 700; }
+:is(.theme-clean, .theme-cleandark) .pomo-btn { background: var(--text-accent); color: var(--on-accent); border: 0; padding: 0 22px; font-weight: 700; }
 :is(.theme-clean, .theme-cleandark) .pomo-btn-secondary { background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color); }
 :is(.theme-clean, .theme-cleandark) .theme-trigger-btn, :is(.theme-clean, .theme-cleandark) .lang-toggle-btn { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); padding: 0 16px; }
 :is(.theme-clean, .theme-cleandark) .lang-toggle-sep { display: none; }
@@ -75,7 +75,7 @@ html.theme-cleandark {
 /* Todo */
 :is(.theme-clean, .theme-cleandark) .todo-input-row { display: flex; gap: 10px; margin-bottom: 12px; }
 :is(.theme-clean, .theme-cleandark) .todo-input-row input { flex: 1; }
-:is(.theme-clean, .theme-cleandark) .todo-input-row button { background: var(--text-accent); color: #fff; border: 0; font-size: 1.6rem; }
+:is(.theme-clean, .theme-cleandark) .todo-input-row button { background: var(--text-accent); color: var(--on-accent); border: 0; font-size: 1.6rem; }
 :is(.theme-clean, .theme-cleandark) .todo-list li { font-size: 1.15rem; padding: 12px 6px; border-bottom: 1px solid var(--border-color); }
 
 /* Simple view hides the technical panels */
@@ -134,7 +134,7 @@ html[dir="rtl"] .cc-toolbar, html[dir="rtl"] .links-grid { direction: rtl; }
 /* Header alignment */
 :is(.theme-clean, .theme-cleandark) .sub-greeting { align-items: center; flex-wrap: wrap; }
 :is(.theme-clean, .theme-cleandark) .lang-toggle { display: inline-flex; gap: 6px; }
-:is(.theme-clean, .theme-cleandark) .lang-toggle-btn.active { background: var(--text-accent); color: #fff; border-color: var(--text-accent); }
+:is(.theme-clean, .theme-cleandark) .lang-toggle-btn.active { background: var(--text-accent); color: var(--on-accent); border-color: var(--text-accent); }
 :is(.theme-clean, .theme-cleandark) .weather-header { box-shadow: none; }
 :is(.theme-clean, .theme-cleandark) .weather-desc { font-size: 1rem; letter-spacing: 0; }
 
@@ -156,7 +156,7 @@ html[dir="rtl"] .cc-toolbar, html[dir="rtl"] .links-grid { direction: rtl; }
 :is(.theme-clean, .theme-cleandark) .todo-item.done .todo-check { background: var(--online-color); border-color: var(--online-color); color: #fff; }
 :is(.theme-clean, .theme-cleandark) :is(.todo-edit-btn, .todo-del) { background: none; border: 0; font-size: 1.1rem; color: var(--text-secondary); min-width: 44px; min-height: 44px; }
 :is(.theme-clean, .theme-cleandark) .todo-del:hover { color: var(--text-red); }
-:is(.theme-clean, .theme-cleandark) .todo-count { background: var(--text-accent); color: #fff; border-radius: 999px; padding: 2px 12px; font-size: 1rem; }
+:is(.theme-clean, .theme-cleandark) .todo-count { background: var(--text-accent); color: var(--on-accent); border-radius: 999px; padding: 2px 12px; font-size: 1rem; }
 .todo-list:empty::before { content: 'No tasks yet. Add your first one above.'; display: block; padding: 18px 4px; color: var(--text-secondary); font-size: 1.1rem; }
 html[lang="ar"] .todo-list:empty::before { content: 'لا توجد مهام بعد. أضف مهمتك الأولى أعلاه.'; }
 #clearDone { margin-top: 10px; min-height: 44px; padding: 0 18px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); font: inherit; font-size: 1rem; cursor: pointer; }
@@ -222,7 +222,7 @@ html[lang="ar"] .todo-list:empty::before { content: 'لا توجد مهام بع
 :is(.theme-clean, .theme-cleandark) .pomo-time { font-size: 2.6rem !important; font-weight: 700; }
 :is(.theme-clean, .theme-cleandark) .pomo-controls { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; width: 100%; }
 :is(.theme-clean, .theme-cleandark) .pomo-info { display: flex; flex-wrap: wrap; gap: 8px 22px; justify-content: center; color: var(--text-secondary); }
-:is(.theme-clean, .theme-cleandark) .timer-display { font-size: clamp(2.2rem, 4vw, 3.2rem) !important; font-weight: 700; text-align: center; }
+:is(.theme-clean, .theme-cleandark) .timer-display { font-size: clamp(1.4rem, calc((4vw + .8rem) / (var(--scale, 1) * var(--auto, 1.1))), 3.2rem) !important; font-weight: 700; letter-spacing: 1px; text-align: center; }
 :is(.theme-clean, .theme-cleandark) .timer-tabs { display: flex; gap: 8px; width: 100%; }
 :is(.theme-clean, .theme-cleandark) .timer-tab { flex: 1; background: var(--bg-tertiary); border: 2px solid transparent; color: var(--text-primary); padding: 0 10px; }
 :is(.theme-clean, .theme-cleandark) .timer-tab.active { border-color: var(--border-active); background: var(--bg-secondary); font-weight: 700; }
@@ -233,9 +233,9 @@ html[lang="ar"] .todo-list:empty::before { content: 'لا توجد مهام بع
 :is(.theme-clean, .theme-cleandark) .timer-preset-btn { background: var(--bg-tertiary); border: 0; padding: 0 16px; }
 :is(.theme-clean, .theme-cleandark) .pins-input-row, :is(.theme-clean, .theme-cleandark) .habits-input-row { display: flex; gap: 10px; margin-bottom: 12px; }
 :is(.theme-clean, .theme-cleandark) :is(.pins-input-row, .habits-input-row) input { flex: 1; min-width: 0; }
-:is(.theme-clean, .theme-cleandark) :is(.pins-input-row, .habits-input-row) button { flex: none; width: 52px; padding: 0; background: var(--text-accent); color: #fff; border: 0; font-size: 1.6rem; }
+:is(.theme-clean, .theme-cleandark) :is(.pins-input-row, .habits-input-row) button { flex: none; width: 52px; padding: 0; background: var(--text-accent); color: var(--on-accent); border: 0; font-size: 1.6rem; }
 :is(.theme-clean, .theme-cleandark) .calc-btn { min-height: 58px; font-size: 1.35rem !important; border-radius: 14px; background: var(--bg-tertiary); border: 0; color: var(--text-primary); }
-:is(.theme-clean, .theme-cleandark) .calc-op, :is(.theme-clean, .theme-cleandark) .calc-eq { background: var(--text-accent); color: #fff; }
+:is(.theme-clean, .theme-cleandark) .calc-op, :is(.theme-clean, .theme-cleandark) .calc-eq { background: var(--text-accent); color: var(--on-accent); }
 :is(.theme-clean, .theme-cleandark) .calc-grid { gap: 10px; }
 :is(.theme-clean, .theme-cleandark) .calc-expr { font-size: 1.6rem !important; }
 :is(.theme-clean, .theme-cleandark) .calc-result { font-size: 2.2rem !important; font-weight: 700; }
@@ -448,3 +448,27 @@ body.density-compact .td-date { font-size: 1.15rem !important; }
 body.density-compact .td-count { font-size: 1.4rem !important; margin-bottom: 6px !important; }
 body.density-compact .footer { padding-top: 10px !important; margin-top: 0 !important; }
 body.density-compact .fullscreen-inner .panel { padding: 20px !important; }
+
+/* ── Contrast fixes (WCAG AA ≥ 4.5:1) for legacy themes — secondary text, accent text, status colours ── */
+html:not([class*="theme-"]) { --text-secondary: #7a8692; }
+html.theme-light { --text-secondary: #666d78; }
+html.theme-solarized { --text-primary: #c8d0d1; --text-secondary: #a1aeb2; --text-accent: #91a31a; --online-color: #91a31a; --text-red: #e97c7a; }
+html.theme-dracula { --text-secondary: #8692b7; }
+html.theme-minimal { --text-secondary: #6e6e6e; --text-red: #d62e2e; }
+html.theme-cyber { --text-secondary: #9954ff; }
+html.theme-nord { --text-secondary: #acc0d5; --text-red: #d5a5ac; }
+html.theme-mocha { --text-secondary: #7d829a; }
+html.theme-amber { --text-secondary: #b38035; }
+html.theme-synthwave { --text-secondary: #a282b3; }
+html.theme-ocean { --text-secondary: #7aa6b7; }
+html.theme-forest { --text-secondary: #7ea080; }
+html.theme-sakura { --text-secondary: #8e5e6a; --text-accent: #b54d6e; --online-color: #bc4f72; --text-red: #c24259; }
+html.theme-monokai { --text-secondary: #9c9a8a; --text-red: #f9508c; }
+html.theme-paper { --text-secondary: #6f6044; --text-accent: #896226; --online-color: #8e6527; }
+html.theme-blood { --text-secondary: #a67070; }
+html.theme-gold { --text-red: #c66358; }
+html.theme-ice { --text-secondary: #4c6e7f; --text-accent: #0e7995; --online-color: #0c7e9b; --text-red: #d42727; }
+html.theme-midnight { --text-secondary: #7582b0; }
+html.theme-void { --text-secondary: #7d7d7d; }
+html.theme-coral { --text-secondary: #b87c71; }
+html.theme-lavender { --text-secondary: #6e5d88; --text-accent: #7d53d8; --online-color: #8357e6; --text-red: #d22629; }

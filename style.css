@@ -2600,6 +2600,7 @@ button:active, .link-item:active, .theme-card:active,
     display: flex;
     align-items: center;
     justify-content: center;
+    -webkit-backdrop-filter: blur(4px);
     backdrop-filter: blur(4px);
     animation: fadeIn 0.2s ease;
 }
@@ -2767,11 +2768,12 @@ kbd {
 
 .calc-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 6px;
 }
 
 .calc-btn {
+    min-width: 0;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     color: var(--text-primary);

@@ -35,6 +35,16 @@ On first load after the update, your theme switches to Clean once. Your data (to
 
 ---
 
+## 🛡 Quality (v4)
+
+- All 28 themes pass WCAG AA text contrast (≥ 4.5:1); Clean dark buttons use dark labels on the light accent.
+- Custom accent colours auto-pick a readable label colour.
+- Tested at 320 px → 2560 px, English and Arabic (RTL), four text sizes. No horizontal scroll.
+- Legacy theme fonts load only when needed (faster first load).
+- Clipboard works on non-HTTPS pages; Safari blur prefix added; offline fallback in the service worker.
+
+---
+
 ## 📁 File Structure
 
 ```
