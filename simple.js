@@ -65,6 +65,7 @@
         $('#tdBism').textContent = L('In the name of God, the Most Gracious, the Most Merciful', 'بسم الله الرحمن الرحيم');
         $('#todayDate').textContent = new Date().toLocaleDateString(ar() ? 'ar-AE-u-nu-latn' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
         try { $('#todayHijri').textContent = new Intl.DateTimeFormat(ar() ? 'ar-SA-u-ca-islamic-umalqura-nu-latn' : 'en-u-ca-islamic-umalqura', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date()); } catch {}
+        if (failed && !times) $('#todayNext').textContent = L('Could not load prayer times', 'تعذر تحميل أوقات الصلاة');
         tick(true);
     }
     function tick(rebuild) {
@@ -83,18 +84,21 @@
         $('#todayNext').innerHTML = L('Next prayer', 'الصلاة القادمة') + ' <b>' + NAMES[nm][idx] + '</b>';
         $('#todayCount').textContent = pad(Math.floor(sec / 3600)) + ':' + pad(Math.floor((sec % 3600) / 60)) + ':' + pad(sec % 60);
     }
+    let failed = false, lastPos = null;
     function load(lat, lon) {
+        lastPos = [lat, lon]; failed = false;
         const day = new Date().toDateString();
         try { const c = JSON.parse(get('cc_prayer', 'null')); if (c && c.day === day && c.lat === lat) { times = c.t; paintStatic(); return; } } catch {}
         fetch('https://api.aladhan.com/v1/timings?latitude=' + lat + '&longitude=' + lon)
             .then((r) => r.json()).then((j) => { times = j.data.timings; set('cc_prayer', JSON.stringify({ day, lat, t: times })); paintStatic(); })
-            .catch(() => { $('#todayNext').textContent = L('Could not load prayer times', 'تعذر تحميل أوقات الصلاة'); });
+            .catch(() => { failed = true; paintStatic(); });
     }
     let loc = null; try { loc = JSON.parse(get('cc_loc', 'null')); } catch {}
     if (loc) load(loc[0], loc[1]);
     else if (navigator.geolocation) navigator.geolocation.getCurrentPosition((p) => { set('cc_loc', JSON.stringify([+p.coords.latitude.toFixed(2), +p.coords.longitude.toFixed(2)])); load(+p.coords.latitude.toFixed(2), +p.coords.longitude.toFixed(2)); }, () => load(25.35, 55.42), { timeout: 6000 });
     else load(25.35, 55.42);
     onLang(paintStatic);
+    window.addEventListener('online', () => { if (failed && lastPos) load(lastPos[0], lastPos[1]); });
     setInterval(() => tick(false), 1000);
 
     // ── Sections: show / hide any panel ──

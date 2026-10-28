@@ -721,6 +721,7 @@ function applyTheme(name) {
     document.documentElement.className = document.documentElement.className
         .replace(/theme-\w+/g, '').trim();
     if (name !== 'dark') document.documentElement.classList.add(`theme-${name}`);
+    if (!['clean', 'cleandark', 'dark'].includes(name) && window.ccLoadLegacyFonts) window.ccLoadLegacyFonts();
     lsSet(SK.THEME, name);
 }
 

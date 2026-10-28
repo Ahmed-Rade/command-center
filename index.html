@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Command Center</title>
+    <meta name="description" content="A simple personal start page: search, quick links, tasks, notes and prayer times.">
     <script>
         try { if (!localStorage.getItem('cc_v2')) { localStorage.setItem('cc_v2','1'); localStorage.setItem('cc_theme','clean'); localStorage.setItem('cc_bg','clean'); }
             if (!localStorage.getItem('cc_v3')) { localStorage.setItem('cc_v3','1'); localStorage.setItem('cc_font','default'); } } catch (e) {}
@@ -22,7 +23,25 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&family=Atkinson+Hyperlegible:wght@400;700&family=Amiri:wght@400;700&family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Amiri:wght@400;700&family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <script>
+        // Legacy theme fonts load only when needed (non-clean theme, custom UI font, or Appearance opened).
+        (function () {
+            var done = false;
+            function load() {
+                if (done) return; done = true;
+                var l = document.createElement('link'); l.rel = 'stylesheet';
+                l.href = 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap';
+                document.head.appendChild(l);
+            }
+            try {
+                var t = localStorage.getItem('cc_theme') || 'clean', f = localStorage.getItem('cc_font') || 'default';
+                if ((t !== 'clean' && t !== 'cleandark' && t !== 'dark') || f !== 'default') load();
+            } catch (e) {}
+            document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('#themeTriggerBtn, #themeModal')) load(); }, true);
+            window.ccLoadLegacyFonts = load;
+        })();
+    </script>
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="icon" href="favicon.ico">
@@ -41,6 +60,7 @@
     <link rel="stylesheet" href="simple.css">
 </head>
 <body>
+    <noscript><p style="padding:24px;font:18px sans-serif">Command Center needs JavaScript. Please enable it.</p></noscript>
     <div class="scanline"></div>
     <div class="noise"></div>
     <canvas id="matrixCanvas"></canvas>
