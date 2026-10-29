@@ -1,0 +1,57 @@
+/* ═══ THEMES POLISH — all 28 themes share the Clean layout; loads last ═══ */
+html:not(.theme-clean):not(.theme-cleandark) {
+  --on-accent: var(--bg-primary); --scale: 1;
+  --scanline-opacity: 0; --noise-opacity: 0;
+  --glow-green: color-mix(in srgb, var(--text-accent) 18%, transparent);
+  --glow-blue: color-mix(in srgb, var(--text-blue) 18%, transparent);
+  --ring: color-mix(in srgb, var(--text-accent) 28%, transparent);
+  color-scheme: dark;
+}
+html.theme-light, html.theme-minimal, html.theme-sakura, html.theme-paper,
+html.theme-ice, html.theme-lavender, html.theme-clean { color-scheme: light; }
+html.theme-cleandark { color-scheme: dark; }
+html[data-font=""][lang="en"]:not(.theme-clean):not(.theme-cleandark):not(.theme-terminal):not(.theme-paper):not(.theme-gold) {
+  --font-mono: 'Atkinson Hyperlegible','Inter',system-ui,sans-serif; --font-ui: var(--font-mono); --font-display: var(--font-mono);
+}
+html.theme-terminal { --font-ui: var(--font-mono); }
+html.theme-paper, html.theme-gold { --font-ui: Georgia,'Times New Roman',serif; --font-display: var(--font-ui); }
+
+:root:root:root .panel {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--text-accent) 5%, var(--bg-secondary)), var(--bg-secondary) 40%);
+  box-shadow: 0 1px 0 color-mix(in srgb, #fff 6%, transparent) inset, 0 8px 24px -14px color-mix(in srgb, var(--text-accent) 40%, #000);
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+@media (hover: hover) {
+  :root:root:root .panel:hover { transform: translateY(-2px); border-color: var(--border-active);
+    box-shadow: 0 12px 32px -14px var(--ring, var(--glow-blue)); }
+}
+:root:root:root .link-item:active, :root:root:root button:active { transform: scale(.97); }
+::selection { background: var(--text-accent); color: var(--on-accent, var(--bg-primary)); }
+* { scrollbar-width: thin; scrollbar-color: var(--border-active) transparent; }
+body { transition: background-color .35s ease, color .35s ease; }
+
+html.theme-cyber .panel, html.theme-synthwave .panel { box-shadow: 0 0 0 1px var(--border-color), 0 0 22px -6px var(--glow-green); }
+html.theme-cyber .greeting, html.theme-synthwave .greeting {
+  background: linear-gradient(90deg, var(--text-accent), var(--text-blue)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+html.theme-terminal .panel { border-style: dashed; box-shadow: none; }
+html.theme-terminal .clock { text-shadow: 0 0 12px var(--glow-green); }
+html.theme-gold .panel { border-color: color-mix(in srgb, var(--text-accent) 40%, var(--border-color)); }
+html.theme-paper .panel { box-shadow: 2px 3px 0 color-mix(in srgb, var(--text-accent) 22%, transparent); }
+html.theme-void .panel { background: #000; box-shadow: none; border-color: #333; }
+html.theme-blood .panel:hover, html.theme-amber .panel:hover, html.theme-lime .panel:hover { box-shadow: 0 0 26px -6px var(--glow-green); }
+html.theme-sakura body, html.theme-lavender body, html.theme-ice body {
+  background-image: radial-gradient(60vmax 40vmax at 90% -10%, color-mix(in srgb, var(--text-accent) 12%, transparent), transparent); }
+html.theme-ocean body, html.theme-midnight body, html.theme-forest body, html.theme-mocha body, html.theme-nord body {
+  background-image: radial-gradient(60vmax 40vmax at 8% -10%, color-mix(in srgb, var(--text-accent) 10%, transparent), transparent); }
+
+.tp-bar { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+.tp-bar button { min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--border-color);
+  background: var(--bg-tertiary); color: var(--text-primary); font: inherit; cursor: pointer; }
+.tp-bar button[aria-pressed="true"] { background: var(--text-accent); color: var(--on-accent, var(--bg-primary)); border-color: transparent; }
+.tp-bar input { flex: 1 1 140px; min-height: 40px; }
+#themeModal .theme-card { transition: transform .15s, border-color .15s; }
+#themeModal .theme-card:hover { transform: translateY(-2px) scale(1.02); border-color: var(--border-active); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}
