@@ -1,0 +1,71 @@
+/* ═══ TILES — sorted grid, equal rows, motion. Loads after themes.css ═══ */
+:root { --ease: cubic-bezier(.2, .8, .2, 1); --gap: 20px; }
+:root:root:root .main-grid {
+  display: grid !important; column-count: auto !important; column-width: auto !important;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  grid-auto-flow: row dense; align-items: stretch; gap: var(--gap) !important;
+}
+.main-grid[data-cols="1"] { grid-template-columns: 1fr; }
+.main-grid[data-cols="2"] { grid-template-columns: repeat(2, 1fr); }
+.main-grid[data-cols="3"] { grid-template-columns: repeat(3, 1fr); }
+.main-grid[data-cols="4"] { grid-template-columns: repeat(4, 1fr); }
+body.density-compact .main-grid { --gap: 12px; }
+
+/* tile base: flex column so rows align and content fills */
+:root:root:root .main-grid > .panel:not(.is-off) {
+  display: flex; flex-direction: column; margin: 0 !important; min-width: 0; position: relative; overflow: visible;
+}
+.main-grid > .panel > .panel-title { flex: 0 0 auto; }
+.main-grid > .panel > :is(textarea, .notes-area, .todo-list, .log-output) { flex: 1 1 auto; }
+.notes-panel textarea { min-height: 240px; resize: vertical; }
+
+/* priority order */
+#panel-links { order: 1; } #panel-today { order: 2; } #panel-todo { order: 3; } #panel-notes { order: 4; }
+#panel-status { order: 5; } #panel-pomo { order: 6; } #panel-timer { order: 7; } #panel-calc { order: 8; }
+#panel-habits { order: 9; } #panel-pins { order: 10; } #panel-quote { order: 11; } #panel-log { order: 12; }
+
+/* spans per column count */
+.main-grid[data-cols="4"] > :is(#panel-links, #panel-notes, #panel-quote, #panel-log),
+.main-grid[data-cols="3"] > :is(#panel-links, #panel-notes, #panel-log),
+.main-grid[data-cols="2"] > :is(#panel-links, #panel-notes, #panel-quote, #panel-log) { grid-column: span 2; }
+
+/* depth + light sweep */
+.main-grid > .panel::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 0%), color-mix(in srgb, var(--text-accent) 14%, transparent), transparent 60%);
+  transition: opacity .3s var(--ease);
+}
+@media (hover: hover) {
+  .main-grid > .panel:hover::before { opacity: 1; }
+  :root:root:root .main-grid > .panel:hover { transform: translateY(-3px); }
+}
+.panel-title::after { content: ""; flex-basis: 100%; height: 2px; margin-top: 2px; width: 28px; border-radius: 2px;
+  background: var(--text-accent); opacity: .7; transition: width .35s var(--ease); order: 99; }
+.panel:hover .panel-title::after { width: 64px; }
+.fullscreen-inner .panel { transform: none !important; animation: none !important; }
+.fullscreen-inner .panel::before { display: none; }
+
+/* entrance */
+.tiles-js .main-grid > .panel:not(.tile-in) { opacity: 0; }
+@keyframes tileIn { from { opacity: 0; transform: translateY(22px) scale(.97); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+:root:root:root .main-grid > .panel.tile-in { animation: tileIn .65s var(--ease) backwards; animation-delay: calc(var(--i, 0) * 70ms); }
+
+/* inner motion */
+.link-item { position: relative; overflow: visible; transition: transform .22s var(--ease), border-color .2s, background .2s, box-shadow .2s; }
+.link-item::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 35%, color-mix(in srgb, #fff 22%, transparent) 50%, transparent 65%);
+  transform: translateX(-120%); transition: transform .6s var(--ease); pointer-events: none; }
+@media (hover: hover) {
+  .link-item:hover { transform: translateY(-4px); box-shadow: 0 10px 22px -12px var(--ring, var(--glow-blue)); }
+  .link-item:hover::after { transform: translateX(120%); }
+  .link-item:hover :is(.link-icon, .link-img) { transform: scale(1.14) rotate(-4deg); }
+}
+.link-icon, .link-img { transition: transform .3s var(--ease); }
+.link-item.tile-in { animation: tileIn .5s var(--ease) backwards; animation-delay: calc(var(--j, 0) * 35ms); }
+@keyframes rowIn { from { opacity: 0; transform: translateX(-14px); } to { opacity: 1; transform: none; } }
+html[dir="rtl"] .todo-item { --rx: 14px; }
+.todo-item { animation: rowIn .35s var(--ease) backwards; transition: background .2s, opacity .3s; }
+.todo-item.done { opacity: .6; }
+@keyframes pulseRing { 0% { box-shadow: 0 0 0 0 var(--ring, var(--glow-blue)); } 100% { box-shadow: 0 0 0 14px transparent; } }
+.prayer-row.next { animation: pulseRing 2.2s ease-out infinite; border-radius: 12px; }
+.prayer-row { transition: background .25s, color .25s; }
+.clock { font-variant-numeric: tabular-nums; }
