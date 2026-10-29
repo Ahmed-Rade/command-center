@@ -52,11 +52,8 @@ body.density-compact .main-grid { --gap: 12px; }
 
 /* inner motion */
 .link-item { position: relative; overflow: visible; transition: transform .22s var(--ease), border-color .2s, background .2s, box-shadow .2s; }
-.link-item::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 35%, color-mix(in srgb, #fff 22%, transparent) 50%, transparent 65%);
-  transform: translateX(-120%); transition: transform .6s var(--ease); pointer-events: none; }
 @media (hover: hover) {
   .link-item:hover { transform: translateY(-4px); box-shadow: 0 10px 22px -12px var(--ring, var(--glow-blue)); }
-  .link-item:hover::after { transform: translateX(120%); }
   .link-item:hover :is(.link-icon, .link-img) { transform: scale(1.14) rotate(-4deg); }
 }
 .link-icon, .link-img { transition: transform .3s var(--ease); }
